@@ -1,89 +1,90 @@
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from '@whiskeysockets/baileys';
-import logger from '@whiskeysockets/baileys/lib/Utils/logger';
+import { Boom } from '@hapi/boom';
+import qrcode from 'qrcode-terminal';
 
-// Logger configuration
-const log = logger.child({});
-log.level = 'silent'; // Set to 'debug' for more verbose logging
+class WhatsAppService {
+  private sock: ReturnType<typeof makeWASocket> | null = null;
+  private isConnected = false;
+  private sessionPath = 'whatsapp-auth';
 
-// Store authentication state in files
-let authState: Awaited<ReturnType<typeof useMultiFileAuthState>> | null = null;
+  async initialize() {
+    try {
+      const { state, saveCreds } = await useMultiFileAuthState(this.sessionPath);
+      
+      const logger = {
+        level: 'silent' as const,
+        child: () => logger,
+        info: () => {},
+        error: () => {},
+        warn: () => {},
+        debug: () => {},
+        trace: () => {}
+      };
 
-/**
- * Initialize WhatsApp connection
- */
-async function initWhatsApp() {
-  if (!authState) {
-    authState = await useMultiFileAuthState('whatsapp-auth');
-  }
+      this.sock = makeWASocket({
+        auth: state,
+        logger,
+        browser: ['FuelFriend Driver', 'Chrome', '1.0.0'],
+        syncFullHistory: false,
+        generateHighQualityLinkPreview: false,
+        markOnlineOnConnect: false,
+      });
 
-  const sock = makeWASocket({
-    auth: authState.state,
-    logger: log,
-    printQRInTerminal: true,
-    browser: ['FuelFriend', 'Chrome', '1.0.0'],
-  });
+      this.sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect, qr } = update;
+        
+        if (qr) {
+          console.log('\n📱 SCAN QR CODE WITH WHATSAPP:');
+          qrcode.generate(qr, { small: true });
+        }
+        
+        if (connection === 'close') {
+          this.isConnected = false;
+          const shouldReconnect = (lastDisconnect?.error instanceof Boom) 
+            ? lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut
+            : true;
+          
+          if (shouldReconnect) {
+            setTimeout(() => this.initialize(), 5000);
+          }
+        } else if (connection === 'open') {
+          console.log('✅ WhatsApp connected successfully!');
+          this.isConnected = true;
+        }
+      });
 
-  sock.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect } = update;
-    if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error as any)?.output?.statusCode !== DisconnectReason.loggedOut;
-      console.log('Connection closed due to', lastDisconnect?.error, ', reconnecting:', shouldReconnect);
-      if (shouldReconnect) {
-        initWhatsApp();
-      }
-    } else if (connection === 'open') {
-      console.log('WhatsApp connection opened');
+      this.sock.ev.on('creds.update', saveCreds);
+      
+    } catch (error) {
+      console.error('❌ WhatsApp initialization error:', error);
+      setTimeout(() => this.initialize(), 10000);
     }
-  });
-
-  sock.ev.on('creds.update', authState.saveCreds);
-
-  return sock;
-}
-
-// Global WhatsApp socket instance
-let whatsappSocket: ReturnType<typeof makeWASocket> | null = null;
-
-/**
- * Get WhatsApp socket instance
- */
-async function getWhatsAppSocket() {
-  if (!whatsappSocket) {
-    whatsappSocket = await initWhatsApp();
   }
-  return whatsappSocket;
-}
 
-/**
- * Send OTP via WhatsApp
- * @param phoneNumber Phone number in international format (e.g., +1234567890)
- * @param otp 4-digit OTP code
- */
-export async function sendOTPviaWhatsApp(phoneNumber: string, otp: string) {
-  try {
-    // Ensure we have a valid WhatsApp connection
-    const sock = await getWhatsAppSocket();
-    
-    // Format phone number for WhatsApp (remove + and add @s.whatsapp.net)
-    const formattedNumber = phoneNumber.replace('+', '') + '@s.whatsapp.net';
-    
-    // Send OTP message
-    const message = {
-      text: `🔐 FuelFriendly Verification Code: ${otp}
+  async sendOTP(phoneNumber: string, otp: string) {
+    if (!this.isConnected || !this.sock) {
+      throw new Error('WhatsApp not connected');
+    }
 
-Please enter this code to verify your account.
-
-This code will expire in 10 minutes.`
-    };
-    
-    await sock.sendMessage(formattedNumber, message);
-    console.log(`OTP sent successfully to ${phoneNumber}`);
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to send OTP via WhatsApp:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    try {
+      const formattedNumber = phoneNumber.replace(/[^\d]/g, '');
+      const jid = `${formattedNumber}@s.whatsapp.net`;
+      
+      const message = `🔐 *FuelFriend Driver OTP*\n\nVerification code: *${otp}*\n\nValid for 10 minutes.\nDo not share this code.`;
+      
+      await this.sock.sendMessage(jid, { text: message });
+      
+      console.log(`✅ OTP sent to ${phoneNumber}`);
+      return { success: true, message: 'OTP sent successfully' };
+      
+    } catch (error) {
+      console.error('❌ Failed to send OTP:', error);
+      throw new Error('Failed to send WhatsApp OTP');
+    }
   }
 }
+
+export default new WhatsAppService();
 
 /**
  * Generate a random 4-digit OTP
@@ -92,5 +93,16 @@ export function generateOTP(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-// Export for use in other modules
-export { initWhatsApp, getWhatsAppSocket };
+/**
+ * Send OTP via WhatsApp (legacy function for compatibility)
+ */
+export async function sendOTPviaWhatsApp(phoneNumber: string, otp: string) {
+  return await whatsappService.sendOTP(phoneNumber, otp);
+}
+
+const whatsappService = new WhatsAppService();
+
+// Initialize on import
+whatsappService.initialize();
+
+export { whatsappService };

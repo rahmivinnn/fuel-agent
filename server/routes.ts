@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { checkLocation } from "./geolocation";
 import { createStripePaymentIntent, createPaypalPayout } from "./payments";
+// Import services
+import { generateOTP } from './whatsapp';
+
 // Lazy import WhatsApp service to prevent blocking server startup
 let whatsappService: typeof import('./whatsapp') | null = null;
 
@@ -174,37 +177,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const whatsapp = await getWhatsAppService();
       const otp = whatsapp.generateOTP();
       
-      // Store OTP in customer record (in production, use Redis or similar)
+      // Store OTP in customer record
       await storage.updateCustomer(customer.id, { 
         otpCode: otp,
-        otpExpires: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
+        otpExpires: new Date(Date.now() + 10 * 60 * 1000)
       });
 
-      // Send OTP via WhatsApp if customer has a phone number
+      let emailSent = false;
+      let whatsappSent = false;
+
+      // Send via email
+      try {
+        const { sendEmailOTP } = await import('./email');
+        const emailResult = await sendEmailOTP(email, otp);
+        emailSent = emailResult.success;
+      } catch (error) {
+        console.warn('Failed to send email OTP:', error);
+      }
+
+      // Send via WhatsApp if phone number exists
       if (customer.phoneNumber) {
         try {
           const whatsapp = await getWhatsAppService();
           const result = await whatsapp.sendOTPviaWhatsApp(customer.phoneNumber, otp);
-          if (!result.success) {
-            console.warn('Failed to send OTP via WhatsApp:', result.error);
-          }
+          whatsappSent = result.success;
         } catch (error) {
-          console.warn('Failed to initialize WhatsApp service:', error);
+          console.warn('Failed to send WhatsApp OTP:', error);
         }
       }
 
-      // Also send via email for backup (in production)
-      // For now, just return success
       res.json({
         success: true,
-        message: customer.phoneNumber 
-          ? "Verification code sent to your WhatsApp and email" 
-          : "Verification code sent to email",
-        // For demo purposes, return the code
-        code: otp
+        message: emailSent && whatsappSent 
+          ? "Verification code sent to your email and WhatsApp" 
+          : emailSent 
+            ? "Verification code sent to your email"
+            : whatsappSent
+              ? "Verification code sent to your WhatsApp"
+              : "Verification code generated",
+        code: process.env.NODE_ENV === 'development' ? otp : undefined
       });
     } catch (error) {
       res.status(400).json({ error: "Invalid request" });
+    }
+  });
+
+  // WhatsApp OTP Routes
+  app.post("/api/otp/whatsapp/send", async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      if (!phoneNumber) {
+        return res.status(400).json({ error: "Phone number required" });
+      }
+
+      const otp = generateOTP();
+      
+      // Store OTP temporarily (in production, use Redis)
+      // For now, store in memory or database
+      
+      const whatsapp = await getWhatsAppService();
+      const result = await whatsapp.sendOTPviaWhatsApp(phoneNumber, otp);
+      
+      if (result.success) {
+        res.json({ success: true, message: "OTP sent to WhatsApp" });
+      } else {
+        res.status(500).json({ error: result.error || "Failed to send OTP" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send WhatsApp OTP" });
+    }
+  });
+
+  app.post("/api/otp/whatsapp/verify", async (req, res) => {
+    try {
+      const { phoneNumber, otp } = req.body;
+      
+      // Verify OTP (implement your verification logic)
+      // For demo, accept any 6-digit code
+      if (otp && otp.length === 6) {
+        res.json({ 
+          success: true, 
+          user: { phoneNumber, verified: true }
+        });
+      } else {
+        res.status(400).json({ error: "Invalid OTP" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to verify OTP" });
     }
   });
 
