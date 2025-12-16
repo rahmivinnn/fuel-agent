@@ -22,10 +22,10 @@ export default function VerifyCode() {
   }, [countdown]);
 
   const handleVerify = async () => {
-    if (code.length !== 4) {
+    if (code.length !== 6) {
       toast({
         title: "Invalid code",
-        description: "Please enter a 4-digit code",
+        description: "Please enter a 6-digit code",
         variant: "destructive",
       });
       return;
@@ -98,13 +98,13 @@ export default function VerifyCode() {
         <div className="text-center">
           <h1 className="text-xl font-bold text-foreground mb-2">Verify code</h1>
           <p className="text-xs text-muted-foreground">
-            Enter four-digits verification code sent to your email
+            Enter six-digits verification code sent to your email
           </p>
         </div>
 
         <div className="flex flex-col items-center space-y-4">
           <InputOTP
-            maxLength={4}
+            maxLength={6}
             value={code}
             onChange={setCode}
             data-testid="input-otp"
@@ -114,13 +114,15 @@ export default function VerifyCode() {
               <InputOTPSlot index={1} className="w-12 h-12 text-lg rounded-lg" />
               <InputOTPSlot index={2} className="w-12 h-12 text-lg rounded-lg" />
               <InputOTPSlot index={3} className="w-12 h-12 text-lg rounded-lg" />
+              <InputOTPSlot index={4} className="w-12 h-12 text-lg rounded-lg" />
+              <InputOTPSlot index={5} className="w-12 h-12 text-lg rounded-lg" />
             </InputOTPGroup>
           </InputOTP>
 
           <Button
             onClick={handleVerify}
             className="w-full h-10 text-sm font-semibold rounded-lg"
-            disabled={isLoading || code.length !== 4}
+            disabled={isLoading || code.length !== 6}
             data-testid="button-verify"
           >
             {isLoading ? "Verifying..." : "Verify"}

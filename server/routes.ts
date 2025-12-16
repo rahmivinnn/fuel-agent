@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { checkLocation } from "./geolocation";
 import { createStripePaymentIntent, createPaypalPayout } from "./payments";
 // Import services
-import { generateOTP } from './whatsapp';
+import { whatsappService, generateOTP } from './whatsapp';
 
 // Lazy import WhatsApp service to prevent blocking server startup
 let whatsappService: typeof import('./whatsapp') | null = null;
@@ -174,8 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate a new OTP
-      const whatsapp = await getWhatsAppService();
-      const otp = whatsapp.generateOTP();
+      const otp = generateOTP();
       
       // Store OTP in customer record
       await storage.updateCustomer(customer.id, { 
@@ -198,8 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send via WhatsApp if phone number exists
       if (customer.phoneNumber) {
         try {
-          const whatsapp = await getWhatsAppService();
-          const result = await whatsapp.sendOTPviaWhatsApp(customer.phoneNumber, otp);
+          const result = await whatsappService.sendOTP(customer.phoneNumber, otp);
           whatsappSent = result.success;
         } catch (error) {
           console.warn('Failed to send WhatsApp OTP:', error);
@@ -222,6 +220,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // WhatsApp connection status
+  app.get("/api/otp/whatsapp/status", async (req, res) => {
+    try {
+      const whatsapp = await getWhatsAppService();
+      res.json({ connected: whatsapp.whatsappService.isConnected || false });
+    } catch (error) {
+      res.json({ connected: false });
+    }
+  });
+
   // WhatsApp OTP Routes
   app.post("/api/otp/whatsapp/send", async (req, res) => {
     try {
@@ -235,13 +243,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store OTP temporarily (in production, use Redis)
       // For now, store in memory or database
       
-      const whatsapp = await getWhatsAppService();
-      const result = await whatsapp.sendOTPviaWhatsApp(phoneNumber, otp);
+      const result = await whatsappService.sendOTP(phoneNumber, otp);
       
       if (result.success) {
         res.json({ success: true, message: "OTP sent to WhatsApp" });
       } else {
-        res.status(500).json({ error: result.error || "Failed to send OTP" });
+        res.status(500).json({ error: result.error || "WhatsApp not connected. Please scan QR code on server." });
       }
     } catch (error) {
       res.status(500).json({ error: "Failed to send WhatsApp OTP" });

@@ -124,7 +124,5 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
-  },
-  "devDependencies": {
-    "@types/qrcode-terminal": "^0.12.2",
+  }
 }
