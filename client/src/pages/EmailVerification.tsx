@@ -116,10 +116,10 @@ export default function EmailVerification() {
               type="button"
               variant="ghost"
               className="w-full text-primary text-sm"
-              onClick={() => setLocation("/login")}
-              data-testid="button-try-another-way"
+              onClick={() => setLocation("/whatsapp-login")}
+              data-testid="button-try-whatsapp"
             >
-              Try another way
+              Use WhatsApp instead
             </Button>
           </form>
         </Form>

@@ -19,6 +19,7 @@ import EmailVerification from "@/pages/EmailVerification";
 import VerifyCode from "@/pages/VerifyCode";
 import VerifySuccess from "@/pages/VerifySuccess";
 import FaceVerification from "@/pages/FaceVerification";
+import WhatsAppLogin from "@/pages/WhatsAppLogin";
 import { useEffect, useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import TestComponent from "./TestComponent";
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/verify-code" component={VerifyCode} />
         <Route path="/verify-success" component={VerifySuccess} />
         <Route path="/face-verification" component={FaceVerification} />
+        <Route path="/whatsapp-login" component={WhatsAppLogin} />
         <Route component={NotFound} />
       </Switch>
     </PageTransition>
