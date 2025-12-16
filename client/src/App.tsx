@@ -1,0 +1,73 @@
+import { Switch, Route } from "wouter";
+import PageTransition from "@/components/PageTransition";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import NotFound from "@/pages/not-found";
+import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import AllOrders from "@/pages/AllOrders";
+import MyOrders from "@/pages/Tracking"; // Renamed from Tracking to MyOrders
+import Wallet from "@/pages/Wallet";
+import Settings from "@/pages/Settings";
+import TrackCustomer from "@/pages/TrackCustomer";
+import EmailVerification from "@/pages/EmailVerification";
+import VerifyCode from "@/pages/VerifyCode";
+import VerifySuccess from "@/pages/VerifySuccess";
+import FaceVerification from "@/pages/FaceVerification";
+import { useEffect, useState } from "react";
+import SplashScreen from "@/components/SplashScreen";
+import TestComponent from "./TestComponent";
+
+function Router() {
+  return (
+    <PageTransition>
+      <Switch>
+        <Route path="/test" component={TestComponent} />
+        <Route path="/" component={Landing} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        {/* Added app pages */}
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/orders" component={AllOrders} />
+        <Route path="/my-orders" component={MyOrders} /> {/* Changed from /tracking to /my-orders */}
+        <Route path="/wallet" component={Wallet} />
+        <Route path="/settings" component={Settings} />
+        <Route path="/track-customer/:id" component={TrackCustomer} />
+        {/* Verification flow */}
+        <Route path="/email-verification" component={EmailVerification} />
+        <Route path="/verify-code" component={VerifyCode} />
+        <Route path="/verify-success" component={VerifySuccess} />
+        <Route path="/face-verification" component={FaceVerification} />
+        <Route component={NotFound} />
+      </Switch>
+    </PageTransition>
+  );
+}
+
+function App() {
+  // Show green splash on initial mount, then hide after animations
+  const [showSplash, setShowSplash] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setShowSplash(false), 1900);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <SplashScreen show={showSplash} />
+          <Router />
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
