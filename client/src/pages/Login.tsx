@@ -11,6 +11,8 @@ import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { MobileContainer } from "@/components/MobileContainer";
 import { motion } from "framer-motion";
+import EmailOTPLogin from "@/components/EmailOTPLogin";
+import WhatsAppOTPLogin from "@/components/WhatsAppOTPLogin";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -18,6 +20,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'password' | 'email-otp' | 'whatsapp-otp'>('password');
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -50,7 +53,7 @@ export default function Login() {
         title: "Success!",
         description: "Logged in successfully",
       });
-      setLocation("/");
+      setLocation("/dashboard");
     } catch (error) {
       toast({
         title: "Error",
@@ -73,6 +76,64 @@ export default function Login() {
       setIsGoogleLoading(false);
     }
   };
+
+  const handleOTPLoginSuccess = (user: any) => {
+    localStorage.setItem("customerEmail", user.email || user.phoneNumber);
+    localStorage.setItem("customerName", "Driver");
+    toast({
+      title: "Success!",
+      description: "Logged in successfully with OTP",
+    });
+    setLocation("/dashboard");
+  };
+
+  if (loginMethod === 'email-otp') {
+    return (
+      <div className="min-h-screen bg-background relative flex flex-col items-center justify-center">
+        <MobileContainer className="relative z-10 py-8">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-6"
+          >
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full" 
+              onClick={() => setLoginMethod('password')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </motion.div>
+          <EmailOTPLogin onLoginSuccess={handleOTPLoginSuccess} />
+        </MobileContainer>
+      </div>
+    );
+  }
+
+  if (loginMethod === 'whatsapp-otp') {
+    return (
+      <div className="min-h-screen bg-background relative flex flex-col items-center justify-center">
+        <MobileContainer className="relative z-10 py-8">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-6"
+          >
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full" 
+              onClick={() => setLoginMethod('password')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </motion.div>
+          <WhatsAppOTPLogin onLoginSuccess={handleOTPLoginSuccess} />
+        </MobileContainer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background relative flex flex-col items-center justify-center">
@@ -121,12 +182,14 @@ export default function Login() {
             <p className="text-muted-foreground">Customer</p>
           </motion.div>
 
-          {/* Login Form */}
+          {/* Login Options */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
+            className="space-y-4"
           >
+            {/* Password Login */}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -193,48 +256,80 @@ export default function Login() {
                     {isLoading ? "Logging in..." : "Log In"}
                   </Button>
                 </motion.div>
-
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or
-                    </span>
-                  </div>
-                </div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 text-base font-normal flex items-center justify-center gap-2 text-black"
-                    onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading}
-                    aria-busy={isGoogleLoading}
-                    data-testid="button-google"
-                  >
-                    <FcGoogle className="mr-2 h-5 w-5" />
-                    {isGoogleLoading ? "Connecting..." : "Continue with Google"}
-                  </Button>
-                </motion.div>
-
-                <div className="text-center pt-4">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    asChild
-                    data-testid="link-signup"
-                  >
-                    <Link href="/register">Don't have an account? Sign up</Link>
-                  </Button>
-                </div>
               </form>
             </Form>
+
+            {/* OTP Login Options */}
+            <div className="space-y-3">
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or login with OTP
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12"
+                onClick={() => setLoginMethod('email-otp')}
+              >
+                📧 Login with Email OTP
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12"
+                onClick={() => setLoginMethod('whatsapp-otp')}
+              >
+                📱 Login with WhatsApp OTP
+              </Button>
+            </div>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or
+                </span>
+              </div>
+            </div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 text-base font-normal flex items-center justify-center gap-2 text-black"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
+                aria-busy={isGoogleLoading}
+                data-testid="button-google"
+              >
+                <FcGoogle className="mr-2 h-5 w-5" />
+                {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+              </Button>
+            </motion.div>
+
+            <div className="text-center pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                asChild
+                data-testid="link-signup"
+              >
+                <Link href="/register">Don't have an account? Sign up</Link>
+              </Button>
+            </div>
           </motion.div>
         </motion.div>
       </MobileContainer>

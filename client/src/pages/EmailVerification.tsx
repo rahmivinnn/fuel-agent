@@ -24,19 +24,22 @@ export default function EmailVerification() {
   const onSubmit = async (data: EmailVerification) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/email-verification", {
+      const normalizedEmail = data.email.trim().toLowerCase();
+
+      // Use the new SendGrid email service
+      const response = await fetch("/api/otp/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!result.success) {
         throw new Error(result.error || "Failed to send verification code");
       }
 
-      localStorage.setItem("verificationEmail", data.email);
+      localStorage.setItem("verificationEmail", normalizedEmail);
 
       toast({
         title: "Code sent!",
@@ -77,7 +80,7 @@ export default function EmailVerification() {
         <div className="text-center">
           <h1 className="text-xl font-bold text-foreground mb-2">Email Verification</h1>
           <p className="text-xs text-muted-foreground">
-            Enter your email address to receive verification code
+            Enter your email address to receive verification code via SendGrid
           </p>
         </div>
 
@@ -109,7 +112,7 @@ export default function EmailVerification() {
               disabled={isLoading}
               data-testid="button-send-code"
             >
-              {isLoading ? "Sending..." : "Send Code"}
+              {isLoading ? "Sending via SendGrid..." : "Send Code via Email"}
             </Button>
 
             <Button
@@ -119,7 +122,7 @@ export default function EmailVerification() {
               onClick={() => setLocation("/whatsapp-login")}
               data-testid="button-try-whatsapp"
             >
-              Use WhatsApp instead
+              Use WhatsApp/SMS instead
             </Button>
           </form>
         </Form>

@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { MobileContainer } from "@/components/MobileContainer";
+import EmailOTPLogin from "@/components/EmailOTPLogin";
+import WhatsAppOTPLogin from "@/components/WhatsAppOTPLogin";
+import { Check } from "lucide-react";
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -23,6 +26,7 @@ export default function Register() {
   const [currentStep, setCurrentStep] = useState(1);
   const [step1Data, setStep1Data] = useState<RegistrationStep1 | null>(null);
   const [step2Data, setStep2Data] = useState<RegistrationStep2 | null>(null);
+  const [verificationMethod, setVerificationMethod] = useState<'email' | 'whatsapp' | null>(null);
 
   const form1 = useForm<RegistrationStep1>({
     resolver: zodResolver(registrationStep1Schema),
@@ -100,8 +104,8 @@ export default function Register() {
         description: "Account created successfully",
       });
 
-      // Navigate to email verification
-      setLocation("/email-verification");
+      // Move to verification step
+      setCurrentStep(4);
     } catch (error) {
       toast({
         title: "Error",
@@ -113,6 +117,14 @@ export default function Register() {
     }
   };
 
+  const handleVerificationSuccess = () => {
+    toast({
+      title: "Verified!",
+      description: "Account verified successfully",
+    });
+    setLocation("/dashboard");
+  };
+
   const handleEditDetails = () => {
     setCurrentStep(1);
   };
@@ -120,24 +132,18 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <MobileContainer className="space-y-8 py-8">
-        {/* Back Button */}
-        {currentStep === 1 && (
-          <Link href="/">
-            <Button variant="ghost" size="icon" data-testid="button-back">
-              <ArrowLeft className="h-5 w-5" />
+        {currentStep === 1 ? (
+          <div className="space-y-8">
+            <Button variant="ghost" size="icon" data-testid="button-back" asChild>
+              <Link href="/">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
             </Button>
-          </Link>
-        )}
-
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Registration</h1>
-          <StepIndicator currentStep={currentStep} totalSteps={3} />
-        </div>
-
-        {/* Step 1: Personal Info */}
-        {currentStep === 1 && (
-          <Form {...form1}>
+            <div className="text-center space-y-4">
+              <h1 className="text-3xl font-bold">Registration</h1>
+              <StepIndicator currentStep={1} totalSteps={3} />
+            </div>
+            <Form {...form1}>
             <form onSubmit={form1.handleSubmit(onStep1Submit)} className="space-y-6">
               <FormField
                 control={form1.control}
@@ -173,20 +179,16 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <div className="flex gap-2">
-                        <PhoneInput
-                           country={"id"}
-                           enableSearch
-                           value={(field.value || "").replace(/^\+/, "")}
-                           onChange={(value) => field.onChange(value ? "+" + value : "")}
-                           inputProps={{ name: field.name, "data-testid": "input-phone", required: true }}
-                           placeholder="Enter phone number"
-                           containerClass="w-full"
-                           inputClass="w-full h-9 rounded-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                         />
-                      </div>
-                    </FormControl>
+                    <PhoneInput
+                      country={"id"}
+                      enableSearch
+                      value={(field.value || "").replace(/^\+/, "")}
+                      onChange={(value) => field.onChange(value ? "+" + value : "")}
+                      inputProps={{ name: field.name, "data-testid": "input-phone", required: true }}
+                      placeholder="Enter phone number"
+                      containerClass="w-full"
+                      inputClass="w-full h-9 rounded-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -198,8 +200,8 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
+                    <div className="relative">
+                      <FormControl>
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter password"
@@ -207,47 +209,31 @@ export default function Register() {
                           {...field}
                           data-testid="input-password"
                         />
-                        <button
-                          type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                          onClick={() => setShowPassword((v) => !v)}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </FormControl>
+                      </FormControl>
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                     <div className="mt-2 text-xs space-y-1">
                       <div className="flex items-center gap-2">
-                        {passwordChecks.length ? (
-                          <CheckCircle2 className="text-green-600" size={16} />
-                        ) : (
-                          <XCircle className="text-red-500" size={16} />
-                        )}
+                        {passwordChecks.length ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
                         <span>At least 8 characters</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {passwordChecks.upper ? (
-                          <CheckCircle2 className="text-green-600" size={16} />
-                        ) : (
-                          <XCircle className="text-red-500" size={16} />
-                        )}
+                        {passwordChecks.upper ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
                         <span>Includes an uppercase letter</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {passwordChecks.number ? (
-                          <CheckCircle2 className="text-green-600" size={16} />
-                        ) : (
-                          <XCircle className="text-red-500" size={16} />
-                        )}
+                        {passwordChecks.number ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
                         <span>Includes a number</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {passwordChecks.special ? (
-                          <CheckCircle2 className="text-green-600" size={16} />
-                        ) : (
-                          <XCircle className="text-red-500" size={16} />
-                        )}
+                        {passwordChecks.special ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
                         <span>Includes a symbol (e.g. !@#$)</span>
                       </div>
                     </div>
@@ -262,8 +248,8 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
+                    <div className="relative">
+                      <FormControl>
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm password"
@@ -271,16 +257,16 @@ export default function Register() {
                           {...field}
                           data-testid="input-confirm-password"
                         />
-                        <button
-                          type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                          onClick={() => setShowConfirmPassword((v) => !v)}
-                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        >
-                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </FormControl>
+                      </FormControl>
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -314,12 +300,15 @@ export default function Register() {
                 {isGoogleLoading ? "Connecting..." : "Continue with Google"}
               </Button>
             </form>
-          </Form>
-        )}
-
-        {/* Step 2: Vehicle Details */}
-        {currentStep === 2 && (
-          <Form {...form2}>
+            </Form>
+          </div>
+        ) : currentStep === 2 ? (
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-3xl font-bold">Registration</h1>
+              <StepIndicator currentStep={2} totalSteps={3} />
+            </div>
+            <Form {...form2}>
             <form onSubmit={form2.handleSubmit(onStep2Submit)} className="space-y-6">
               <FormField
                 control={form2.control}
@@ -400,12 +389,15 @@ export default function Register() {
                 Next
               </Button>
             </form>
-          </Form>
-        )}
-
-        {/* Step 3: Summary */}
-        {currentStep === 3 && step1Data && step2Data && (
-          <div className="space-y-6">
+            </Form>
+          </div>
+        ) : currentStep === 3 && step1Data && step2Data ? (
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-3xl font-bold">Registration</h1>
+              <StepIndicator currentStep={3} totalSteps={3} />
+            </div>
+            <div className="space-y-6">
             <div className="space-y-4">
               <div className="flex justify-between py-3 border-b">
                 <span className="text-muted-foreground">Name</span>
@@ -465,8 +457,76 @@ export default function Register() {
             >
               Edit Details
             </Button>
+            </div>
           </div>
-        )}
+        ) : currentStep === 4 && step1Data ? (
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-3xl font-bold">Verification</h1>
+            </div>
+            <div className="space-y-6">
+            <p className="text-center text-muted-foreground">
+              How would you like to verify your account?
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setVerificationMethod('email')}
+                className={`w-full flex items-center p-4 rounded-2xl border transition-all ${
+                  verificationMethod === 'email'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border bg-card'
+                }`}
+              >
+                <div className={`w-6 h-6 rounded-full border mr-3 flex items-center justify-center ${
+                  verificationMethod === 'email' ? 'border-primary bg-primary' : 'border-border'
+                }`}>
+                  {verificationMethod === 'email' && <Check size={16} className="text-white" />}
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold">Email</p>
+                  <p className="text-xs text-muted-foreground">Send code to {step1Data.email}</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setVerificationMethod('whatsapp')}
+                className={`w-full flex items-center p-4 rounded-2xl border transition-all ${
+                  verificationMethod === 'whatsapp'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border bg-card'
+                }`}
+              >
+                <div className={`w-6 h-6 rounded-full border mr-3 flex items-center justify-center ${
+                  verificationMethod === 'whatsapp' ? 'border-primary bg-primary' : 'border-border'
+                }`}>
+                  {verificationMethod === 'whatsapp' && <Check size={16} className="text-white" />}
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold">WhatsApp</p>
+                  <p className="text-xs text-muted-foreground">Send code to {step1Data.phoneNumber}</p>
+                </div>
+              </button>
+            </div>
+
+            <Button
+              onClick={() => setCurrentStep(5)}
+              disabled={!verificationMethod}
+              className="w-full"
+            >
+              Continue
+            </Button>
+            </div>
+          </div>
+        ) : currentStep === 5 && verificationMethod === 'email' && step1Data ? (
+          <div className="space-y-8">
+            <EmailOTPLogin onLoginSuccess={handleVerificationSuccess} />
+          </div>
+        ) : currentStep === 5 && verificationMethod === 'whatsapp' && step1Data ? (
+          <div className="space-y-8">
+            <WhatsAppOTPLogin onLoginSuccess={handleVerificationSuccess} />
+          </div>
+        ) : null}
       </MobileContainer>
     </div>
   );

@@ -3,8 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { checkLocation } from "./geolocation";
 import { createStripePaymentIntent, createPaypalPayout } from "./payments";
-// Import services
-import { whatsappService, generateOTP } from './whatsapp';
+import { generateOTP, saveOTP, verifyOTP, cleanupExpiredOTPs } from './otp';
+import { sendEmailOTP } from './email';
 
 // Lazy import WhatsApp service to prevent blocking server startup
 let whatsappService: typeof import('./whatsapp') | null = null;
@@ -15,6 +15,9 @@ async function getWhatsAppService() {
   }
   return whatsappService;
 }
+
+// Cleanup expired OTPs every 10 minutes
+setInterval(cleanupExpiredOTPs, 10 * 60 * 1000);
 import {
   registrationStep1Schema,
   registrationStep2Schema,
@@ -63,8 +66,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
     */
-    next();
-
     next();
   });
 
@@ -220,57 +221,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // WhatsApp connection status
+  // SMS/WhatsApp connection status
   app.get("/api/otp/whatsapp/status", async (req, res) => {
     try {
-      const whatsapp = await getWhatsAppService();
-      res.json({ connected: whatsapp.whatsappService.isConnected || false });
+      const { getSMSStatus } = await import('./sms');
+      const status = await getSMSStatus();
+      
+      // Also check Baileys status
+      const { whatsappService } = await import('./whatsapp');
+      const baileysStatus = whatsappService.getConnectionStatus();
+      
+      res.json({ 
+        connected: status.available || baileysStatus.connected,
+        sms: status.twilioSMS,
+        whatsapp: status.twilioWhatsApp,
+        baileys: baileysStatus
+      });
     } catch (error) {
-      res.json({ connected: false });
+      res.json({ connected: false, sms: false, whatsapp: false, baileys: { connected: false } });
     }
   });
 
-  // WhatsApp OTP Routes
+  // Restart WhatsApp connection
+  app.post("/api/otp/whatsapp/restart", async (req, res) => {
+    try {
+      const { whatsappService } = await import('./whatsapp');
+      console.log('🔄 Restarting WhatsApp service...');
+      await whatsappService.initialize();
+      res.json({ success: true, message: 'WhatsApp service restarted - check terminal for QR code' });
+    } catch (error: any) {
+      res.json({ success: false, error: error.message });
+    }
+  });
+
+  // Email OTP Routes
+  app.post("/api/otp/email/send", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ success: false, error: "Email is required" });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, error: "Invalid email format" });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const otp = generateOTP();
+      saveOTP(normalizedEmail, otp);
+
+      console.log('📧 Sending email OTP to:', normalizedEmail, 'OTP:', otp);
+
+      const result = await sendEmailOTP(normalizedEmail, otp);
+
+      if (result.success) {
+        res.json({ success: true, message: "Verification code sent successfully" });
+      } else {
+        res.status(500).json({ success: false, error: result.error || "Failed to send verification code" });
+      }
+    } catch (error) {
+      console.error('Email OTP error:', error);
+      res.status(500).json({ success: false, error: "Failed to send verification code" });
+    }
+  });
+
+  app.post("/api/otp/email/verify", async (req, res) => {
+    try {
+      const { email, otp } = req.body;
+
+      if (!email || !otp) {
+        return res.status(400).json({ success: false, error: "Email and OTP are required" });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, error: "Invalid email format" });
+      }
+
+      if (!/^\d{6}$/.test(otp)) {
+        return res.status(400).json({ success: false, error: "OTP must be 6 digits" });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const result = verifyOTP(normalizedEmail, otp);
+
+      if (result.success) {
+        res.json({ success: true, message: result.message });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      res.status(500).json({ success: false, error: "Failed to verify code" });
+    }
+  });
+
+  // WhatsApp/SMS OTP Routes (Twilio)
   app.post("/api/otp/whatsapp/send", async (req, res) => {
     try {
       const { phoneNumber } = req.body;
       if (!phoneNumber) {
-        return res.status(400).json({ error: "Phone number required" });
+        return res.status(400).json({ success: false, error: "Phone number required" });
       }
 
       const otp = generateOTP();
-      
-      // Store OTP temporarily (in production, use Redis)
-      // For now, store in memory or database
-      
-      const result = await whatsappService.sendOTP(phoneNumber, otp);
-      
+      saveOTP(phoneNumber, otp);
+
+      console.log('📱 Sending SMS/WhatsApp OTP to:', phoneNumber, 'OTP:', otp);
+
+      // Use new SMS service with WhatsApp priority
+      const { sendSMSOTP } = await import('./sms');
+      const result = await sendSMSOTP(phoneNumber, otp, true); // WhatsApp first for Indonesian numbers
+
       if (result.success) {
-        res.json({ success: true, message: "OTP sent to WhatsApp" });
+        res.json({ 
+          success: true, 
+          message: result.message,
+          provider: result.provider
+        });
       } else {
-        res.status(500).json({ error: result.error || "WhatsApp not connected. Please scan QR code on server." });
+        res.status(500).json({ 
+          success: false, 
+          error: result.error || "Failed to send OTP"
+        });
       }
     } catch (error) {
-      res.status(500).json({ error: "Failed to send WhatsApp OTP" });
+      console.error('SMS/WhatsApp OTP error:', error);
+      res.status(500).json({ success: false, error: "Failed to send OTP" });
     }
   });
 
   app.post("/api/otp/whatsapp/verify", async (req, res) => {
     try {
       const { phoneNumber, otp } = req.body;
-      
-      // Verify OTP (implement your verification logic)
-      // For demo, accept any 6-digit code
-      if (otp && otp.length === 6) {
-        res.json({ 
-          success: true, 
-          user: { phoneNumber, verified: true }
-        });
+
+      if (!phoneNumber || !otp) {
+        return res.status(400).json({ success: false, error: "Phone number and OTP are required" });
+      }
+
+      console.log('Verifying WhatsApp OTP for:', phoneNumber, 'OTP:', otp);
+      const result = verifyOTP(phoneNumber, otp);
+      console.log('Verification result:', result);
+
+      if (result.success) {
+        res.json({ success: true, message: result.message, user: { phoneNumber, verified: true } });
       } else {
-        res.status(400).json({ error: "Invalid OTP" });
+        res.json({ success: false, error: result.error });
       }
     } catch (error) {
-      res.status(500).json({ error: "Failed to verify OTP" });
+      console.error('WhatsApp OTP verify error:', error);
+      res.json({ success: false, error: "Failed to verify WhatsApp OTP" });
+    }
+  });
+
+  // Add contact to Resend
+  app.post("/api/resend/contact", async (req, res) => {
+    try {
+      const { email, firstName, lastName } = req.body;
+      if (!email) return res.status(400).json({ error: "Email required" });
+
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) return res.json({ success: false, error: "Resend not configured" });
+
+      const response = await fetch('https://api.resend.com/audiences/78261da4-41a8-4ef8-8c49-c57536b363de/contacts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, first_name: firstName, last_name: lastName })
+      });
+
+      const data = await response.json();
+      return res.json({ success: response.ok, data });
+    } catch (err: any) {
+      return res.json({ success: false, error: err.message });
     }
   });
 

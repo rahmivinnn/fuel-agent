@@ -47,7 +47,14 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
+    // Skip API routes - let them be handled by Express routes
+    if (url.startsWith('/api/')) {
+      return next();
+    }
+
     try {
+      if (res.headersSent) return;
+      
       const metaDir = path.dirname(fileURLToPath(import.meta.url));
       const clientTemplate = path.resolve(
         metaDir,

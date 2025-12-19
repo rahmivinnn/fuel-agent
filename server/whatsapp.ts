@@ -4,7 +4,7 @@ import qrcode from 'qrcode-terminal';
 
 class WhatsAppService {
   private sock: ReturnType<typeof makeWASocket> | null = null;
-  private isConnected = false;
+  public isConnected = false;
   private sessionPath = 'whatsapp-auth';
 
   async initialize() {
@@ -36,6 +36,7 @@ class WhatsAppService {
         if (qr) {
           console.log('\n📱 SCAN QR CODE WITH WHATSAPP:');
           qrcode.generate(qr, { small: true });
+          console.log('\n⬆️ Scan QR code above with WhatsApp to connect');
         }
         
         if (connection === 'close') {
@@ -44,12 +45,16 @@ class WhatsAppService {
             ? lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut
             : true;
           
+          console.log('❌ WhatsApp disconnected');
           if (shouldReconnect) {
-            setTimeout(() => this.initialize(), 5000);
+            console.log('🔄 Reconnecting in 10 seconds...');
+            setTimeout(() => this.initialize(), 10000); // Increased delay
           }
         } else if (connection === 'open') {
           console.log('✅ WhatsApp connected successfully!');
           this.isConnected = true;
+        } else if (connection === 'connecting') {
+          console.log('🔄 WhatsApp connecting...');
         }
       });
 
@@ -61,48 +66,60 @@ class WhatsAppService {
     }
   }
 
-  async sendOTP(phoneNumber: string, otp: string) {
+  async sendOTP(phoneNumber: string, otp: string): Promise<{success: boolean, message: string}> {
+    // Wait for connection if connecting
+    for (let i = 0; i < 10; i++) {
+      if (this.isConnected) break;
+      console.log(`⏳ Waiting for WhatsApp connection... (${i+1}/10)`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
     if (!this.isConnected || !this.sock) {
-      throw new Error('WhatsApp not connected');
+      throw new Error('WhatsApp not connected - scan QR code first');
     }
 
     try {
-      const formattedNumber = phoneNumber.replace(/[^\d]/g, '');
+      // Format nomor Indonesia
+      let formattedNumber = phoneNumber.replace(/[^\d]/g, '');
+      if (formattedNumber.startsWith('08')) {
+        formattedNumber = '62' + formattedNumber.substring(1);
+      } else if (formattedNumber.startsWith('8')) {
+        formattedNumber = '62' + formattedNumber;
+      }
+      
       const jid = `${formattedNumber}@s.whatsapp.net`;
       
-      const message = `🔐 *FuelFriend Driver OTP*\n\nVerification code: *${otp}*\n\nValid for 10 minutes.\nDo not share this code.`;
+      const message = `🔐 *FuelFriend Driver OTP*
+
+Kode verifikasi: *${otp}*
+
+⏰ Berlaku 10 menit
+🔒 Jangan bagikan kode ini
+
+Terima kasih! 🚗⛽`;
       
       await this.sock.sendMessage(jid, { text: message });
       
-      console.log(`✅ OTP sent to ${phoneNumber}`);
-      return { success: true, message: 'OTP sent successfully' };
+      console.log(`✅ WhatsApp OTP sent to ${phoneNumber}`);
+      return { success: true, message: 'WhatsApp OTP sent successfully' };
       
-    } catch (error) {
-      console.error('❌ Failed to send OTP:', error);
-      throw new Error('Failed to send WhatsApp OTP');
+    } catch (error: any) {
+      console.error('❌ Failed to send WhatsApp OTP:', error);
+      throw new Error(`WhatsApp send failed: ${error.message}`);
     }
+  }
+
+  getConnectionStatus() {
+    return {
+      connected: this.isConnected,
+      hasSocket: !!this.sock
+    };
   }
 }
 
-export default new WhatsAppService();
+export const whatsappService = new WhatsAppService();
 
-/**
- * Generate a random 6-digit OTP
- */
-export function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-/**
- * Send OTP via WhatsApp (legacy function for compatibility)
- */
-export async function sendOTPviaWhatsApp(phoneNumber: string, otp: string) {
-  return await whatsappService.sendOTP(phoneNumber, otp);
-}
-
-const whatsappService = new WhatsAppService();
-
-// Initialize on import
+// Auto-initialize on import
 whatsappService.initialize();
 
-export { whatsappService };
+export default whatsappService;

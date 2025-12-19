@@ -1,40 +1,79 @@
-import { Resend } from "resend";
+import sgMail from '@sendgrid/mail';
 
 export async function sendEmailOTP(email: string, otp: string) {
   try {
+    // Development simulation
     if (process.env.NODE_ENV === 'development' && process.env.SIMULATE_EMAIL_SENDING === 'true') {
       console.log('📧 SIMULATED: OTP email sent to:', email);
       console.log('🔐 SIMULATED OTP Code:', otp);
       return { success: true, messageId: 'simulated-' + Date.now(), simulated: true, otp };
     }
     
-    if (!process.env.RESEND_API_KEY) {
-      return { success: false, error: 'Email service not configured' };
+    // Check SendGrid configuration
+    if (!process.env.SENDGRID_API_KEY || process.env.SENDGRID_API_KEY === 'your_sendgrid_api_key') {
+      console.warn('⚠️ SendGrid not configured, using simulation mode');
+      console.log('📧 SIMULATED: OTP email sent to:', email);
+      console.log('🔐 SIMULATED OTP Code:', otp);
+      return { success: true, messageId: 'simulated-' + Date.now(), simulated: true, otp };
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@fuelfriend.com';
     
-    const result = await resend.emails.send({
-      from: fromEmail,
+    const msg = {
       to: email.trim().toLowerCase(),
-      subject: 'Your OTP Code - FuelFriend Driver',
+      from: {
+        email: fromEmail,
+        name: 'FuelFriend Driver'
+      },
+      subject: '🔐 Your Verification Code - FuelFriend Driver',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #ea580c;">FuelFriend Driver</h2>
-          <p>Your verification code is:</p>
-          <div style="font-size: 24px; font-weight: bold; color: #333; margin: 20px 0;">${otp}</div>
-          <p style="color: #666;">This code expires in 10 minutes.</p>
-        </div>
-      `
-    });
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>FuelFriend Driver OTP</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8f9fa;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%); padding: 30px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: bold;">🚗 FuelFriend Driver</h1>
+            </div>
+            <div style="padding: 40px 30px; text-align: center;">
+              <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Verification Code</h2>
+              <p style="color: #6b7280; margin: 0 0 30px 0; font-size: 16px; line-height: 1.5;">Enter this code in the app to verify your account:</p>
+              <div style="background-color: #f3f4f6; border: 2px dashed #ea580c; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <div style="font-size: 32px; font-weight: bold; color: #ea580c; letter-spacing: 4px; font-family: 'Courier New', monospace;">${otp}</div>
+              </div>
+              <p style="color: #9ca3af; font-size: 14px; margin: 20px 0 0 0;">⏰ This code expires in 10 minutes</p>
+              <p style="color: #9ca3af; font-size: 14px; margin: 5px 0 0 0;">🔒 Do not share this code with anyone</p>
+            </div>
+            <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2024 FuelFriend. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `FuelFriend Driver\n\nYour verification code: ${otp}\n\nThis code expires in 10 minutes.\nDo not share this code with anyone.`
+    };
     
-    if (result.error) {
-      return { success: false, error: result.error.message };
-    }
+    const result = await sgMail.send(msg);
+    console.log('✅ Email OTP sent successfully to:', email);
     
-    return { success: true, messageId: result.data?.id };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
+    return { 
+      success: true, 
+      messageId: result[0].headers['x-message-id'] || 'sendgrid-' + Date.now(),
+      provider: 'sendgrid'
+    };
+  } catch (error: any) {
+    console.error('❌ SendGrid error:', error.response?.body || error.message);
+    
+    // Return error instead of fallback to prevent double response
+    return { 
+      success: false, 
+      error: error.message || 'Failed to send email'
+    };
   }
 }

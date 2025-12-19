@@ -57,9 +57,29 @@ export default function WhatsAppOTPLogin({ onLoginSuccess }: WhatsAppOTPLoginPro
           });
         }, 1000);
         
-        toast({ title: 'Success', description: 'OTP sent to your WhatsApp' });
+        const providerMsg = data.provider === 'baileys' ? ' (via WhatsApp Web)' : 
+                          data.provider === 'twilio-whatsapp' ? ' (via Twilio WhatsApp)' :
+                          data.provider === 'twilio-sms' ? ' (via SMS)' : '';
+        
+        toast({ 
+          title: 'Success', 
+          description: `OTP sent to your WhatsApp${providerMsg}` 
+        });
       } else {
-        toast({ title: 'Error', description: data.error || 'Failed to send OTP', variant: 'destructive' });
+        // Show detailed error but with user-friendly message
+        const userMessage = data.error?.includes('not connected') 
+          ? 'WhatsApp service is connecting. Please try again in a moment.'
+          : data.error?.includes('Twilio') 
+          ? 'SMS/WhatsApp service temporarily unavailable. Please try again.'
+          : 'Failed to send OTP. Please check your number and try again.';
+          
+        toast({ 
+          title: 'Unable to Send OTP', 
+          description: userMessage, 
+          variant: 'destructive' 
+        });
+        
+        console.error('WhatsApp OTP Error:', data.error); // For debugging
       }
     } catch (err) {
       toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
@@ -147,12 +167,7 @@ export default function WhatsAppOTPLogin({ onLoginSuccess }: WhatsAppOTPLoginPro
             <div className="flex justify-center">
               <InputOTP maxLength={6} value={otp} onChange={setOtp}>
                 <InputOTPGroup className="gap-2">
-                  <InputOTPSlot index={0} className="w-10 h-10" />
-                  <InputOTPSlot index={1} className="w-10 h-10" />
-                  <InputOTPSlot index={2} className="w-10 h-10" />
-                  <InputOTPSlot index={3} className="w-10 h-10" />
-                  <InputOTPSlot index={4} className="w-10 h-10" />
-                  <InputOTPSlot index={5} className="w-10 h-10" />
+                  <InputOTPSlot index={0} className="w-10 h-10" /><InputOTPSlot index={1} className="w-10 h-10" /><InputOTPSlot index={2} className="w-10 h-10" /><InputOTPSlot index={3} className="w-10 h-10" /><InputOTPSlot index={4} className="w-10 h-10" /><InputOTPSlot index={5} className="w-10 h-10" />
                 </InputOTPGroup>
               </InputOTP>
             </div>
