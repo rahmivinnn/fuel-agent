@@ -923,6 +923,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint - Create new order (will trigger auto-notification)
+  app.post("/api/test/create-order", async (req, res) => {
+    try {
+      const order = await storage.createOrder({
+        trackingNumber: `TEST${Date.now()}`,
+        customerId: "cust1",
+        deliveryAddress: "Test Address",
+        deliveryPhone: "+1234567890",
+        fuelType: "Premium",
+        fuelQuantity: "10.00",
+        totalAmount: "50.00",
+        deliveryFee: "5.00",
+        orderType: "instant",
+        status: "pending"
+      });
+      
+      res.json({ success: true, order, message: "Test order created - notification will be sent automatically" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create test order" });
+    }
+  });
+
   // ========== Chat Routes ==========
 
   // Get chat messages for order
