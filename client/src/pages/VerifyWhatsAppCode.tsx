@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function VerifyWhatsAppCode() {
   const [, setLocation] = useLocation();
@@ -35,7 +36,7 @@ export default function VerifyWhatsAppCode() {
     try {
       const phoneNumber = localStorage.getItem("verificationPhone");
       
-      const response = await fetch("/api/otp/whatsapp/verify", {
+      const response = await fetch(`${API_BASE_URL}/api/otp/whatsapp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber, otp: code }),
@@ -65,7 +66,7 @@ export default function VerifyWhatsAppCode() {
     try {
       const phoneNumber = localStorage.getItem("verificationPhone");
       
-      const response = await fetch("/api/otp/whatsapp/send", {
+      const response = await fetch(`${API_BASE_URL}/api/otp/whatsapp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber }),

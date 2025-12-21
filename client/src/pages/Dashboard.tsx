@@ -71,7 +71,8 @@ export default function Dashboard() {
       pendingOrders,
       activeOrders,
       isLoadingPending,
-      isLoadingActive
+      isLoadingActive,
+      API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'not set'
     });
   }, [driverId, driver, pendingOrders, activeOrders, isLoadingPending, isLoadingActive]);
 
@@ -152,7 +153,7 @@ export default function Dashboard() {
                   <Skeleton className="h-40 w-full rounded-xl" />
                   <Skeleton className="h-40 w-full rounded-xl" />
                 </>
-              ) : pendingOrders.length > 0 ? (
+              ) : pendingOrders && pendingOrders.length > 0 ? (
                 pendingOrders.slice(0, 2).map((order: any) => (
                   <OrderCard
                     key={order.id}
@@ -164,6 +165,7 @@ export default function Dashboard() {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-sm text-[#606268] font-['Poppins']">No requests available</p>
+                  <p className="text-xs text-[#606268] mt-1">Pending orders: {pendingOrders?.length || 0}</p>
                   <Button 
                     variant="ghost" 
                     size="sm" 
