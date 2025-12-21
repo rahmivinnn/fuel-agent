@@ -48,8 +48,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Update userName when component mounts
-    setUserName(localStorage.getItem("customerName") || "Shah Hussain");
-  }, []);
+    const storedName = localStorage.getItem("customerName");
+    if (storedName) {
+      setUserName(storedName);
+    } else if (manualDriver?.fullName) {
+      setUserName(manualDriver.fullName);
+    }
+  }, [manualDriver]);
 
   useEffect(() => {
     // Force refresh on mount
