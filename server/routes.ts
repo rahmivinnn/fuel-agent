@@ -328,27 +328,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const otp = generateOTP();
       saveOTP(phoneNumber, otp);
 
-      console.log('📱 Sending SMS/WhatsApp OTP to:', phoneNumber, 'OTP:', otp);
+      console.log('📱 Sending WhatsApp OTP to:', phoneNumber, 'OTP:', otp);
 
-      // Use new SMS service with WhatsApp priority
-      const { sendSMSOTP } = await import('./sms');
-      const result = await sendSMSOTP(phoneNumber, otp, true); // WhatsApp first for Indonesian numbers
+      // Use WhatsApp service with proper import
+      const whatsappModule = await getWhatsAppService();
+      const result = await whatsappModule.whatsappService.sendOTP(phoneNumber, otp);
 
       if (result.success) {
         res.json({ 
           success: true, 
-          message: result.message,
-          provider: result.provider
+          message: "Verification code sent to your WhatsApp",
+          provider: "whatsapp"
         });
       } else {
         res.status(500).json({ 
           success: false, 
-          error: result.error || "Failed to send OTP"
+          error: result.error || "Failed to send WhatsApp OTP"
         });
       }
     } catch (error) {
-      console.error('SMS/WhatsApp OTP error:', error);
-      res.status(500).json({ success: false, error: "Failed to send OTP" });
+      console.error('WhatsApp OTP error:', error);
+      res.status(500).json({ success: false, error: "Failed to send WhatsApp OTP" });
     }
   });
 
@@ -403,8 +403,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Verify OTP Code
   app.post("/api/auth/verify-code", async (req, res) => {
     try {
-      const { code } = otpVerificationSchema.parse(req.body);
-      const { email } = req.body;
+      const { code, email } = req.body;
+
+      if (!code || !email) {
+        return res.status(400).json({ error: "Code and email are required" });
+      }
 
       const customer = await storage.getCustomerByEmail(email);
       if (!customer) {
@@ -429,6 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ success: true, message: "Email verified successfully" });
     } catch (error) {
+      console.error('Verify code error:', error);
       res.status(400).json({ error: "Invalid request" });
     }
   });

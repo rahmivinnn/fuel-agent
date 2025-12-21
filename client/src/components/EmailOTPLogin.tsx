@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Shield } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
@@ -7,40 +7,36 @@ import { useToast } from '@/hooks/use-toast';
 
 interface EmailOTPLoginProps {
   onLoginSuccess: (user: any) => void;
+  onBack?: () => void;
+  prefilledEmail?: string; // For register flow
+  isRegisterFlow?: boolean;
 }
 
-export default function EmailOTPLogin({ onLoginSuccess }: EmailOTPLoginProps) {
-  const [step, setStep] = useState<'email' | 'otp'>('email');
-  const [email, setEmail] = useState('');
+export default function EmailOTPLogin({ onLoginSuccess, onBack, prefilledEmail, isRegisterFlow = false }: EmailOTPLoginProps) {
+  const [step, setStep] = useState<'email' | 'otp'>(prefilledEmail ? 'otp' : 'email');
+  const [email, setEmail] = useState(prefilledEmail || '');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const { toast } = useToast();
-  const hasSentRef = useRef(false);
+
+  // Auto-send OTP if email is prefilled (register flow)
+  useEffect(() => {
+    if (prefilledEmail && !loading) {
+      sendOTP();
+    }
+  }, [prefilledEmail]);
 
   const sendOTP = async () => {
-    if (!email.trim()) {
+    const emailToUse = prefilledEmail || email;
+    if (!emailToUse.trim()) {
       toast({ title: 'Error', description: 'Email is required', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
     try {
-      const normalizedEmail = email.trim().toLowerCase();
-
-      // Add to Resend contacts first
-      await fetch('/api/resend/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: normalizedEmail,
-          firstName: normalizedEmail.split('@')[0],
-          lastName: ''
-        })
-      });
-
-      // Small delay to ensure contact is added
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const normalizedEmail = emailToUse.trim().toLowerCase();
 
       const response = await fetch('/api/otp/email/send', {
         method: 'POST',
@@ -66,7 +62,11 @@ export default function EmailOTPLogin({ onLoginSuccess }: EmailOTPLoginProps) {
 
         toast({ title: 'Success', description: 'OTP sent to your email' });
       } else {
-        toast({ title: 'Error', description: data.error || 'Failed to send OTP', variant: 'destructive' });
+        const userMessage = data.error?.includes('not connected') 
+          ? 'Email service is connecting. Please try again in a moment.'
+          : 'Failed to send OTP. Please check your email and try again.';
+          
+        toast({ title: 'Unable to Send OTP', description: userMessage, variant: 'destructive' });
       }
     } catch (err) {
       toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
@@ -83,7 +83,8 @@ export default function EmailOTPLogin({ onLoginSuccess }: EmailOTPLoginProps) {
 
     setLoading(true);
     try {
-      const normalizedEmail = email.trim().toLowerCase();
+      const emailToUse = prefilledEmail || email;
+      const normalizedEmail = emailToUse.trim().toLowerCase();
 
       const response = await fetch('/api/otp/email/verify', {
         method: 'POST',
@@ -106,90 +107,100 @@ export default function EmailOTPLogin({ onLoginSuccess }: EmailOTPLoginProps) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-6">
-      <div className="text-center">
-        <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-8 h-8 text-blue-600" />
-        </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          Email Login
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {step === 'email'
-            ? 'Enter your email to receive OTP'
-            : 'Enter the 6-digit code sent to your email'
-          }
-        </p>
-      </div>
-
-      {step === 'email' ? (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-                className="pl-10"
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          <Button
-            onClick={sendOTP}
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? 'Sending...' : 'Send OTP via Email'}
+    <div className="min-h-screen bg-white flex flex-col px-6 py-8">
+      {/* Back Button */}
+      {onBack && (
+        <div className="mb-6">
+          <Button variant="ghost" size="sm" className="p-0 h-auto text-gray-600" onClick={onBack}>
+            <ArrowLeft className="h-5 w-5" />
           </Button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">OTP Code</label>
+      )}
+
+      <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
+        {/* Email Icon */}
+        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-8">
+          <Mail className="w-12 h-12 text-green-600" />
+        </div>
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-4">
+            Email Verification
+          </h1>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            {step === 'email'
+              ? 'Enter your email address to receive verification code'
+              : 'Enter your email address to receive verification code'
+            }
+          </p>
+        </div>
+
+        {step === 'email' ? (
+          <div className="w-full space-y-6">
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email address"
+              className="w-full h-14 rounded-full border-gray-300 px-6 bg-gray-50 text-center"
+              disabled={loading}
+            />
+
+            <Button
+              onClick={sendOTP}
+              disabled={loading}
+              className="w-full h-14 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold text-lg"
+            >
+              {loading ? 'Sending...' : 'Send Code'}
+            </Button>
+
+            <div className="text-center">
+              <Button
+                variant="ghost"
+                className="text-gray-600 text-sm p-0 h-auto"
+                onClick={() => {/* Handle try another way */}}
+              >
+                Try another way
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full space-y-6">
             <div className="flex justify-center">
               <InputOTP maxLength={6} value={otp} onChange={setOtp}>
                 <InputOTPGroup className="gap-2">
-                  <InputOTPSlot index={0} className="w-10 h-10" /><InputOTPSlot index={1} className="w-10 h-10" /><InputOTPSlot index={2} className="w-10 h-10" /><InputOTPSlot index={3} className="w-10 h-10" /><InputOTPSlot index={4} className="w-10 h-10" /><InputOTPSlot index={5} className="w-10 h-10" />
+                  <InputOTPSlot index={0} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={1} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={2} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={3} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={4} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={5} className="w-12 h-12 text-lg" />
                 </InputOTPGroup>
               </InputOTP>
             </div>
-          </div>
 
-          <div className="flex gap-3">
-            <Button
-              onClick={() => setStep('email')}
-              disabled={loading}
-              variant="outline"
-              className="flex-1"
-            >
-              Back
-            </Button>
             <Button
               onClick={verifyOTP}
               disabled={loading || otp.length !== 6}
-              className="flex-1"
+              className="w-full h-14 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold text-lg"
             >
-              {loading ? 'Verifying...' : 'Verify OTP'}
+              {loading ? 'Verifying...' : 'Verify Code'}
             </Button>
-          </div>
 
-          <div className="text-center">
-            <Button
-              onClick={sendOTP}
-              disabled={countdown > 0}
-              variant="ghost"
-              className="text-sm"
-            >
-              {countdown > 0 ? `Resend in ${countdown}s` : 'Resend OTP'}
-            </Button>
+            <div className="text-center">
+              <Button
+                onClick={sendOTP}
+                disabled={countdown > 0}
+                variant="ghost"
+                className="text-gray-600 text-sm p-0 h-auto"
+              >
+                {countdown > 0 ? `Resend in ${countdown}s` : 'Resend Code'}
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

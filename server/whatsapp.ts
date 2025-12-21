@@ -34,9 +34,12 @@ class WhatsAppService {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
-          console.log('\n📱 SCAN QR CODE WITH WHATSAPP:');
+          console.log('\n🔥 WHATSAPP QR CODE - SCAN WITH YOUR PHONE:');
+          console.log('=' .repeat(50));
           qrcode.generate(qr, { small: true });
-          console.log('\n⬆️ Scan QR code above with WhatsApp to connect');
+          console.log('=' .repeat(50));
+          console.log('⬆️ Open WhatsApp > Settings > Linked Devices > Link a Device');
+          console.log('📱 Scan the QR code above to connect WhatsApp\n');
         }
         
         if (connection === 'close') {

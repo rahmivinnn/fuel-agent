@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, CheckCircle2, XCircle, Car } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registrationStep1Schema, registrationStep2Schema, type RegistrationStep1, type RegistrationStep2 } from "@shared/schema";
@@ -27,6 +27,7 @@ export default function Register() {
   const [step1Data, setStep1Data] = useState<RegistrationStep1 | null>(null);
   const [step2Data, setStep2Data] = useState<RegistrationStep2 | null>(null);
   const [verificationMethod, setVerificationMethod] = useState<'email' | 'whatsapp' | null>(null);
+  const [preferredPayment, setPreferredPayment] = useState<string>("");
 
   const form1 = useForm<RegistrationStep1>({
     resolver: zodResolver(registrationStep1Schema),
@@ -39,7 +40,6 @@ export default function Register() {
     },
   });
 
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const passwordValue = form1.watch("password");
@@ -49,6 +49,7 @@ export default function Register() {
     number: /\d/.test(passwordValue ?? ""),
     special: /[^A-Za-z0-9]/.test(passwordValue ?? ""),
   };
+  
   const form2 = useForm<RegistrationStep2>({
     resolver: zodResolver(registrationStep2Schema),
     defaultValues: {
@@ -59,15 +60,29 @@ export default function Register() {
     },
   });
 
+  // Reset form2 when entering step 2
   const onStep1Submit = (data: RegistrationStep1) => {
-    // Store E.164 phone number directly from the phone input
     setStep1Data(data);
+    // Don't reset form2, let it keep existing data
     setCurrentStep(2);
   };
 
   const onStep2Submit = (data: RegistrationStep2) => {
     setStep2Data(data);
     setCurrentStep(3);
+  };
+
+  // Populate forms when going back
+  const handleEditDetails = () => {
+    // Populate form1 with step1Data
+    if (step1Data) {
+      form1.reset(step1Data);
+    }
+    // Populate form2 with step2Data if it exists
+    if (step2Data) {
+      form2.reset(step2Data);
+    }
+    setCurrentStep(1);
   };
 
   const handleGoogleSignIn = async () => {
@@ -104,8 +119,12 @@ export default function Register() {
         description: "Account created successfully",
       });
 
-      // Move to verification step
-      setCurrentStep(4);
+      // Store email and phone for verification
+      localStorage.setItem("verificationEmail", step1Data.email);
+      localStorage.setItem("verificationPhone", step1Data.phoneNumber);
+      
+      // Redirect to email verification page
+      setLocation("/email-verification");
     } catch (error) {
       toast({
         title: "Error",
@@ -125,409 +144,474 @@ export default function Register() {
     setLocation("/dashboard");
   };
 
-  const handleEditDetails = () => {
-    setCurrentStep(1);
-  };
-
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <MobileContainer className="space-y-8 py-8">
-        {currentStep === 1 ? (
-          <div className="space-y-8">
-            <Button variant="ghost" size="icon" data-testid="button-back" asChild>
-              <Link href="/">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <div className="text-center space-y-4">
-              <h1 className="text-3xl font-bold">Registration</h1>
-              <StepIndicator currentStep={1} totalSteps={3} />
+    <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
+      {/* Main Content */}
+      <div className="px-4 pt-6 pb-8">
+        {/* Back Button */}
+        <div className="flex items-center gap-2 mb-8">
+          <button 
+            onClick={() => currentStep > 1 ? setCurrentStep(currentStep - 1) : setLocation('/')}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
+          >
+            {currentStep === 1 ? (
+              <ArrowLeft className="w-4 h-4" />
+            ) : (
+              <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+            )}
+          </button>
+          {currentStep === 1 && (
+            <span className="text-sm text-[#3F4249] font-['Poppins']">Back</span>
+          )}
+        </div>
+
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img src="/logo.png" alt="FuelFriendly" className="w-[105px] h-[60px]" />
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-[#3F4249] font-['Poppins']">Registration</h1>
+        </div>
+
+        {/* Step Indicator */}
+        <div className="flex items-center justify-center mb-12 relative">
+          <div className="flex items-center">
+            {/* Step 1 */}
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+              currentStep > 1 ? 'bg-[#3AC36C]' : currentStep === 1 ? 'bg-white border-2 border-[#3AC36C]' : 'bg-white border-2 border-[#606268]'
+            }`}>
+              {currentStep > 1 ? (
+                <Check className="w-4 h-4 text-white stroke-[2.5]" />
+              ) : (
+                <span className={`text-base font-semibold ${
+                  currentStep === 1 ? 'text-[#3AC36C]' : 'text-[#606268]'
+                }`}>1</span>
+              )}
             </div>
-            <Form {...form1}>
-            <form onSubmit={form1.handleSubmit(onStep1Submit)} className="space-y-6">
+            
+            {/* Dots between 1 and 2 */}
+            <div className="flex items-center gap-1 mx-2">
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                currentStep > 1 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+            </div>
+            
+            {/* Step 2 */}
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+              currentStep > 2 ? 'bg-[#3AC36C]' : currentStep === 2 ? 'bg-white border-2 border-[#3AC36C]' : 'bg-white border-2 border-[#606268]'
+            }`}>
+              {currentStep > 2 ? (
+                <Check className="w-4 h-4 text-white stroke-[2.5]" />
+              ) : (
+                <span className={`text-base font-semibold ${
+                  currentStep === 2 ? 'text-[#3AC36C]' : 'text-[#606268]'
+                }`}>2</span>
+              )}
+            </div>
+            
+            {/* Dots between 2 and 3 */}
+            <div className="flex items-center gap-1 mx-2">
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-0.5 h-0.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                currentStep > 2 ? 'bg-[#3AC36C]' : 'bg-[#606268]'
+              }`}></div>
+            </div>
+            
+            {/* Step 3 */}
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+              currentStep >= 3 ? 'bg-white border-2 border-[#3AC36C]' : 'bg-white border-2 border-[#606268]'
+            }`}>
+              <span className={`text-base font-semibold ${
+                currentStep >= 3 ? 'text-[#3AC36C]' : 'text-[#606268]'
+              }`}>3</span>
+            </div>
+          </div>
+          
+          {/* Car Icon */}
+          <div className={`absolute -bottom-6 ${
+            currentStep === 1 ? 'left-0' : currentStep === 2 ? 'left-1/2 -translate-x-1/2' : 'right-0'
+          }`}>
+            <img src="/Vector.png" alt="car" className="w-[43px] h-[14px]" />
+          </div>
+        </div>
+
+        {/* Forms */}
+        {currentStep === 1 && (
+          <Form {...form1}>
+            <form onSubmit={form1.handleSubmit(onStep1Submit)} className="space-y-4">
               <FormField
                 control={form1.control}
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your full name" {...field} data-testid="input-fullname" />
+                      <Input 
+                        placeholder="Full Name" 
+                        {...field} 
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                        autoComplete="off"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form1.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email address</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="Enter your email" {...field} data-testid="input-email" />
+                      <Input 
+                        type="email" 
+                        placeholder="Email address" 
+                        {...field} 
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                        autoComplete="off"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form1.control}
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <PhoneInput
-                      country={"id"}
-                      enableSearch
-                      value={(field.value || "").replace(/^\+/, "")}
-                      onChange={(value) => field.onChange(value ? "+" + value : "")}
-                      inputProps={{ name: field.name, "data-testid": "input-phone", required: true }}
-                      placeholder="Enter phone number"
-                      containerClass="w-full"
-                      inputClass="w-full h-9 rounded-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                    />
+                    <FormControl>
+                      <Input 
+                        placeholder="Phone Number" 
+                        {...field} 
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                        autoComplete="off"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form1.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <div className="relative">
-                      <FormControl>
+                    <FormControl>
+                      <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Enter password"
-                          className="pr-10"
+                          placeholder="Password"
+                          className="w-full h-12 rounded-[30px] border border-black/50 px-4 pr-12 font-['Poppins']"
                           {...field}
-                          data-testid="input-password"
+                          autoComplete="off"
                         />
-                      </FormControl>
-                      <button
-                        type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                        onClick={() => setShowPassword((v) => !v)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                    <div className="mt-2 text-xs space-y-1">
-                      <div className="flex items-center gap-2">
-                        {passwordChecks.length ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
-                        <span>At least 8 characters</span>
+                        <button
+                          type="button"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#606268]"
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                        </button>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {passwordChecks.upper ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
-                        <span>Includes an uppercase letter</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {passwordChecks.number ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
-                        <span>Includes a number</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {passwordChecks.special ? <CheckCircle2 className="text-green-600" size={16} /> : <XCircle className="text-red-500" size={16} />}
-                        <span>Includes a symbol (e.g. !@#$)</span>
-                      </div>
-                    </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form1.control}
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <div className="relative">
-                      <FormControl>
+                    <FormControl>
+                      <div className="relative">
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Confirm password"
-                          className="pr-10"
+                          placeholder="Confirm Password"
+                          className="w-full h-12 rounded-[30px] border border-black/50 px-4 pr-12 font-['Poppins']"
                           {...field}
-                          data-testid="input-confirm-password"
+                          autoComplete="off"
                         />
-                      </FormControl>
-                      <button
-                        type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                        onClick={() => setShowConfirmPassword((v) => !v)}
-                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                      >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#606268]"
+                          onClick={() => setShowConfirmPassword((v) => !v)}
+                        >
+                          {showConfirmPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                        </button>
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <Button type="submit" className="w-full" data-testid="button-next-step1">
+              <Button 
+                type="submit" 
+                className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mt-6"
+              >
                 Next
               </Button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 text-base font-semibold flex items-center justify-center gap-2 text-black"
-                onClick={handleGoogleSignIn}
-                disabled={isGoogleLoading}
-                aria-busy={isGoogleLoading}
-                data-testid="button-google-signup"
-              >
-                <FcGoogle className="mr-2 h-5 w-5" />
-                {isGoogleLoading ? "Connecting..." : "Continue with Google"}
-              </Button>
             </form>
-            </Form>
-          </div>
-        ) : currentStep === 2 ? (
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-3xl font-bold">Registration</h1>
-              <StepIndicator currentStep={2} totalSteps={3} />
-            </div>
-            <Form {...form2}>
-            <form onSubmit={form2.handleSubmit(onStep2Submit)} className="space-y-6">
+          </Form>
+        )}
+        
+        {currentStep === 2 && (
+          <Form {...form2}>
+            <form onSubmit={form2.handleSubmit(onStep2Submit)} className="space-y-4">
               <FormField
                 control={form2.control}
                 name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vehicle Brand</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Honda, Toyota" {...field} data-testid="input-brand" />
+                      <Input 
+                        placeholder="ID Card Number" 
+                        {...field} 
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                        autoComplete="off"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form2.control}
                 name="color"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vehicle Color</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Red, Blue" {...field} data-testid="input-color" />
+                      <Input 
+                        placeholder="Address" 
+                        {...field} 
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                        autoComplete="off"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form2.control}
                 name="licenseNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>License Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., ABC-1234" {...field} data-testid="input-license" />
+                      <Input 
+                        placeholder="Working hour" 
+                        {...field} 
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                        autoComplete="off"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form2.control}
                 name="fuelType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fuel type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-fuel-type">
-                          <SelectValue placeholder="Select fuel type" />
+                    <FormControl>
+                      <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        setPreferredPayment(value);
+                      }} value={field.value}>
+                        <SelectTrigger className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']">
+                          <SelectValue placeholder="Preferred Payment Method" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Petrol">Petrol</SelectItem>
-                        <SelectItem value="Diesel">Diesel</SelectItem>
-                        <SelectItem value="Premium">Premium</SelectItem>
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                          <SelectItem value="E-Wallet">E-Wallet</SelectItem>
+                          <SelectItem value="Cash">Cash</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
+              
               <Button
                 type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => toast({ title: "Vehicle Management", description: "Vehicle management is available." })}
-                data-testid="button-add-vehicle"
+                variant="ghost"
+                className="w-full h-12 rounded-[30px] border-2 border-dashed border-[#3AC36C] text-[#3AC36C] bg-white hover:bg-green-50 font-['Poppins']"
+                onClick={() => {
+                  // Add secondary contact functionality
+                  toast({
+                    title: "Feature Coming Soon",
+                    description: "Secondary contact number feature will be available soon",
+                  });
+                }}
               >
-                Add Vehicle
+                + Add Secondary Contact Number
               </Button>
-
-              <Button type="submit" className="w-full" data-testid="button-next-step2">
+              
+              <Button 
+                type="submit" 
+                className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mt-6"
+              >
                 Next
               </Button>
             </form>
-            </Form>
-          </div>
-        ) : currentStep === 3 && step1Data && step2Data ? (
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-3xl font-bold">Registration</h1>
-              <StepIndicator currentStep={3} totalSteps={3} />
+          </Form>
+        ) }
+        
+        {currentStep === 3 && step1Data && step2Data && (
+          <div className="space-y-6">
+            {/* Summary Card */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Name</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step1Data.fullName}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Email Address</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step1Data.email}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Phone No.</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step1Data.phoneNumber}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Password</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">abc123</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">ID Card Number</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step2Data.brand || '1234 5678 910'}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Address</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step2Data.color || 'Abc def ghi'}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Working hours</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step2Data.licenseNumber || '9:00AM-5:00PM'}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Bank Name</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step2Data.fuelType || 'National Bank'}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Account Holder</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{step1Data.fullName}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2 border-b border-dotted border-gray-300">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Account No</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">1234 5678 9013</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-800 font-bold font-['Poppins']">Mobile Wallet</span>
+                  <span className="text-gray-600 font-normal font-['Poppins']">{preferredPayment || 'Not selected'}</span>
+                </div>
+              </div>
             </div>
-            <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">Name</span>
-                <span className="font-medium" data-testid="text-summary-name">{step1Data.fullName}</span>
-              </div>
-
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">Email Address</span>
-                <span className="font-medium" data-testid="text-summary-email">{step1Data.email}</span>
-              </div>
-
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">Phone No.</span>
-                <span className="font-medium" data-testid="text-summary-phone">{step1Data.phoneNumber}</span>
-              </div>
-
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">Password</span>
-                <span className="font-medium">*********</span>
-              </div>
-
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">Vehicle Brand</span>
-                <span className="font-medium" data-testid="text-summary-brand">{step2Data.brand}</span>
-              </div>
-
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">Vehicle color</span>
-                <span className="font-medium" data-testid="text-summary-color">{step2Data.color}</span>
-              </div>
-
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">License Number</span>
-                <span className="font-medium" data-testid="text-summary-license">{step2Data.licenseNumber}</span>
-              </div>
-
-              <div className="flex justify-between py-3 border-b">
-                <span className="text-muted-foreground">Fuel Type</span>
-                <span className="font-medium" data-testid="text-summary-fuel">{step2Data.fuelType}</span>
-              </div>
-            </div>
-
-            <Button
-              onClick={handleCreateAccount}
-              className="w-full"
-              disabled={isLoading}
-              data-testid="button-create-account"
-            >
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </Button>
-
-            <Button
-              onClick={handleEditDetails}
-              variant="outline"
-              className="w-full"
-              data-testid="button-edit-details"
-            >
-              Edit Details
-            </Button>
-            </div>
-          </div>
-        ) : currentStep === 4 && step1Data ? (
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-3xl font-bold">Verification</h1>
-            </div>
-            <div className="space-y-6">
-            <p className="text-center text-muted-foreground">
-              How would you like to verify your account?
-            </p>
-
+            
+            {/* Buttons */}
             <div className="space-y-3">
-              <button
-                onClick={() => setVerificationMethod('email')}
-                className={`w-full flex items-center p-4 rounded-2xl border transition-all ${
-                  verificationMethod === 'email'
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border bg-card'
-                }`}
+              <Button
+                onClick={handleCreateAccount}
+                className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins']"
+                disabled={isLoading}
               >
-                <div className={`w-6 h-6 rounded-full border mr-3 flex items-center justify-center ${
-                  verificationMethod === 'email' ? 'border-primary bg-primary' : 'border-border'
-                }`}>
-                  {verificationMethod === 'email' && <Check size={16} className="text-white" />}
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold">Email</p>
-                  <p className="text-xs text-muted-foreground">Send code to {step1Data.email}</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setVerificationMethod('whatsapp')}
-                className={`w-full flex items-center p-4 rounded-2xl border transition-all ${
-                  verificationMethod === 'whatsapp'
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border bg-card'
-                }`}
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </Button>
+              
+              <Button
+                onClick={() => setCurrentStep(1)}
+                variant="ghost"
+                className="w-full text-[#3AC36C] font-semibold font-['Poppins'] hover:bg-green-50"
               >
-                <div className={`w-6 h-6 rounded-full border mr-3 flex items-center justify-center ${
-                  verificationMethod === 'whatsapp' ? 'border-primary bg-primary' : 'border-border'
-                }`}>
-                  {verificationMethod === 'whatsapp' && <Check size={16} className="text-white" />}
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold">WhatsApp</p>
-                  <p className="text-xs text-muted-foreground">Send code to {step1Data.phoneNumber}</p>
-                </div>
-              </button>
-            </div>
-
-            <Button
-              onClick={() => setCurrentStep(5)}
-              disabled={!verificationMethod}
-              className="w-full"
-            >
-              Continue
-            </Button>
+                Edit Details
+              </Button>
             </div>
           </div>
-        ) : currentStep === 5 && verificationMethod === 'email' && step1Data ? (
-          <div className="space-y-8">
-            <EmailOTPLogin onLoginSuccess={handleVerificationSuccess} />
+        )}
+
+        {/* Sign In Link */}
+        {currentStep === 1 && (
+          <div className="text-center mt-5">
+            <div className="flex items-center justify-center gap-4">
+              <span className="text-black/50 font-['Poppins']">Already have account?</span>
+              <Link href="/login" className="text-[#3AC36C] font-semibold font-['Poppins'] underline">
+                Sign In
+              </Link>
+            </div>
           </div>
-        ) : currentStep === 5 && verificationMethod === 'whatsapp' && step1Data ? (
-          <div className="space-y-8">
-            <WhatsAppOTPLogin onLoginSuccess={handleVerificationSuccess} />
-          </div>
-        ) : null}
-      </MobileContainer>
+        )}
+      </div>
+
+      {/* Home Indicator */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#101010] rounded-full mb-2"></div>
     </div>
   );
 }

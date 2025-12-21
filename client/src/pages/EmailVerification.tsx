@@ -2,54 +2,56 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Mail } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { emailVerificationSchema, type EmailVerification } from "@shared/schema";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 
 export default function EmailVerification() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<EmailVerification>({
-    resolver: zodResolver(emailVerificationSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
+  // Get email from localStorage (from registration)
+  const registeredEmail = localStorage.getItem("verificationEmail") || "";
 
-  const onSubmit = async (data: EmailVerification) => {
+  const handleSendCode = async () => {
+    const emailToUse = email || registeredEmail;
+    
+    if (!emailToUse) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const normalizedEmail = data.email.trim().toLowerCase();
-
-      // Use the new SendGrid email service
-      const response = await fetch("/api/otp/email/send", {
+      const response = await fetch("/api/auth/email-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail }),
+        body: JSON.stringify({ email: emailToUse }),
       });
 
       const result = await response.json();
 
-      if (!result.success) {
+      if (!response.ok) {
         throw new Error(result.error || "Failed to send verification code");
       }
 
-      localStorage.setItem("verificationEmail", normalizedEmail);
-
+      // Store email for verification page
+      localStorage.setItem("verificationEmail", emailToUse);
+      
       toast({
         title: "Code sent!",
         description: "Verification code has been sent to your email",
       });
+      
       setLocation("/verify-code");
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send verification code",
+        description: error instanceof Error ? error.message : "Failed to send code",
         variant: "destructive",
       });
     } finally {
@@ -57,76 +59,72 @@ export default function EmailVerification() {
     }
   };
 
+  const handleTryAnotherWay = () => {
+    setLocation("/whatsapp-verification");
+  };
+
   return (
-    <div className="min-h-screen bg-background p-4 flex flex-col">
-      <div className="w-full max-w-sm mx-auto space-y-6 pt-8">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setLocation("/login")}
-            data-testid="button-back-email"
+    <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
+      <div className="px-4 pt-6 pb-8">
+        {/* Back Button */}
+        <div className="flex items-center gap-2 mb-8">
+          <button 
+            onClick={() => setLocation('/register')}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div className="flex-1 flex justify-center">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-              <Mail className="w-6 h-6 text-primary" />
-            </div>
-          </div>
-          <div className="w-9" />
+            <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="text-center">
-          <h1 className="text-xl font-bold text-foreground mb-2">Email Verification</h1>
-          <p className="text-xs text-muted-foreground">
-            Enter your email address to receive verification code via SendGrid
+        {/* Email Icon */}
+        <div className="flex justify-center mb-8">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+            <img src="/inbox.png" alt="Email" className="w-10 h-10" />
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-[#3F4249] font-['Poppins'] mb-4">Email Verification</h1>
+          <p className="text-sm text-[#606268] font-['Poppins']">
+            Enter your email address to receive verification code
           </p>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">Email address</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="Enter your email"
-                      className="h-10 text-sm"
-                      data-testid="input-email-verification"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Email Input */}
+        <div className="mb-6">
+          <Input
+            type="email"
+            placeholder="Email address"
+            value={email || registeredEmail}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+            disabled={!!registeredEmail}
+          />
+        </div>
 
-            <Button
-              type="submit"
-              className="w-full h-10 text-sm font-semibold"
-              disabled={isLoading}
-              data-testid="button-send-code"
-            >
-              {isLoading ? "Sending via SendGrid..." : "Send Code via Email"}
-            </Button>
+        {/* Send Code Button */}
+        <Button
+          onClick={handleSendCode}
+          className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mb-6"
+          disabled={isLoading}
+        >
+          {isLoading ? "Sending..." : "Send Code"}
+        </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full text-primary text-sm"
-              onClick={() => setLocation("/whatsapp-login")}
-              data-testid="button-try-whatsapp"
-            >
-              Use WhatsApp/SMS instead
-            </Button>
-          </form>
-        </Form>
+        {/* Try Another Way */}
+        <div className="text-center">
+          <button
+            onClick={handleTryAnotherWay}
+            className="text-[#3F4249] font-['Poppins'] underline"
+          >
+            Try another way
+          </button>
+        </div>
       </div>
+
+      {/* Home Indicator */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#101010] rounded-full mb-2"></div>
     </div>
   );
 }

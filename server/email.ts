@@ -35,22 +35,23 @@ export async function sendEmailOTP(email: string, otp: string) {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>FuelFriend Driver OTP</title>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8f9fa;">
+        <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #f8f9fa;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <div style="background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%); padding: 30px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: bold;">🚗 FuelFriend Driver</h1>
+            <div style="background: linear-gradient(135deg, #3AC36C 0%, #2EAD5A 100%); padding: 30px; text-align: center;">
+              <img src="http://localhost:5000/logo.png" alt="FuelFriend" style="height: 40px; margin-bottom: 10px;" />
+              <h1 style="color: white; margin: 0; font-size: 24px; font-weight: bold; font-family: 'Poppins', Arial, sans-serif;">FuelFriend Driver</h1>
             </div>
             <div style="padding: 40px 30px; text-align: center;">
-              <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Verification Code</h2>
-              <p style="color: #6b7280; margin: 0 0 30px 0; font-size: 16px; line-height: 1.5;">Enter this code in the app to verify your account:</p>
-              <div style="background-color: #f3f4f6; border: 2px dashed #ea580c; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                <div style="font-size: 32px; font-weight: bold; color: #ea580c; letter-spacing: 4px; font-family: 'Courier New', monospace;">${otp}</div>
+              <h2 style="color: #3F4249; margin: 0 0 20px 0; font-size: 20px; font-family: 'Poppins', Arial, sans-serif;">Verification Code</h2>
+              <p style="color: #606268; margin: 0 0 30px 0; font-size: 16px; line-height: 1.5; font-family: 'Poppins', Arial, sans-serif;">Enter this code in the app to verify your account:</p>
+              <div style="background-color: #f0fdf4; border: 2px dashed #3AC36C; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <div style="font-size: 32px; font-weight: bold; color: #3AC36C; letter-spacing: 4px; font-family: 'Courier New', monospace;">${otp}</div>
               </div>
-              <p style="color: #9ca3af; font-size: 14px; margin: 20px 0 0 0;">⏰ This code expires in 10 minutes</p>
-              <p style="color: #9ca3af; font-size: 14px; margin: 5px 0 0 0;">🔒 Do not share this code with anyone</p>
+              <p style="color: #606268; font-size: 14px; margin: 20px 0 0 0; font-family: 'Poppins', Arial, sans-serif;">This code expires in 10 minutes</p>
+              <p style="color: #606268; font-size: 14px; margin: 5px 0 0 0; font-family: 'Poppins', Arial, sans-serif;">Do not share this code with anyone</p>
             </div>
             <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2024 FuelFriend. All rights reserved.</p>
+              <p style="color: #9ca3af; font-size: 12px; margin: 0; font-family: 'Poppins', Arial, sans-serif;">© 2024 FuelFriend. All rights reserved.</p>
             </div>
           </div>
         </body>

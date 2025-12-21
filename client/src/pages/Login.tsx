@@ -136,203 +136,122 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative flex flex-col items-center justify-center">
-      <MobileContainer className="relative z-10 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full space-y-8"
-        >
-          {/* Back Button */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
+    <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
+      {/* Main Content */}
+      <div className="px-4 pt-6 pb-8">
+        {/* Back Button */}
+        <div className="flex items-center gap-2 mb-8">
+          <button 
+            onClick={() => setLocation('/')}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-          </motion.div>
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        </div>
 
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="text-center"
-          >
-            <img
-              src="/logo.png"
-              alt="Fuel Friend"
-              className="h-16 mx-auto mb-6 mt-4"
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img src="/logo.png" alt="FuelFriendly" className="w-[105px] h-[60px]" />
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-[#3F4249] font-['Poppins']">Sign In</h1>
+        </div>
+
+        {/* Form */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="emailOrPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="Email or phone number"
+                      {...field}
+                      className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                      data-testid="input-email-phone"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </motion.div>
 
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="text-center space-y-2"
-          >
-            <h1 className="text-3xl font-normal">Sign In</h1>
-            <p className="text-muted-foreground">Customer</p>
-          </motion.div>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 pr-12 font-['Poppins']"
+                        {...field}
+                        data-testid="input-password"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#606268]"
+                        onClick={() => setShowPassword((v) => !v)}
+                      >
+                        {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* Login Options */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-            className="space-y-4"
-          >
-            {/* Password Login */}
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="emailOrPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email or phone number</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter email or phone"
-                          {...field}
-                          className="h-12"
-                          data-testid="input-email-phone"
-                        />
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">If using a phone number, include the country code (e.g. +62).</p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter password"
-                            className="pr-10 h-12"
-                            {...field}
-                            data-testid="input-password"
-                          />
-                          <button
-                            type="button"
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                            onClick={() => setShowPassword((v) => !v)}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                          >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">Use at least 6 characters, mixing letters and numbers.</p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button
-                    type="submit"
-                    className="w-full h-12"
-                    disabled={isLoading}
-                    data-testid="button-login"
-                  >
-                    {isLoading ? "Logging in..." : "Log In"}
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
-
-            {/* OTP Login Options */}
-            <div className="space-y-3">
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or login with OTP
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12"
-                onClick={() => setLoginMethod('email-otp')}
-              >
-                📧 Login with Email OTP
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12"
-                onClick={() => setLoginMethod('whatsapp-otp')}
-              >
-                📱 Login with WhatsApp OTP
-              </Button>
+            <div className="text-center">
+              <Link href="/forgot-password" className="text-[#FF6B6B] text-sm font-['Poppins']">Forgotten Password</Link>
             </div>
 
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or
-                </span>
-              </div>
-            </div>
-
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mt-6"
+              disabled={isLoading}
+              data-testid="button-login"
             >
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 text-base font-normal flex items-center justify-center gap-2 text-black"
-                onClick={handleGoogleSignIn}
-                disabled={isGoogleLoading}
-                aria-busy={isGoogleLoading}
-                data-testid="button-google"
-              >
-                <FcGoogle className="mr-2 h-5 w-5" />
-                {isGoogleLoading ? "Connecting..." : "Continue with Google"}
-              </Button>
-            </motion.div>
+              {isLoading ? "Logging in..." : "Log In"}
+            </Button>
 
-            <div className="text-center pt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                asChild
-                data-testid="link-signup"
-              >
-                <Link href="/register">Don't have an account? Sign up</Link>
-              </Button>
+            <div className="text-center py-4">
+              <span className="text-black/50 font-['Poppins']">Or</span>
             </div>
-          </motion.div>
-        </motion.div>
-      </MobileContainer>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 rounded-[30px] border border-black/50 bg-white hover:bg-gray-50 text-[#3F4249] font-['Poppins']"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+              data-testid="button-google"
+            >
+              <FcGoogle className="mr-3 h-5 w-5" />
+              {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+            </Button>
+          </form>
+        </Form>
+
+        {/* Sign Up Link */}
+        <div className="text-center mt-5">
+          <div className="flex items-center justify-center gap-4">
+            <span className="text-black/50 font-['Poppins']">Don't have account?</span>
+            <Link href="/register" className="text-[#3AC36C] font-semibold font-['Poppins'] underline">
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Home Indicator */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#101010] rounded-full mb-2"></div>
     </div>
   );
 }

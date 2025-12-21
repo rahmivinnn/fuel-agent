@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
+import { Mail, ArrowLeft } from "lucide-react";
 
 export default function VerifyCode() {
   const [, setLocation] = useLocation();
@@ -92,36 +93,58 @@ export default function VerifyCode() {
     }
   };
 
+  const email = localStorage.getItem("verificationEmail") || localStorage.getItem("customerEmail") || "lorem@gmail.com";
+
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col">
-      <div className="w-full max-w-sm mx-auto space-y-6 pt-16">
-        <div className="text-center">
-          <h1 className="text-xl font-bold text-foreground mb-2">Verify code</h1>
-          <p className="text-xs text-muted-foreground">
-            Enter six-digits verification code sent to your email
+      {/* Back button */}
+      <div className="w-full max-w-sm mx-auto pt-4">
+        <button
+          onClick={() => setLocation("/login")}
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
+        >
+          <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+        </button>
+      </div>
+      
+      <div className="w-full max-w-sm mx-auto space-y-8 pt-8 flex-1 flex flex-col justify-center">
+        {/* Email icon */}
+        <div className="flex justify-center mb-6">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+            <img src="/inbox1.png" alt="Inbox" className="w-10 h-10" />
+          </div>
+        </div>
+        
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold text-foreground">Verify code</h1>
+          <p className="text-sm text-muted-foreground">
+            Enter four-digits verification code sent
+          </p>
+          <p className="text-sm text-muted-foreground">
+            to {email}
           </p>
         </div>
 
-        <div className="flex flex-col items-center space-y-4">
+        <div className="flex flex-col items-center space-y-6">
           <InputOTP
             maxLength={6}
             value={code}
             onChange={setCode}
             data-testid="input-otp"
           >
-            <InputOTPGroup className="gap-2">
-              <InputOTPSlot index={0} className="w-12 h-12 text-lg rounded-lg" />
-              <InputOTPSlot index={1} className="w-12 h-12 text-lg rounded-lg" />
-              <InputOTPSlot index={2} className="w-12 h-12 text-lg rounded-lg" />
-              <InputOTPSlot index={3} className="w-12 h-12 text-lg rounded-lg" />
-              <InputOTPSlot index={4} className="w-12 h-12 text-lg rounded-lg" />
-              <InputOTPSlot index={5} className="w-12 h-12 text-lg rounded-lg" />
+            <InputOTPGroup className="gap-3">
+              <InputOTPSlot index={0} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={1} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={2} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={3} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={4} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={5} className="w-14 h-14 text-xl rounded-xl border-2" />
             </InputOTPGroup>
           </InputOTP>
 
           <Button
             onClick={handleVerify}
-            className="w-full h-10 text-sm font-semibold rounded-lg"
+            className="w-full h-12 text-base font-semibold rounded-xl bg-green-600 hover:bg-green-700 text-white"
             disabled={isLoading || code.length !== 6}
             data-testid="button-verify"
           >
@@ -132,18 +155,20 @@ export default function VerifyCode() {
             <p className="text-sm text-muted-foreground">
               Haven't received the verification code?
             </p>
-            <Button
-              variant="ghost"
-              onClick={handleResend}
-              disabled={!canResend}
-              className="text-primary p-0 h-auto font-semibold"
-              data-testid="button-resend"
-            >
-              Resend
-            </Button>
-            {!canResend && (
-              <p className="text-xs text-muted-foreground">{countdown}s</p>
-            )}
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={handleResend}
+                disabled={!canResend}
+                className="text-green-600 p-0 h-auto font-semibold hover:text-green-700"
+                data-testid="button-resend"
+              >
+                Resend
+              </Button>
+              {!canResend && (
+                <span className="text-sm text-muted-foreground">{countdown}s</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
