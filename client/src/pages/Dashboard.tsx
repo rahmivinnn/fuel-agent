@@ -9,6 +9,7 @@ import { MobileContainer } from "@/components/MobileContainer";
 import { RefreshCw, Bell } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/lib/api";
+import { JobAcceptedModal } from "@/components/JobAcceptedModal";
 
 // Safe hook imports with fallbacks
 let useOrders: any, useAcceptOrder: any, useCancelOrder: any, useDriver: any, useGeolocation: any;
@@ -43,6 +44,12 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [city, setCity] = useState<string>("Global");
   const [isReady, setIsReady] = useState(false);
+  const [userName, setUserName] = useState(localStorage.getItem("customerName") || "Shah Hussain");
+
+  useEffect(() => {
+    // Update userName when component mounts
+    setUserName(localStorage.getItem("customerName") || "Shah Hussain");
+  }, []);
 
   useEffect(() => {
     // Force refresh on mount
@@ -65,6 +72,8 @@ export default function Dashboard() {
   const [manualPendingOrders, setManualPendingOrders] = useState([]);
   const [manualActiveOrders, setManualActiveOrders] = useState([]);
   const [manualDriver, setManualDriver] = useState({ fullName: "Driver" });
+  const [showJobModal, setShowJobModal] = useState(false);
+  const [acceptedOrder, setAcceptedOrder] = useState<any>(null);
 
   const { data: driver, isLoading: isLoadingDriver, refetch: refetchDriver } = useDriver(driverId);
   const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending");
@@ -131,9 +140,13 @@ export default function Dashboard() {
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
+      const order = manualPendingOrders.find((o: any) => o.id === orderId);
       await acceptOrderMutation.mutateAsync({ orderId, driverId });
+      
+      setAcceptedOrder(order);
+      setShowJobModal(true);
+      
       toast({ title: "Order Accepted!", description: "You have accepted the order" });
-      setLocation(`/my-orders?accepted=${orderId}`);
     } catch (error) {
       toast({ title: "Error", description: "Failed to accept order", variant: "destructive" });
     }
@@ -167,7 +180,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm text-gray-600">Hello!</p>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {localStorage.getItem("customerName") || "Shah Hussain"}
+                  {userName}
                 </h1>
               </div>
             </div>
@@ -271,6 +284,20 @@ export default function Dashboard() {
           </div>
         </div>
       </MobileContainer>
+
+      <JobAcceptedModal
+        isOpen={showJobModal}
+        onClose={() => setShowJobModal(false)}
+        onTrackOrder={() => {
+          setShowJobModal(false);
+          setLocation(`/track-customer/${acceptedOrder?.id}`);
+        }}
+        order={{
+          stationName: acceptedOrder?.stationId || "Shell Station",
+          deliveryAddress: acceptedOrder?.deliveryAddress || "Shell Station- Abc Town",
+          fuelType: acceptedOrder?.fuelType || "Fuel delivery"
+        }}
+      />
 
       <BottomNav />
     </div>

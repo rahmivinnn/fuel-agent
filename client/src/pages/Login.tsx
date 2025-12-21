@@ -77,8 +77,9 @@ export default function Login() {
   };
 
   const handleOTPLoginSuccess = (user: any) => {
+    localStorage.setItem("customerId", "c1");
     localStorage.setItem("customerEmail", user.email || user.phoneNumber);
-    localStorage.setItem("customerName", "Driver");
+    localStorage.setItem("customerName", user.name || "Driver");
     toast({
       title: "Success!",
       description: "Logged in successfully with OTP",

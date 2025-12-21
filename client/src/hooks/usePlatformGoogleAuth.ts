@@ -33,6 +33,7 @@ export const usePlatformGoogleAuth = () => {
       }
 
       // Store user data
+      console.log('Storing Google user data:', data.customer);
       localStorage.setItem('customerId', data.customer.id);
       localStorage.setItem('customerEmail', data.customer.email);
       localStorage.setItem('customerName', data.customer.fullName);

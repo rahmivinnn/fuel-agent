@@ -31,8 +31,8 @@ export default function MyOrders() {
         setIsManualLoading(true);
         const response = await fetch(`${API_BASE_URL}/api/orders?driverId=${driverId}`);
         const data = await response.json();
+        console.log('My Orders API response:', data);
         setManualOrders(Array.isArray(data) ? data : []);
-        console.log('My Orders manual fetch:', data);
       } catch (error) {
         console.error('My Orders fetch error:', error);
         setManualOrders([]);

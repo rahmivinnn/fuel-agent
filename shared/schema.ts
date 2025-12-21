@@ -167,7 +167,7 @@ export const chatMessages = pgTable("chat_messages", {
 // Wallet Schema (Mock for frontend compatibility as actual wallet might be complex)
 export const wallets = pgTable("wallets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  driverId: varchar("driver_id").notNull(), // Assuming linked to FuelFriend (Driver)
+  driverId: varchar("driver_id").references(() => fuelFriends.id).notNull(),
   balance: decimal("balance", { precision: 10, scale: 2 }).default("0.00"),
   currency: varchar("currency").default("USD"),
   bankName: text("bank_name"),

@@ -21,7 +21,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ show }) => {
           <motion.div
             className="absolute top-0 left-1/2 transform -translate-x-1/2"
             style={{
-              top: '20px',
+              top: '40px',
             }}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 0.3, y: 0 }}
@@ -38,7 +38,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ show }) => {
           <motion.div
             className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
             style={{
-              bottom: '40px',
+              bottom: '60px',
             }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 0.3, y: 0 }}
@@ -61,7 +61,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ show }) => {
               <img 
                 src="/logo.png" 
                 alt="FuelFriendly" 
-                className="w-[15vw] h-[15vw] min-w-[80px] min-h-[80px] max-w-[150px] max-h-[150px] sm:w-32 sm:h-32"
+                className="w-[20vw] h-[20vw] min-w-[120px] min-h-[120px] max-w-[200px] max-h-[200px] sm:w-40 sm:h-40"
               />
             </motion.div>
           </div>
