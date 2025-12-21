@@ -56,6 +56,18 @@ export default function Dashboard() {
   const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", driverId);
   const { position, error, loading } = useGeolocation();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Dashboard Debug:', {
+      driverId,
+      driver,
+      pendingOrders,
+      activeOrders,
+      isLoadingPending,
+      isLoadingActive
+    });
+  }, [driverId, driver, pendingOrders, activeOrders, isLoadingPending, isLoadingActive]);
+
   const acceptOrderMutation = useAcceptOrder();
   const cancelOrderMutation = useCancelOrder();
 

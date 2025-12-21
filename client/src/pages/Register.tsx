@@ -18,6 +18,8 @@ import EmailOTPLogin from "@/components/EmailOTPLogin";
 import WhatsAppOTPLogin from "@/components/WhatsAppOTPLogin";
 import { Check } from "lucide-react";
 
+import { apiClient } from "@/lib/api";
+
 export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -102,9 +104,8 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/register/complete", {
+      const response = await apiClient.fetch("/api/auth/register/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ step1: step1Data, step2: step2Data }),
       });
 

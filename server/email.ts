@@ -38,7 +38,7 @@ export async function sendEmailOTP(email: string, otp: string) {
         <body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #f8f9fa;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <div style="background: linear-gradient(135deg, #3AC36C 0%, #2EAD5A 100%); padding: 30px; text-align: center;">
-              <img src="http://localhost:5000/logo.png" alt="FuelFriend" style="height: 40px; margin-bottom: 10px;" />
+              <img src="https://api.kelolahrd.life/logo.png" alt="FuelFriend" style="height: 40px; margin-bottom: 10px;" />
               <h1 style="color: white; margin: 0; font-size: 24px; font-weight: bold; font-family: 'Poppins', Arial, sans-serif;">FuelFriend Driver</h1>
             </div>
             <div style="padding: 40px 30px; text-align: center;">

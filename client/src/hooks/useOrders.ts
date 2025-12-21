@@ -14,7 +14,9 @@ export function useOrders(status?: string, driverIdOrCustomerId?: string, mode: 
     queryFn: async () => {
       const response = await fetch(`/api/orders${query ? `?${query}` : ""}`);
       if (!response.ok) throw new Error("Failed to fetch orders");
-      return await response.json();
+      const data = await response.json();
+      // Backend returns array directly, not wrapped in success object
+      return Array.isArray(data) ? data : data.orders || [];
     },
   });
 }
@@ -48,6 +50,9 @@ export function useCancelOrder() {
   return useMutation({
     mutationFn: async (orderId: string) => {
       return apiRequest("POST", `/api/orders/${orderId}/cancel`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
     },
   });
 }

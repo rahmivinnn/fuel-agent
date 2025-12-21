@@ -549,6 +549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reviews
       });
     } catch (error) {
+      console.error('Fuel friend fetch error:', error);
       res.status(500).json({ error: "Failed to fetch fuel friend details" });
     }
   });
@@ -864,18 +865,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const driverId = req.query.driverId as string | undefined;
       const customerId = req.query.customerId as string | undefined;
       let orders = await storage.getAllOrders();
+      
       if (status) {
         if (status === "active") {
-          orders = orders.filter(o => o.status === "active" || o.status === "in_progress");
+          orders = orders.filter(o => o.status === "in_progress" || o.status === "active");
         } else {
           orders = orders.filter(o => o.status === status);
         }
       }
-      if (driverId) orders = orders.filter(o => o.fuelFriendId === driverId);
-      if (customerId) orders = orders.filter(o => o.customerId === customerId);
+      
+      if (driverId) {
+        orders = orders.filter(o => o.fuelFriendId === driverId);
+      }
+      
+      if (customerId) {
+        orders = orders.filter(o => o.customerId === customerId);
+      }
+      
+      // Sort by creation date, newest first
+      orders.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+      
       // Return array directly to match client expectations
       res.json(orders);
     } catch (error) {
+      console.error('Orders fetch error:', error);
       res.status(500).json({ error: "Failed to fetch orders" });
     }
   });

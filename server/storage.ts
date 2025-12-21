@@ -468,6 +468,46 @@ export class MemStorage implements IStorage {
       },
     ];
     notifications.forEach(notif => this.notifications.set(notif.id, notif));
+
+    // Create wallet for driver ff1
+    const wallet: Wallet = {
+      id: "wallet1",
+      driverId: "ff1",
+      balance: "245.50",
+      currency: "USD",
+      bankName: "Chase Bank",
+      cardNumber: "4532",
+      expiryDate: "12/26",
+      cvv: "123",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.wallets.set(wallet.id, wallet);
+
+    // Create sample transactions
+    const transactions: Transaction[] = [
+      {
+        id: "txn1",
+        walletId: "wallet1",
+        type: "deposit",
+        amount: "25.00",
+        status: "completed",
+        date: new Date().toISOString().split('T')[0],
+        time: "14:30",
+        createdAt: new Date(),
+      },
+      {
+        id: "txn2",
+        walletId: "wallet1",
+        type: "payment",
+        amount: "15.00",
+        status: "completed",
+        date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // yesterday
+        time: "09:15",
+        createdAt: new Date(Date.now() - 86400000),
+      },
+    ];
+    transactions.forEach(txn => this.transactions.set(txn.id, txn));
   }
 
   // Customer methods
