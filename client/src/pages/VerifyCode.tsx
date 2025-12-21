@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, ArrowLeft } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function VerifyCode() {
   const [, setLocation] = useLocation();
@@ -36,7 +37,7 @@ export default function VerifyCode() {
     try {
       const email = localStorage.getItem("verificationEmail") || localStorage.getItem("customerEmail");
       
-      const response = await fetch("/api/auth/verify-code", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, email }),
@@ -66,7 +67,7 @@ export default function VerifyCode() {
     try {
       const email = localStorage.getItem("verificationEmail") || localStorage.getItem("customerEmail");
       
-      const response = await fetch("/api/auth/email-verification", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/email-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

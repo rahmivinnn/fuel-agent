@@ -13,6 +13,7 @@ import { MobileContainer } from "@/components/MobileContainer";
 import { motion } from "framer-motion";
 import EmailOTPLogin from "@/components/EmailOTPLogin";
 import WhatsAppOTPLogin from "@/components/WhatsAppOTPLogin";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -33,7 +34,7 @@ export default function Login() {
   const onSubmit = async (data: LoginData) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

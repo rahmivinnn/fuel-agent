@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function EmailVerification() {
   const [, setLocation] = useLocation();
@@ -27,7 +28,7 @@ export default function EmailVerification() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/email-verification", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/email-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailToUse }),
