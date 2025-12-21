@@ -77,10 +77,17 @@ export default function Dashboard() {
   }, [driverId, driver, pendingOrders, activeOrders, isLoadingPending, isLoadingActive]);
 
   const handleRefresh = async () => {
-    console.log('Refreshing data...');
-    await queryClient.invalidateQueries();
-    await Promise.all([refetchDriver(), refetchPending(), refetchActive()]);
-    toast({ title: "Data refreshed!", duration: 2000 });
+    try {
+      console.log('Refreshing data...');
+      await queryClient.invalidateQueries();
+      if (refetchDriver) await refetchDriver();
+      if (refetchPending) await refetchPending();
+      if (refetchActive) await refetchActive();
+      toast({ title: "Data refreshed!", duration: 2000 });
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast({ title: "Refresh failed", variant: "destructive", duration: 2000 });
+    }
   };
 
   const acceptOrderMutation = useAcceptOrder();

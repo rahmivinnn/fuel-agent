@@ -17,7 +17,7 @@ export default function Wallet() {
   const [selectedPayment, setSelectedPayment] = useState<string>("paypal");
   const currencySymbol = getCurrencySymbol();
   
-  const driverId = localStorage.getItem("driverId") || "driver1";
+  const driverId = localStorage.getItem("driverId") || "ff1";
   
   const { data: wallet, isLoading: isLoadingWallet } = useWallet(driverId);
   const { data: transactions = [], isLoading: isLoadingTransactions } = useTransactions(driverId);

@@ -1,12 +1,13 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Wallet, Transaction } from "@shared/schema";
+import { API_BASE_URL } from "@/lib/api";
 
 export function useWallet(driverId: string) {
   return useQuery<Wallet>({
     queryKey: ["/api/wallet", driverId],
     queryFn: async () => {
-      const response = await fetch(`/api/wallet/driver/${driverId}`);
+      const response = await fetch(`${API_BASE_URL}/api/wallet/driver/${driverId}`);
       if (!response.ok) throw new Error("Failed to fetch wallet");
       return response.json();
     },
@@ -18,7 +19,7 @@ export function useTransactions(driverId: string) {
   return useQuery<Transaction[]>({
     queryKey: ["/api/transactions", driverId],
     queryFn: async () => {
-      const response = await fetch(`/api/transactions/driver/${driverId}`);
+      const response = await fetch(`${API_BASE_URL}/api/transactions/driver/${driverId}`);
       if (!response.ok) throw new Error("Failed to fetch transactions");
       return response.json();
     },
