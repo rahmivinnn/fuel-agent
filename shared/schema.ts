@@ -76,6 +76,7 @@ export const fuelFriends = pgTable("fuel_friends", {
   profilePhoto: text("profile_photo"),
   about: text("about"),
   isAvailable: boolean("is_available").default(true),
+  fcmToken: text("fcm_token"), // For push notifications
   createdAt: timestamp("created_at").defaultNow(),
 });
 

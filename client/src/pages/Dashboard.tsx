@@ -10,6 +10,7 @@ import { RefreshCw, Bell } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/lib/api";
 import { JobAcceptedModal } from "@/components/JobAcceptedModal";
+import { registerFCMToken, setupForegroundNotifications } from "@/lib/firebase-messaging";
 
 // Safe hook imports with fallbacks
 let useOrders: any, useAcceptOrder: any, useCancelOrder: any, useDriver: any, useGeolocation: any;
@@ -77,7 +78,30 @@ export default function Dashboard() {
       description: "Ready for deliveries?",
       duration: 3000,
     });
-  }, [toast, queryClient]);
+
+    // Setup FCM for push notifications
+    const setupNotifications = async () => {
+      const success = await registerFCMToken(driverId);
+      if (success) {
+        console.log('✅ FCM token registered successfully');
+        
+        // Setup foreground notification handler
+        setupForegroundNotifications((payload) => {
+          if (payload.data?.type === 'new_order') {
+            toast({
+              title: payload.notification?.title || 'New Order',
+              description: payload.notification?.body,
+              duration: 5000,
+            });
+            // Refresh orders when new order notification received
+            queryClient.invalidateQueries();
+          }
+        });
+      }
+    };
+    
+    setupNotifications();
+  }, [toast, queryClient, driverId]);
 
   const { data: driver, isLoading: isLoadingDriver, refetch: refetchDriver } = useDriver(driverId);
   const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending");

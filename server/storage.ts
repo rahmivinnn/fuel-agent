@@ -43,6 +43,7 @@ export interface IStorage {
   getFuelFriend(id: string): Promise<FuelFriend | undefined>;
   getAllFuelFriends(): Promise<FuelFriend[]>;
   getAvailableFuelFriends(): Promise<FuelFriend[]>;
+  updateFuelFriend(id: string, updates: Partial<FuelFriend>): Promise<FuelFriend | undefined>;
 
   // Order methods
   getOrder(id: string): Promise<Order | undefined>;
@@ -629,6 +630,14 @@ export class MemStorage implements IStorage {
 
   async getAvailableFuelFriends(): Promise<FuelFriend[]> {
     return Array.from(this.fuelFriends.values()).filter(ff => ff.isAvailable);
+  }
+
+  async updateFuelFriend(id: string, updates: Partial<FuelFriend>): Promise<FuelFriend | undefined> {
+    const fuelFriend = this.fuelFriends.get(id);
+    if (!fuelFriend) return undefined;
+    const updatedFuelFriend = { ...fuelFriend, ...updates };
+    this.fuelFriends.set(id, updatedFuelFriend);
+    return updatedFuelFriend;
   }
 
   // Order methods

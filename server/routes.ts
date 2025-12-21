@@ -844,6 +844,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== Notification Routes ==========
 
+  // Receive new order notification from fuel-user
+  app.post("/api/notifications/new-order", async (req, res) => {
+    try {
+      const { orderId, trackingNumber, message, customerAddress, fuelType, totalAmount } = req.body;
+      
+      console.log('🔔 New Order Notification Received:', {
+        orderId,
+        trackingNumber,
+        message,
+        customerAddress,
+        fuelType,
+        totalAmount
+      });
+      
+      // Create notification for all drivers
+      const notification = await storage.createNotification({
+        customerId: 'system',
+        title: 'New Order Received',
+        message: `Order ${trackingNumber}: ${fuelType} delivery to ${customerAddress}. Total: $${totalAmount}`,
+        type: 'order_update'
+      });
+      
+      // Send push notification to all drivers
+      const { sendOrderNotificationToDrivers } = await import('./push-notifications');
+      await sendOrderNotificationToDrivers({ orderId, trackingNumber, fuelType, totalAmount });
+      
+      res.json({ success: true, notification });
+    } catch (error) {
+      console.error('Notification creation error:', error);
+      res.status(500).json({ error: "Failed to create notification" });
+    }
+  });
+
   // Get customer notifications
   app.get("/api/notifications/customer/:customerId", async (req, res) => {
     try {
@@ -871,6 +904,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete notification" });
+    }
+  });
+
+  // Register FCM token for driver
+  app.post("/api/drivers/:id/fcm-token", async (req, res) => {
+    try {
+      const { fcmToken } = req.body;
+      if (!fcmToken) {
+        return res.status(400).json({ error: "FCM token required" });
+      }
+      
+      // Update driver with FCM token
+      await storage.updateFuelFriend(req.params.id, { fcmToken });
+      res.json({ success: true, message: "FCM token registered" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to register FCM token" });
     }
   });
 
