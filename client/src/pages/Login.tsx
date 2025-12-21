@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginData } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { usePlatformGoogleAuth } from "@/hooks/usePlatformGoogleAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { MobileContainer } from "@/components/MobileContainer";
@@ -20,8 +21,8 @@ export default function Login() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'password' | 'email-otp' | 'whatsapp-otp'>('password');
+  const { signInWithGoogle, loading: googleLoading } = usePlatformGoogleAuth();
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -67,14 +68,11 @@ export default function Login() {
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      setIsGoogleLoading(true);
-      toast({ title: "Google Sign-In", description: "Starting sign-in..." });
-      await new Promise((r) => setTimeout(r, 800));
-      toast({ title: "Success", description: "Signed in with Google." });
+    const result = await signInWithGoogle();
+    if (result.success) {
+      // Store additional driver info if needed
+      localStorage.setItem("driverId", "ff1"); // Default driver ID
       setLocation("/dashboard");
-    } finally {
-      setIsGoogleLoading(false);
     }
   };
 
@@ -231,11 +229,11 @@ export default function Login() {
               variant="outline"
               className="w-full h-12 rounded-[30px] border border-black/50 bg-white hover:bg-gray-50 text-[#3F4249] font-['Poppins']"
               onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading}
+              disabled={googleLoading}
               data-testid="button-google"
             >
               <FcGoogle className="mr-3 h-5 w-5" />
-              {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+              {googleLoading ? "Connecting..." : "Continue with Google"}
             </Button>
           </form>
         </Form>

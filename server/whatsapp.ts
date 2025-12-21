@@ -1,6 +1,5 @@
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
-import qrcode from 'qrcode-terminal';
 
 class WhatsAppService {
   private sock: ReturnType<typeof makeWASocket> | null = null;
@@ -30,13 +29,18 @@ class WhatsAppService {
         markOnlineOnConnect: false,
       });
 
-      this.sock.ev.on('connection.update', (update) => {
+      this.sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
           console.log('\n🔥 WHATSAPP QR CODE - SCAN WITH YOUR PHONE:');
           console.log('=' .repeat(50));
-          qrcode.generate(qr, { small: true });
+          try {
+            const qrcode = await import('qrcode-terminal');
+            qrcode.default.generate(qr, { small: true });
+          } catch (e) {
+            console.log('QR Code:', qr);
+          }
           console.log('=' .repeat(50));
           console.log('⬆️ Open WhatsApp > Settings > Linked Devices > Link a Device');
           console.log('📱 Scan the QR code above to connect WhatsApp\n');

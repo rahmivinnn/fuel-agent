@@ -8,23 +8,32 @@ import { User, Bell, Lock, HelpCircle, LogOut, ChevronRight } from "lucide-react
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomer } from "@/hooks/useCustomer";
+import { usePlatformGoogleAuth } from "@/hooks/usePlatformGoogleAuth";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { signOutGoogle } = usePlatformGoogleAuth();
   
   const customerId = localStorage.getItem("customerId") || "c1";
   const { data, isLoading } = useCustomer(customerId);
   const customer = data?.customer;
+  const isGoogleUser = localStorage.getItem("googleUser");
 
-  const handleLogout = () => {
-    localStorage.removeItem("customerId");
-    localStorage.removeItem("customerEmail");
-    localStorage.removeItem("verificationEmail");
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out",
-    });
+  const handleLogout = async () => {
+    // If user signed in with Google, sign out from Google too
+    if (isGoogleUser) {
+      await signOutGoogle();
+    } else {
+      localStorage.removeItem("customerId");
+      localStorage.removeItem("customerEmail");
+      localStorage.removeItem("customerName");
+      localStorage.removeItem("verificationEmail");
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out",
+      });
+    }
     setLocation("/");
   };
 

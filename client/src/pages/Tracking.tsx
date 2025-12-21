@@ -9,25 +9,48 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function MyOrders() {
+  const [manualOrders, setManualOrders] = useState([]);
+  const [isManualLoading, setIsManualLoading] = useState(true);
+
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const driverId = localStorage.getItem("driverId") || "ff1"; // Changed from customerId to driverId
-  const { data: orders = [], isLoading, refetch } = useOrders(undefined, driverId, "driver"); // Changed to driver mode
+  const driverId = localStorage.getItem("driverId") || "ff1";
+  const { data: orders = [], isLoading, refetch } = useOrders(undefined, driverId, "driver");
   const { position, error } = useGeolocation();
   const [cancelledOrders, setCancelledOrders] = useState<Set<string>>(new Set());
   const [acceptedOrderId, setAcceptedOrderId] = useState<string | null>(null);
+
+  // Manual data fetching
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsManualLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/orders?driverId=${driverId}`);
+        const data = await response.json();
+        setManualOrders(Array.isArray(data) ? data : []);
+        console.log('My Orders manual fetch:', data);
+      } catch (error) {
+        console.error('My Orders fetch error:', error);
+        setManualOrders([]);
+      } finally {
+        setIsManualLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [driverId]);
 
   // Debug logging
   useEffect(() => {
     console.log('My Orders Debug:', {
       driverId,
-      orders,
-      isLoading
+      orders: manualOrders,
+      isLoading: isManualLoading
     });
-  }, [driverId, orders, isLoading]);
+  }, [driverId, manualOrders, isManualLoading]);
 
   const handleRefresh = async () => {
     console.log('Refreshing My Orders...');
@@ -107,7 +130,7 @@ export default function MyOrders() {
   };
 
   // Filter out cancelled orders - show all driver orders
-  const visibleOrders = orders.filter((order: any) => {
+  const visibleOrders = manualOrders.filter((order: any) => {
     // Filter out cancelled orders
     if (cancelledOrders.has(order.id)) return false;
     return true;
@@ -201,7 +224,7 @@ export default function MyOrders() {
           </div>
         )}
 
-        {isLoading ? (
+        {isManualLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-10 w-40" />
             <Skeleton className="h-32 w-full rounded-xl" />

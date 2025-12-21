@@ -115,6 +115,11 @@ export default function Register() {
         throw new Error(result.error || "Registration failed");
       }
 
+      // Store user data for dashboard
+      localStorage.setItem("customerId", result.customer.id);
+      localStorage.setItem("customerEmail", result.customer.email);
+      localStorage.setItem("customerName", result.customer.fullName);
+
       toast({
         title: "Success!",
         description: "Account created successfully",

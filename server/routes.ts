@@ -71,6 +71,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== Authentication Routes ==========
 
+  // Google Authentication
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      const { uid, email, displayName, photoURL } = req.body;
+
+      if (!uid || !email) {
+        return res.status(400).json({ error: "Invalid Google user data" });
+      }
+
+      // Check if user exists
+      let customer = await storage.getCustomerByEmail(email);
+      
+      if (!customer) {
+        // Create new customer from Google data
+        customer = await storage.createCustomer({
+          fullName: displayName || email.split('@')[0],
+          email: email,
+          phoneNumber: "", // Will be filled later
+          password: uid, // Use Google UID as password
+          isEmailVerified: true // Google emails are verified
+        });
+      }
+
+      res.json({
+        success: true,
+        customer: {
+          id: customer.id,
+          fullName: customer.fullName,
+          email: customer.email,
+          isEmailVerified: customer.isEmailVerified
+        }
+      });
+    } catch (error) {
+      console.error('Google auth error:', error);
+      res.status(500).json({ error: "Google authentication failed" });
+    }
+  });
+
   // Login
   app.post("/api/auth/login", async (req, res) => {
     try {

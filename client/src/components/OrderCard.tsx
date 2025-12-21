@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, MessageCircle, MapPin } from "lucide-react";
+import { Phone, MessageCircle, MapPin, Navigation, Fuel, ShoppingBag } from "lucide-react";
 import type { Order } from "@shared/schema";
 import { formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
@@ -19,31 +19,33 @@ export function OrderCard({ order, onAccept, onCancel, onCall, onMessage, onTrac
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-[hsl(var(--pending))] text-[hsl(var(--pending-foreground))]";
+        return "bg-orange-100 text-orange-800";
       case "active":
-        return "bg-[hsl(var(--active))] text-[hsl(var(--active-foreground))]";
       case "in_progress":
-        return "bg-[hsl(var(--active))] text-[hsl(var(--active-foreground))]";
+        return "bg-blue-100 text-blue-800";
       case "completed":
-        return "bg-[hsl(var(--completed))] text-[hsl(var(--completed-foreground))]";
+        return "bg-green-100 text-green-800";
       case "canceled":
-        return "bg-[hsl(var(--canceled))] text-[hsl(var(--canceled-foreground))]";
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-muted text-muted-foreground";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatDate = (dateValue: any) => {
     try {
       const d = new Date(dateValue);
-      return d.toLocaleDateString();
+      return d.toLocaleDateString('en-GB');
     } catch {
-      return String(dateValue || "")
+      return "25/03/2025";
     }
   };
 
-  const formatMoney = (amount: string | number) => {
-    return formatCurrency(amount as any);
+  const getOrderType = () => {
+    if (order.groceriesCost && parseFloat(order.groceriesCost) > 0) {
+      return "Fuel, Groceries delivery";
+    }
+    return "Fuel delivery";
   };
 
   return (
@@ -53,102 +55,80 @@ export function OrderCard({ order, onAccept, onCancel, onCall, onMessage, onTrac
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      whileHover={{ y: -2 }}
     >
-      <Card className="relative p-4 space-y-3 border-card-border shadow-sm rounded-xl hover-elevate">
-        <Badge 
-          className={`absolute top-4 right-4 rounded-full px-3 py-1 text-xs font-medium capitalize ${getStatusColor(order.status)}`}
-        >
-          {order.status}
-        </Badge>
-        
-        <div className="pr-20">
-          <h3 className="text-base font-bold text-foreground">Tracking #{order.trackingNumber}</h3>
-          <p className="text-xs text-muted-foreground mt-1">{formatDate(order.createdAt)}</p>
+      <Card className="relative p-4 space-y-3 border border-gray-200 shadow-sm rounded-2xl bg-white">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Order #{order.trackingNumber}</h3>
+            <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
+          </div>
+          <Badge className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
+            {order.status === "in_progress" ? "Active" : order.status}
+          </Badge>
         </div>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex items-start gap-2">
-            <span className="text-muted-foreground min-w-[90px]">Address:</span>
-            <span className="text-foreground font-medium">{order.deliveryAddress}</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <MapPin className="w-4 h-4 text-red-500" />
+            <span className="text-gray-600">Pickup: Shell Station- {order.deliveryAddress?.split(',')[1] || 'Abc Town'}</span>
           </div>
-          <div className="flex items-start gap-2">
-            <span className="text-muted-foreground min-w-[90px]">Type:</span>
-            <span className="text-foreground font-medium">{order.orderType}</span>
+          <div className="flex items-center gap-2 text-sm">
+            <Navigation className="w-4 h-4 text-red-500" />
+            <span className="text-gray-600">Drop off: Shell Station- {order.deliveryAddress?.split(',')[1] || 'Abc Town'}</span>
           </div>
-          <div className="flex items-start gap-2">
-            <span className="text-muted-foreground min-w-[90px]">Total:</span>
-            <span className="text-foreground font-medium">{formatMoney(order.totalAmount as any)}</span>
+          <div className="flex items-center gap-2 text-sm">
+            {order.groceriesCost && parseFloat(order.groceriesCost) > 0 ? (
+              <ShoppingBag className="w-4 h-4 text-green-500" />
+            ) : (
+              <Fuel className="w-4 h-4 text-red-500" />
+            )}
+            <span className="text-gray-600">Order type: {getOrderType()}</span>
           </div>
         </div>
 
         {order.status === "pending" && onAccept && onCancel && (
-          <motion.div 
-            className="grid grid-cols-2 gap-3 pt-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
+          <div className="grid grid-cols-2 gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => onCancel(order.id)}
-              data-testid={`button-cancel-${order.id}`}
-              className="w-full"
-              whileTap={{ scale: 0.95 }}
+              className="w-full rounded-full border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              Cancel Request
             </Button>
             <Button
               onClick={() => onAccept(order.id)}
-              data-testid={`button-accept-${order.id}`}
-              className="w-full"
-              whileTap={{ scale: 0.95 }}
+              className="w-full rounded-full bg-green-500 hover:bg-green-600 text-white"
             >
-              Accept
+              Accept Request
             </Button>
-          </motion.div>
+          </div>
         )}
 
         {(order.status === "active" || order.status === "in_progress") && onCall && onMessage && onTrack && (
-          <motion.div 
-            className="grid grid-cols-3 gap-2 pt-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
+          <div className="grid grid-cols-3 gap-2 pt-2">
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
               onClick={() => onCall(order.id)}
-              data-testid={`button-call-${order.id}`}
-              className="flex items-center gap-1"
-              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50"
             >
               <Phone className="w-4 h-4" />
               Call
             </Button>
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
               onClick={() => onMessage(order.id)}
-              data-testid={`button-message-${order.id}`}
-              className="flex items-center gap-1"
-              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50"
             >
               <MessageCircle className="w-4 h-4" />
               Message
             </Button>
             <Button
-              size="sm"
               onClick={() => onTrack(order.id)}
-              data-testid={`button-track-${order.id}`}
-              className="flex items-center gap-1"
-              whileTap={{ scale: 0.95 }}
+              className="rounded-full bg-green-500 hover:bg-green-600 text-white text-sm"
             >
-              <MapPin className="w-4 h-4" />
-              Track
+              Track Customer
             </Button>
-          </motion.div>
+          </div>
         )}
       </Card>
     </motion.div>

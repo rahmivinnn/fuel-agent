@@ -15,87 +15,55 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ show }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
-          className="fixed inset-0 z-[60] bg-[#35B458] overflow-hidden flex items-center justify-center"
+          className="fixed inset-0 z-[60] overflow-hidden bg-white"
         >
-          {/* Pola diagonal atas — tetap di posisi atas */}
+          {/* Top Hexagon Pattern */}
           <motion.div
-            aria-hidden
-            className="absolute left-1/2 -translate-x-1/2 w-full h-24 md:h-32 opacity-90 select-none pointer-events-none"
+            className="absolute top-0 left-1/2 transform -translate-x-1/2"
             style={{
-              top: 0,
-              backgroundImage: "url(/diagonal-2.svg)",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-              backgroundPosition: "center top",
-              // Stabilize paint & stacking
-              willChange: "transform, opacity",
-              zIndex: 0,
-              contain: "paint",
+              top: '20px',
             }}
-            initial={{ opacity: 0.9 }}
-            animate={{
-              opacity: [0.9, 0.9, 0],
-            }}
-            transition={{
-              duration: 1.6,
-              times: [0, 0.6, 1],
-              ease: [0.16, 1, 0.3, 1],
-            }}
-          />
-
-          {/* Pola diagonal bawah — tetap di posisi bawah */}
-          <motion.div
-            aria-hidden
-            className="absolute left-1/2 -translate-x-1/2 w-full h-24 md:h-32 opacity-90 select-none pointer-events-none"
-            style={{
-              bottom: 0,
-              backgroundImage: "url(/diagonal-1.svg)",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-              backgroundPosition: "center bottom",
-              // Stabilize paint & stacking
-              willChange: "transform, opacity",
-              zIndex: 0,
-              contain: "paint",
-            }}
-            initial={{ opacity: 0.9 }}
-            animate={{
-              opacity: [0.9, 0.9, 0],
-            }}
-            transition={{
-              duration: 1.6,
-              times: [0, 0.6, 1],
-              ease: [0.16, 1, 0.3, 1],
-              delay: 0.05,
-            }}
-          />
-
-          {/* Center brand */}
-          <div className="flex items-center justify-center px-8 w-full max-w-xs">
-            <motion.img
-              src="/logo.svg"
-              alt="FuelFriendly"
-              className="w-full max-w-[180px] h-auto drop-shadow-sm object-contain block"
-              style={{
-                // Promote to its own layer to avoid jitter when diagonals fade
-                willChange: "transform, opacity",
-                transform: "translateZ(0)",
-                backfaceVisibility: "hidden",
-                position: "relative",
-                zIndex: 1,
-              }}
-              initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: [0.92, 1.08, 1.0], opacity: [0, 1, 1] }}
-              transition={{ duration: 1.2, times: [0, 0.6, 1], ease: [0.16, 1, 0.3, 1], delay: 0.9 }}
-              loading="eager"
-              decoding="async"
-              draggable={false}
-              onError={(e) => {
-                const target = e.currentTarget as HTMLImageElement;
-                // Fallback jika SVG gagal
-                target.src = "/logo.png";
-              }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 0.3, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <img 
+              src="/hexagon.png" 
+              alt="" 
+              className="w-[250px] h-[150px]"
             />
+          </motion.div>
+
+          {/* Bottom Hexagon Pattern */}
+          <motion.div
+            className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
+            style={{
+              bottom: '40px',
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 0.3, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <img 
+              src="/hexagon.png" 
+              alt="" 
+              className="w-[250px] h-[150px]"
+            />
+          </motion.div>
+
+          {/* Center Logo */}
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <img 
+                src="/logo.png" 
+                alt="FuelFriendly" 
+                className="w-[15vw] h-[15vw] min-w-[80px] min-h-[80px] max-w-[150px] max-h-[150px] sm:w-32 sm:h-32"
+              />
+            </motion.div>
           </div>
         </motion.div>
       ) : null}

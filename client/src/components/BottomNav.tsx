@@ -13,8 +13,8 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-      <div className="grid grid-cols-4">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-inset-bottom">
+      <div className="grid grid-cols-4 max-w-md mx-auto">
         {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = location === item.path;
@@ -24,10 +24,10 @@ export function BottomNav() {
               key={item.path} 
               href={item.path}
               data-testid={item.testId}
-              className={`flex flex-col items-center justify-center gap-1 py-3 transition-colors ${
+              className={`flex flex-col items-center justify-center gap-1 py-3 px-2 transition-colors ${
                 isActive 
-                  ? "text-primary" 
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-green-600" 
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <motion.div

@@ -26,3 +26,8 @@ yarn-error.log*
 
 # OS
 Thumbs.db
+
+# Keep Firebase config files
+!google-services*.json
+!fuelfriendly.json
+!android/app/google-services.json

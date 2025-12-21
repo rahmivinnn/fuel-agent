@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { MobileContainer } from "@/components/MobileContainer";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Bell } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/lib/api";
 
 // Safe hook imports with fallbacks
 let useOrders: any, useAcceptOrder: any, useCancelOrder: any, useDriver: any, useGeolocation: any;
@@ -44,11 +45,14 @@ export default function Dashboard() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    setIsReady(true);
-    // Force refresh data on mount
+    // Force refresh on mount
     setTimeout(() => {
+      console.log('Force invalidating queries...');
       queryClient.invalidateQueries();
+      queryClient.refetchQueries();
     }, 100);
+    
+    setIsReady(true);
     toast({
       title: "Welcome Back!",
       description: "Ready for deliveries?",
@@ -58,23 +62,55 @@ export default function Dashboard() {
 
   const driverId = localStorage.getItem("driverId") || "ff1";
   
+  const [manualPendingOrders, setManualPendingOrders] = useState([]);
+  const [manualActiveOrders, setManualActiveOrders] = useState([]);
+  const [manualDriver, setManualDriver] = useState({ fullName: "Driver" });
+
   const { data: driver, isLoading: isLoadingDriver, refetch: refetchDriver } = useDriver(driverId);
   const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending");
   const { data: activeOrders = [], isLoading: isLoadingActive, refetch: refetchActive } = useOrders("active", driverId);
   const { position, error, loading } = useGeolocation();
 
+  // Manual data fetching as fallback
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch pending orders
+        const pendingResponse = await fetch(`${API_BASE_URL}/api/orders?status=pending`);
+        const pendingData = await pendingResponse.json();
+        setManualPendingOrders(pendingData);
+        
+        // Fetch active orders for driver
+        const activeResponse = await fetch(`${API_BASE_URL}/api/orders?status=active&driverId=${driverId}`);
+        const activeData = await activeResponse.json();
+        setManualActiveOrders(activeData);
+        
+        // Fetch driver info
+        const driverResponse = await fetch(`${API_BASE_URL}/api/fuel-friends/${driverId}`);
+        const driverData = await driverResponse.json();
+        setManualDriver(driverData.fuelFriend || { fullName: "Driver" });
+        
+        console.log('Manual data loaded:', { pendingData, activeData, driverData });
+      } catch (error) {
+        console.error('Manual fetch error:', error);
+      }
+    };
+    fetchData();
+  }, [driverId]);
+
   // Debug logging
   useEffect(() => {
     console.log('Dashboard Debug:', {
       driverId,
-      driver,
-      pendingOrders,
-      activeOrders,
-      isLoadingPending,
-      isLoadingActive,
-      API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'not set'
+      driver: manualDriver,
+      pendingOrders: manualPendingOrders,
+      activeOrders: manualActiveOrders,
+      isLoadingPending: false,
+      isLoadingActive: false,
+      API_BASE_URL_DIRECT: API_BASE_URL,
+      ENV_VAR: import.meta.env.VITE_API_BASE_URL
     });
-  }, [driverId, driver, pendingOrders, activeOrders, isLoadingPending, isLoadingActive]);
+  }, [driverId, manualDriver, manualPendingOrders, manualActiveOrders]);
 
   const handleRefresh = async () => {
     try {
@@ -113,32 +149,34 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-20">
       <MobileContainer className="py-6">
         <div className="space-y-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-[#3F4249] font-['Poppins']">Hello!</h2>
-              {isLoadingDriver ? (
-                <Skeleton className="h-8 w-48" />
-              ) : (
-                <h1 className="text-2xl font-bold text-[#3F4249] font-['Poppins']">{driver?.fullName || "Driver"}</h1>
-              )}
-              <div className="flex items-center gap-2">
-                {loading ? (
-                  <Skeleton className="h-4 w-32" />
-                ) : (
-                  <p className="text-sm text-[#606268] font-['Poppins']">Location: {city}</p>
-                )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden">
+                <img 
+                  src="/avatar.png" 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%23e5e7eb'/%3E%3Cpath d='M24 12c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 28c-6.6 0-12-5.4-12-12 0-1.3.2-2.5.6-3.6 2.4 1.8 5.4 2.9 8.7 2.9h5.4c3.3 0 6.3-1.1 8.7-2.9.4 1.1.6 2.3.6 3.6 0 6.6-5.4 12-12 12z' fill='%23fff'/%3E%3C/svg%3E";
+                  }}
+                />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Hello!</p>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {localStorage.getItem("customerName") || "Shah Hussain"}
+                </h1>
               </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleRefresh}
-              className="text-[#3AC36C]"
+              className="text-gray-600 hover:text-gray-900"
             >
-              <RefreshCw className="w-5 h-5" />
+              <img src="/ring.png" alt="Notifications" className="w-6 h-6" />
             </Button>
           </div>
 
@@ -160,8 +198,8 @@ export default function Dashboard() {
                   <Skeleton className="h-40 w-full rounded-xl" />
                   <Skeleton className="h-40 w-full rounded-xl" />
                 </>
-              ) : pendingOrders && pendingOrders.length > 0 ? (
-                pendingOrders.slice(0, 2).map((order: any) => (
+              ) : manualPendingOrders && manualPendingOrders.length > 0 ? (
+                manualPendingOrders.slice(0, 2).map((order: any) => (
                   <OrderCard
                     key={order.id}
                     order={order}
@@ -172,7 +210,7 @@ export default function Dashboard() {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-sm text-[#606268] font-['Poppins']">No requests available</p>
-                  <p className="text-xs text-[#606268] mt-1">Pending orders: {pendingOrders?.length || 0}</p>
+                  <p className="text-xs text-[#606268] mt-1">Pending orders: {manualPendingOrders?.length || 0}</p>
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -205,8 +243,8 @@ export default function Dashboard() {
                   <Skeleton className="h-40 w-full rounded-xl" />
                   <Skeleton className="h-40 w-full rounded-xl" />
                 </>
-              ) : activeOrders.length > 0 ? (
-                activeOrders.slice(0, 2).map((order: any) => (
+              ) : manualActiveOrders.length > 0 ? (
+                manualActiveOrders.slice(0, 2).map((order: any) => (
                   <OrderCard
                     key={order.id}
                     order={order}

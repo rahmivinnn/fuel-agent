@@ -16,9 +16,10 @@ export function useOrders(status?: string, driverIdOrCustomerId?: string, mode: 
         }
         const query = params.toString();
         
-        console.log('Fetching orders:', `${API_BASE_URL}/api/orders${query ? `?${query}` : ""}`);
+        const url = `${API_BASE_URL}/api/orders${query ? `?${query}` : ""}`;
+        console.log('Fetching orders:', url);
         
-        const response = await fetch(`${API_BASE_URL}/api/orders${query ? `?${query}` : ""}`, {
+        const response = await fetch(url, {
           cache: 'no-store',
           headers: {
             'Cache-Control': 'no-cache',
@@ -43,8 +44,8 @@ export function useOrders(status?: string, driverIdOrCustomerId?: string, mode: 
       }
     },
     staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: true,
+    gcTime: 0,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   });
 }
