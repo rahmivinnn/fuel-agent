@@ -16,6 +16,7 @@ import Wallet from "@/pages/Wallet";
 import Settings from "@/pages/Settings";
 import TrackCustomer from "@/pages/TrackCustomer";
 import Message from "@/pages/Message";
+import Notifications from "@/pages/Notifications";
 import EmailVerification from "@/pages/EmailVerification";
 import VerifyCode from "@/pages/VerifyCode";
 import VerifySuccess from "@/pages/VerifySuccess";
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/settings" component={Settings} />
         <Route path="/track-customer/:id" component={TrackCustomer} />
         <Route path="/message/:id" component={Message} />
+        <Route path="/notifications" component={Notifications} />
         {/* Verification flow */}
         <Route path="/email-verification" component={EmailVerification} />
         <Route path="/whatsapp-verification" component={WhatsAppVerification} />

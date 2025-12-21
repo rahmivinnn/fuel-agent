@@ -44,7 +44,14 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [city, setCity] = useState<string>("Global");
   const [isReady, setIsReady] = useState(false);
-  const [userName, setUserName] = useState(localStorage.getItem("customerName") || "Shah Hussain");
+  const [userName, setUserName] = useState("Shah Hussain");
+  const [manualPendingOrders, setManualPendingOrders] = useState([]);
+  const [manualActiveOrders, setManualActiveOrders] = useState([]);
+  const [manualDriver, setManualDriver] = useState({ fullName: "Driver" });
+  const [showJobModal, setShowJobModal] = useState(false);
+  const [acceptedOrder, setAcceptedOrder] = useState<any>(null);
+
+  const driverId = localStorage.getItem("driverId") || "ff1";
 
   useEffect(() => {
     // Update userName when component mounts
@@ -71,14 +78,6 @@ export default function Dashboard() {
       duration: 3000,
     });
   }, [toast, queryClient]);
-
-  const driverId = localStorage.getItem("driverId") || "ff1";
-  
-  const [manualPendingOrders, setManualPendingOrders] = useState([]);
-  const [manualActiveOrders, setManualActiveOrders] = useState([]);
-  const [manualDriver, setManualDriver] = useState({ fullName: "Driver" });
-  const [showJobModal, setShowJobModal] = useState(false);
-  const [acceptedOrder, setAcceptedOrder] = useState<any>(null);
 
   const { data: driver, isLoading: isLoadingDriver, refetch: refetchDriver } = useDriver(driverId);
   const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending");
@@ -185,7 +184,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm text-gray-600">Hello!</p>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {userName}
+                  {localStorage.getItem("customerName") || manualDriver?.fullName || "Shah Hussain"}
                 </h1>
               </div>
             </div>
@@ -193,6 +192,7 @@ export default function Dashboard() {
               variant="ghost"
               size="icon"
               className="text-gray-600 hover:text-gray-900"
+              onClick={() => setLocation("/notifications")}
             >
               <img src="/ring.png" alt="Notifications" className="w-6 h-6" />
             </Button>

@@ -40,7 +40,7 @@ export default function Message() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setLocation(-1)}
+          onClick={() => window.history.back()}
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
