@@ -1,25 +1,48 @@
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Package, MapPin, Clock, Navigation, CheckCircle } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Clock, Navigation, CheckCircle, RefreshCw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOrders } from "@/hooks/useOrders";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function MyOrders() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
-  const customerId = localStorage.getItem("customerId") || "cust1";
-  const { data: orders = [], isLoading } = useOrders(undefined, customerId, "customer");
+  const queryClient = useQueryClient();
+  const driverId = localStorage.getItem("driverId") || "ff1"; // Changed from customerId to driverId
+  const { data: orders = [], isLoading, refetch } = useOrders(undefined, driverId, "driver"); // Changed to driver mode
   const { position, error } = useGeolocation();
   const [cancelledOrders, setCancelledOrders] = useState<Set<string>>(new Set());
   const [acceptedOrderId, setAcceptedOrderId] = useState<string | null>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('My Orders Debug:', {
+      driverId,
+      orders,
+      isLoading
+    });
+  }, [driverId, orders, isLoading]);
+
+  const handleRefresh = async () => {
+    console.log('Refreshing My Orders...');
+    await queryClient.invalidateQueries();
+    await refetch();
+    toast({ title: "Orders refreshed!", duration: 2000 });
+  };
+
   // Check if there's a newly accepted order
   useEffect(() => {
+    // Force refresh on mount
+    setTimeout(() => {
+      queryClient.invalidateQueries();
+    }, 100);
+    
     const params = new URLSearchParams(window.location.search);
     const acceptedId = params.get('accepted');
     if (acceptedId) {
@@ -35,7 +58,7 @@ export default function MyOrders() {
         }
       }, 100);
     }
-  }, [location]);
+  }, [location, queryClient]);
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -83,20 +106,10 @@ export default function MyOrders() {
     });
   };
 
-  // Filter out cancelled orders and mock orders
-  // Mock orders have specific tracking numbers that we can identify
+  // Filter out cancelled orders - show all driver orders
   const visibleOrders = orders.filter((order: any) => {
     // Filter out cancelled orders
     if (cancelledOrders.has(order.id)) return false;
-    
-    // Don't filter out the accepted order
-    if (acceptedOrderId && order.id === acceptedOrderId) return true;
-    
-    // Filter out mock orders by checking for specific patterns in tracking numbers
-    // Mock orders have tracking numbers like "162432", "GB8821", "US9922", "US9923"
-    const mockTrackingNumbers = ["162432", "GB8821", "US9922", "US9923"];
-    if (mockTrackingNumbers.includes(order.trackingNumber)) return false;
-    
     return true;
   });
   
@@ -112,16 +125,26 @@ export default function MyOrders() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-10 bg-card border-b border-card-border p-4 flex items-center gap-3">
+      <div className="sticky top-0 z-10 bg-card border-b border-card-border p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocation("/dashboard")}
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-lg font-bold">My Orders</h1>
+        </div>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setLocation("/dashboard")}
-          data-testid="button-back"
+          onClick={handleRefresh}
+          className="text-primary"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <RefreshCw className="w-5 h-5" />
         </Button>
-        <h1 className="text-lg font-bold">My Orders</h1>
       </div>
 
       <div className="p-6 space-y-6">
@@ -191,15 +214,15 @@ export default function MyOrders() {
             </div>
             <h2 className="text-xl font-bold">No Orders Yet</h2>
             <p className="text-sm text-muted-foreground">
-              You haven't placed any orders. Visit a fuel station to get started.
+              You haven't accepted any orders yet. Check the dashboard for new requests.
             </p>
             <Button variant="default" onClick={() => setLocation("/dashboard")}>
-              Find Stations
+              Go to Dashboard
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold">Order History ({otherOrders.length}{acceptedOrder ? ' + 1 accepted' : ''})</h2>
+            <h2 className="text-lg font-bold">My Orders ({otherOrders.length}{acceptedOrder ? ' + 1 accepted' : ''})</h2>
             {otherOrders.map((order: any) => {
               const station = getStationDetails(order);
               return (

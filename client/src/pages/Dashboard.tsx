@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { MobileContainer } from "@/components/MobileContainer";
+import { RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Safe hook imports with fallbacks
 let useOrders: any, useAcceptOrder: any, useCancelOrder: any, useDriver: any, useGeolocation: any;
@@ -37,23 +39,28 @@ try {
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [city, setCity] = useState<string>("Global");
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     setIsReady(true);
+    // Force refresh data on mount
+    setTimeout(() => {
+      queryClient.invalidateQueries();
+    }, 100);
     toast({
       title: "Welcome Back!",
       description: "Ready for deliveries?",
       duration: 3000,
     });
-  }, [toast]);
+  }, [toast, queryClient]);
 
   const driverId = localStorage.getItem("driverId") || "ff1";
   
-  const { data: driver, isLoading: isLoadingDriver } = useDriver(driverId);
-  const { data: pendingOrders = [], isLoading: isLoadingPending } = useOrders("pending");
-  const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", driverId);
+  const { data: driver, isLoading: isLoadingDriver, refetch: refetchDriver } = useDriver(driverId);
+  const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending");
+  const { data: activeOrders = [], isLoading: isLoadingActive, refetch: refetchActive } = useOrders("active", driverId);
   const { position, error, loading } = useGeolocation();
 
   // Debug logging
@@ -67,6 +74,13 @@ export default function Dashboard() {
       isLoadingActive
     });
   }, [driverId, driver, pendingOrders, activeOrders, isLoadingPending, isLoadingActive]);
+
+  const handleRefresh = async () => {
+    console.log('Refreshing data...');
+    await queryClient.invalidateQueries();
+    await Promise.all([refetchDriver(), refetchPending(), refetchActive()]);
+    toast({ title: "Data refreshed!", duration: 2000 });
+  };
 
   const acceptOrderMutation = useAcceptOrder();
   const cancelOrderMutation = useCancelOrder();
@@ -110,6 +124,14 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              className="text-[#3AC36C]"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </Button>
           </div>
 
           <div className="space-y-4">
@@ -140,7 +162,18 @@ export default function Dashboard() {
                   />
                 ))
               ) : (
-                <p className="text-sm text-[#606268] text-center py-4 font-['Poppins']">No requests available</p>
+                <div className="text-center py-8">
+                  <p className="text-sm text-[#606268] font-['Poppins']">No requests available</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleRefresh}
+                    className="mt-2 text-[#3AC36C]"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-1" />
+                    Refresh
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -174,7 +207,18 @@ export default function Dashboard() {
                   />
                 ))
               ) : (
-                <p className="text-sm text-[#606268] text-center py-4 font-['Poppins']">No active orders</p>
+                <div className="text-center py-8">
+                  <p className="text-sm text-[#606268] font-['Poppins']">No active orders</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleRefresh}
+                    className="mt-2 text-[#3AC36C]"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-1" />
+                    Refresh
+                  </Button>
+                </div>
               )}
             </div>
           </div>
