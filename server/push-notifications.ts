@@ -1,14 +1,18 @@
 import admin from 'firebase-admin';
+import path from 'path';
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: "maviss-d4910",
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
+  try {
+    // Try to load service account from file
+    const serviceAccountPath = path.join(process.cwd(), 'maviss-d4910-firebase-adminsdk-fbsvc-774e546855.json');
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccountPath),
+    });
+    console.log('✅ Firebase Admin initialized with service account file');
+  } catch (error) {
+    console.warn('⚠️ Firebase Admin initialization failed:', error.message);
+  }
 }
 
 export async function sendPushNotification(
@@ -18,6 +22,11 @@ export async function sendPushNotification(
   data?: Record<string, string>
 ) {
   try {
+    if (!admin.apps.length) {
+      console.log('📱 Firebase Admin not initialized, skipping push notification');
+      return { success: false, error: 'Firebase not initialized' };
+    }
+
     const message = {
       token: fcmToken,
       notification: { title, body },
@@ -42,7 +51,6 @@ export async function sendPushNotification(
 
 export async function sendOrderNotificationToDrivers(orderData: any) {
   try {
-    // Get all active driver FCM tokens from storage
     const drivers = await import('./storage').then(m => m.storage.getAvailableFuelFriends());
     
     const notifications = drivers.map(driver => {

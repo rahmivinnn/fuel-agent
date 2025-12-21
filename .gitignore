@@ -31,3 +31,7 @@ Thumbs.db
 !google-services*.json
 !fuelfriendly.json
 !android/app/google-services.json
+
+# Firebase service account (sensitive)
+maviss-d4910-firebase-adminsdk-fbsvc-774e546855.json
+firebase-service-account.json
