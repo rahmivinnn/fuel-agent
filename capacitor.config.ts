@@ -2,7 +2,7 @@ import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.fuelfriend.app",
-  appName: "Fuel Friend",
+  appName: "FuelFriend Agent",
   webDir: "dist/public",
   bundledWebRuntime: false,
   android: {

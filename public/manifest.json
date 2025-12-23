@@ -1,7 +1,7 @@
 {
-  "name": "Fuel Friend Driver",
-  "short_name": "Fuel Friend",
-  "description": "Manage your fuel delivery orders and earnings on the go",
+  "name": "FuelFriend Agent",
+  "short_name": "FF Agent",
+  "description": "FuelFriend delivery driver app for managing fuel orders",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
