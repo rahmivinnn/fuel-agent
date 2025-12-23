@@ -860,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create notification for all drivers
       const notification = await storage.createNotification({
-        customerId: 'system',
+        customerId: 'cb59d9f0-f680-4d08-bce9-48f139682521',
         title: 'New Order Received',
         message: `Order ${trackingNumber}: ${fuelType} delivery to ${customerAddress}. Total: $${totalAmount}`,
         type: 'order_update'

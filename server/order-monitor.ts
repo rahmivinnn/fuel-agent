@@ -24,7 +24,7 @@ export async function startOrderMonitoring() {
         
         // Create notification
         await storage.createNotification({
-          customerId: 'system',
+          customerId: 'cb59d9f0-f680-4d08-bce9-48f139682521',
           title: 'New Order Available',
           message: `Order ${order.trackingNumber}: ${order.fuelType} delivery - $${order.totalAmount}`,
           type: 'order_update'
