@@ -2,11 +2,11 @@ import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.fuelfriend.app",
-  appName: "FuelFriendPWA",
+  appName: "Fuel Friend",
   webDir: "dist/public",
   bundledWebRuntime: false,
   android: {
-    allowMixedContent: true,
+    allowMixedContent: true
   },
   plugins: {
     GoogleAuth: {

@@ -12,12 +12,18 @@
     "db:push": "drizzle-kit push",
     "cap:init": "cap init FuelFriendPWA com.fuelfriend.app --web-dir=dist/public",
     "cap:add:android": "cap add android",
+    "cap:add:ios": "cap add ios",
     "cap:copy": "cap copy android",
+    "cap:copy:ios": "cap copy ios",
     "cap:sync": "cap sync android",
+    "cap:sync:ios": "cap sync ios",
     "cap:open:android": "cap open android",
-    "cap:build:android": "cap build android"
+    "cap:open:ios": "cap open ios",
+    "cap:build:android": "cap build android",
+    "cap:build:ios": "cap build ios"
   },
   "dependencies": {
+    "@capacitor/ios": "^7.4.4",
     "@hapi/boom": "^10.0.1",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
