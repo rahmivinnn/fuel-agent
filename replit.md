@@ -161,3 +161,7 @@ The workflow "Start application" runs `npm run dev`:
 - [ ] Connect to production database
 - [ ] Implement actual email verification service
 - [ ] Add analytics and monitoring
+
+
+
+document.documentElement.classList.toggle('dark');

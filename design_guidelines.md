@@ -183,3 +183,7 @@
 - Screen reader labels on icons
 - Form validation with clear error messages
 - Support for system dark mode preference
+
+
+
+document.documentElement.classList.toggle('dark');
