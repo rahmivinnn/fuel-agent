@@ -1,6 +1,6 @@
 export const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://api.kelolahrd.life' 
-  : 'http://localhost:4000';
+  : 'http://localhost:5000';
 
 export const apiClient = {
   async fetch(endpoint: string, options: RequestInit = {}) {
