@@ -16,7 +16,7 @@ export async function initializeDatabase() {
       WHERE table_schema = 'public'
     `);
     
-    const existingTables = tableCheck.map((row: any) => row.table_name);
+    const existingTables = tableCheck.rows?.map((row: any) => row.table_name) || [];
     const requiredTables = [
       'customers', 'orders', 'fuel_friends', 'vehicles', 
       'fuel_stations', 'payment_methods', 'wallets', 
