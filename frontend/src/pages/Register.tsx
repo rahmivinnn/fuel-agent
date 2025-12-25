@@ -116,9 +116,9 @@ export default function Register() {
       }
 
       // Store user data for dashboard
-      localStorage.setItem("customerId", result.customer.id);
-      localStorage.setItem("customerEmail", result.customer.email);
-      localStorage.setItem("customerName", result.customer.fullName);
+      localStorage.setItem("customerId", result.data.customer.id);
+      localStorage.setItem("customerEmail", result.data.customer.email);
+      localStorage.setItem("customerName", result.data.customer.fullName);
 
       toast({
         title: "Success!",
