@@ -1,14 +1,12 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Wallet, Transaction } from "@/lib/schemas";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/lib/api";
+import { apiCallWithAuth } from "@/lib/auth";
 
 export function useWallet(driverId: string) {
-  return useQuery<Wallet>({
-    queryKey: ["/api/wallet", driverId],
+  return useQuery({
+    queryKey: ["wallet", driverId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/wallet/driver/${driverId}`);
-      if (!response.ok) throw new Error("Failed to fetch wallet");
+      const response = await apiCallWithAuth(`${API_BASE_URL}/api/wallet/driver/${driverId}`);
       return response.json();
     },
     enabled: !!driverId,
@@ -16,11 +14,10 @@ export function useWallet(driverId: string) {
 }
 
 export function useTransactions(driverId: string) {
-  return useQuery<Transaction[]>({
-    queryKey: ["/api/transactions", driverId],
+  return useQuery({
+    queryKey: ["transactions", driverId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/transactions/driver/${driverId}`);
-      if (!response.ok) throw new Error("Failed to fetch transactions");
+      const response = await apiCallWithAuth(`${API_BASE_URL}/api/transactions/driver/${driverId}`);
       return response.json();
     },
     enabled: !!driverId,
@@ -28,39 +25,19 @@ export function useTransactions(driverId: string) {
 }
 
 export function useWithdraw() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
-    mutationFn: async ({
-      driverId,
-      amount,
-      paymentMethod,
-    }: {
-      driverId: string;
-      amount: string;
-      paymentMethod: string;
-    }) => {
-      // In a real app, you'd get the user's email from their profile or auth context
-      // For now we'll mock it or get it from storage if available
-      const email = localStorage.getItem("driverEmail") || "driver@example.com";
-
-      const result = await apiRequest("POST", "/api/payments/withdraw", {
-        amount,
-        email,
-        method: paymentMethod
+    mutationFn: async ({ amount, email, method }: { amount: string; email: string; method: string }) => {
+      const response = await apiCallWithAuth(`${API_BASE_URL}/api/payments/withdraw`, {
+        method: 'POST',
+        body: JSON.stringify({ amount, email, method })
       });
-
-      // If withdrawal is successful, update the wallet balance
-      if (result.success) {
-        // In a real implementation, you would update the wallet balance on the server
-        // For now, we'll just invalidate the query to refetch the wallet data
-        queryClient.invalidateQueries({ queryKey: ["/api/wallet", driverId] });
-        queryClient.invalidateQueries({ queryKey: ["/api/transactions", driverId] });
-      }
-
-      return result;
+      return response.json();
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/wallet", variables.driverId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions", variables.driverId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
   });
 }

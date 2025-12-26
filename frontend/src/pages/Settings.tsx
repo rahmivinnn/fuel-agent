@@ -37,7 +37,7 @@ export default function Settings() {
     {
       icon: Bell,
       label: "Notifications",
-      onClick: () => setLocation("/notifications"),
+      onClick: () => setLocation("/notification-settings"),
     },
     {
       icon: Palette,
@@ -50,7 +50,7 @@ export default function Settings() {
     {
       icon: Info,
       label: "Help and Support",
-      onClick: () => toast({ title: "Help & Support", description: "Support center coming soon" }),
+      onClick: () => setLocation("/support-help"),
     },
     {
       icon: Info,

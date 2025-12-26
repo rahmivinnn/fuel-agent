@@ -123,8 +123,8 @@ router.post('/orders/:id/cancel', authenticateToken, async (req, res) => {
   return res.json(order);
 });
 
-// Customers
-router.get('/customers/:id', async (req, res) => {
+// Customers (Protected)
+router.get('/customers/:id', authenticateToken, async (req, res) => {
   const customer = await storage.getCustomer(req.params.id);
   if (!customer) {
     return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'Customer not found');
@@ -134,7 +134,7 @@ router.get('/customers/:id', async (req, res) => {
   return sendSuccess(res, { customer: customerData, vehicles }, RESPONSE_CODES.SUCCESS);
 });
 
-router.patch('/customers/:id', async (req, res) => {
+router.patch('/customers/:id', authenticateToken, async (req, res) => {
   const customer = await storage.updateCustomer(req.params.id, req.body);
   if (!customer) {
     return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'Customer not found');
@@ -210,30 +210,30 @@ router.post('/drivers/:id/fcm-token', async (req, res) => {
   return sendSuccess(res, { message: 'FCM token registered' }, RESPONSE_CODES.SUCCESS);
 });
 
-// Wallet
-router.get('/wallet/driver/:driverId', async (req, res) => {
+// Wallet (Protected)
+router.get('/wallet/driver/:driverId', authenticateToken, async (req, res) => {
   const wallet = await storage.getWallet(req.params.driverId);
   return res.json(wallet);
 });
 
-router.put('/wallet/driver/:driverId', async (req, res) => {
+router.put('/wallet/driver/:driverId', authenticateToken, async (req, res) => {
   return res.json({ ...req.body, driverId: req.params.driverId });
 });
 
-// Transactions
-router.get('/transactions/driver/:driverId', async (req, res) => {
+// Transactions (Protected)
+router.get('/transactions/driver/:driverId', authenticateToken, async (req, res) => {
   const transactions = await storage.getTransactions(req.params.driverId);
   return res.json(transactions);
 });
 
-// Payments
-router.post('/payments/create-intent', async (req, res) => {
+// Payments (Protected)
+router.post('/payments/create-intent', authenticateToken, async (req, res) => {
   const { amount, currency } = req.body;
   const paymentIntent = await createStripePaymentIntent(amount, currency);
   return res.json({ clientSecret: paymentIntent.client_secret });
 });
 
-router.post('/payments/withdraw', async (req, res) => {
+router.post('/payments/withdraw', authenticateToken, async (req, res) => {
   const { amount, email, method } = req.body;
   const amountFloat = parseFloat(amount);
 
