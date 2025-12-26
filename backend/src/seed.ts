@@ -7,6 +7,18 @@ import {
 async function seed() {
   console.log("🌱 Seeding database...");
 
+  // Clear existing data first
+  await db.delete(transactions);
+  await db.delete(wallets);
+  await db.delete(orders);
+  await db.delete(products);
+  await db.delete(fuelFriends);
+  await db.delete(fuelStations);
+  await db.delete(vehicles);
+  await db.delete(customers);
+  
+  console.log("🗑️ Cleared existing data");
+
   // Create test customers (US & UK)
   const [customerUS, customerUK] = await db.insert(customers).values([
     {
