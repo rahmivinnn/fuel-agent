@@ -14,7 +14,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileContainer } from "@/components/MobileContainer";
 import { motion } from "framer-motion";
-import { apiClient } from "@/lib/api";
+import { apiService } from "@/lib/api";
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -71,8 +71,9 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      const response = await apiClient.fetch("/api/auth/register/complete", {
+      const response = await fetch('http://localhost:4000/api/auth/register/complete', {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ step1: step1Data, step2: step2Data }),
       });
 
