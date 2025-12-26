@@ -7,13 +7,17 @@ import {
 async function seed() {
   console.log("🌱 Seeding database...");
 
-  // Clear existing data first
+  // Clear existing data first (in correct order due to foreign keys)
   await db.delete(transactions);
   await db.delete(wallets);
+  await db.delete(orderItems);
   await db.delete(orders);
+  await db.delete(reviews);
+  await db.delete(notifications);
   await db.delete(products);
   await db.delete(fuelFriends);
   await db.delete(fuelStations);
+  await db.delete(paymentMethods);
   await db.delete(vehicles);
   await db.delete(customers);
   
