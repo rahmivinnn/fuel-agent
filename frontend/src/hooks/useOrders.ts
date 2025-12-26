@@ -3,6 +3,11 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { API_BASE_URL } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/api";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { API_BASE_URL } from "@/lib/api";
+import { apiCallWithAuth } from "@/lib/auth";
+
 export function useOrders(status?: string, driverIdOrCustomerId?: string, mode: "driver" | "customer" = "driver") {
   return useQuery({
     queryKey: ["orders", status, driverIdOrCustomerId, mode],
@@ -19,13 +24,7 @@ export function useOrders(status?: string, driverIdOrCustomerId?: string, mode: 
         const url = `${API_BASE_URL}/api/orders${query ? `?${query}` : ""}`;
         console.log('Fetching orders:', url);
         
-        const response = await fetch(url, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
+        const response = await apiCallWithAuth(url);
         
         if (!response.ok) {
           console.error('Orders fetch failed:', response.status, response.statusText);
@@ -67,10 +66,14 @@ export function useOrder(orderId?: string) {
 export function useAcceptOrder() {
   return useMutation({
     mutationFn: async ({ orderId, driverId }: { orderId: string; driverId: string }) => {
-      return apiRequest("POST", `/api/orders/${orderId}/accept`, { driverId });
+      const response = await apiCallWithAuth(`${API_BASE_URL}/api/orders/${orderId}/accept`, {
+        method: 'POST',
+        body: JSON.stringify({ driverId })
+      });
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
 }
@@ -78,10 +81,13 @@ export function useAcceptOrder() {
 export function useCancelOrder() {
   return useMutation({
     mutationFn: async (orderId: string) => {
-      return apiRequest("POST", `/api/orders/${orderId}/cancel`);
+      const response = await apiCallWithAuth(`${API_BASE_URL}/api/orders/${orderId}/cancel`, {
+        method: 'POST'
+      });
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
 }

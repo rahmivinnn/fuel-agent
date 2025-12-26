@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/lib/api";
 import { JobAcceptedModal } from "@/components/JobAcceptedModal";
 import { registerFCMToken, setupForegroundNotifications } from "@/lib/firebase-messaging";
+import { apiCallWithAuth } from "@/lib/auth";
 
 // Safe hook imports with fallbacks
 let useOrders: any, useAcceptOrder: any, useCancelOrder: any, useDriver: any, useGeolocation: any;
@@ -113,16 +114,16 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         // Fetch pending orders
-        const pendingResponse = await fetch(`${API_BASE_URL}/api/orders?status=pending`);
+        const pendingResponse = await apiCallWithAuth(`${API_BASE_URL}/api/orders?status=pending`);
         const pendingData = await pendingResponse.json();
         setManualPendingOrders(pendingData);
         
         // Fetch active orders for driver
-        const activeResponse = await fetch(`${API_BASE_URL}/api/orders?status=active&driverId=${driverId}`);
+        const activeResponse = await apiCallWithAuth(`${API_BASE_URL}/api/orders?status=active&driverId=${driverId}`);
         const activeData = await activeResponse.json();
         setManualActiveOrders(activeData);
         
-        // Fetch driver info
+        // Fetch driver info (public endpoint)
         const driverResponse = await fetch(`${API_BASE_URL}/api/fuel-friends/${driverId}`);
         const driverData = await driverResponse.json();
         setManualDriver(driverData.fuelFriend || { fullName: "Driver" });
@@ -206,20 +207,28 @@ export default function Dashboard() {
                 />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Hello!</p>
+                <p className="text-sm text-gray-600">Good morning!</p>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {localStorage.getItem("customerName") || manualDriver?.fullName || "Shah Hussain"}
+                  {localStorage.getItem("customerName") || manualDriver?.fullName || "Michael Johnson"}
                 </h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-xs text-green-600 font-medium">Online</span>
+                </div>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-600 hover:text-gray-900"
-              onClick={() => setLocation("/notifications")}
-            >
-              <img src="/ring.png" alt="Notifications" className="w-6 h-6" />
-            </Button>
+            <div className="text-right">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-600 hover:text-gray-900 mb-2"
+                onClick={() => setLocation("/notifications")}
+              >
+                <img src="/ring.png" alt="Notifications" className="w-6 h-6" />
+              </Button>
+              <div className="text-xs text-gray-500">Today's Earnings</div>
+              <div className="text-lg font-bold text-green-600">$127.50</div>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -250,17 +259,20 @@ export default function Dashboard() {
                   />
                 ))
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-[#606268] font-['Poppins']">No requests available</p>
-                  <p className="text-xs text-[#606268] mt-1">Pending orders: {manualPendingOrders?.length || 0}</p>
+                <div className="bg-gray-50 rounded-2xl p-6 text-center">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
+                    <RefreshCw className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-1">No New Requests</h4>
+                  <p className="text-sm text-gray-600 mb-3">Check back soon for new delivery opportunities</p>
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
                     onClick={handleRefresh}
-                    className="mt-2 text-[#3AC36C]"
+                    className="border-green-200 text-green-600 hover:bg-green-50"
                   >
                     <RefreshCw className="w-4 h-4 mr-1" />
-                    Refresh
+                    Refresh Orders
                   </Button>
                 </div>
               )}
@@ -296,17 +308,15 @@ export default function Dashboard() {
                   />
                 ))
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-[#606268] font-['Poppins']">No active orders</p>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleRefresh}
-                    className="mt-2 text-[#3AC36C]"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-1" />
-                    Refresh
-                  </Button>
+                <div className="bg-blue-50 rounded-2xl p-6 text-center">
+                  <div className="w-16 h-16 bg-blue-200 rounded-full mx-auto mb-3 flex items-center justify-center">
+                    <Navigation className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Ready for Deliveries</h4>
+                  <p className="text-sm text-gray-600 mb-3">Accept new orders to start earning</p>
+                  <div className="text-xs text-blue-600 bg-blue-100 px-3 py-1 rounded-full inline-block">
+                    0 Active Orders
+                  </div>
                 </div>
               )}
             </div>

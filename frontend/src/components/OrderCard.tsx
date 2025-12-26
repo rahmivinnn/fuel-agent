@@ -70,19 +70,28 @@ export function OrderCard({ order, onAccept, onCancel, onCall, onMessage, onTrac
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
             <MapPin className="w-4 h-4 text-red-500" />
-            <span className="text-gray-600">Pickup: Shell Station- {order.deliveryAddress?.split(',')[1] || 'Abc Town'}</span>
+            <span className="text-gray-600">Pickup: {order.stationName || "Shell NYC"}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Navigation className="w-4 h-4 text-red-500" />
-            <span className="text-gray-600">Drop off: Shell Station- {order.deliveryAddress?.split(',')[1] || 'Abc Town'}</span>
+            <Navigation className="w-4 h-4 text-blue-500" />
+            <span className="text-gray-600">Drop off: {order.deliveryAddress?.split(',')[0] || "123 Broadway"}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             {order.groceriesCost && parseFloat(order.groceriesCost) > 0 ? (
               <ShoppingBag className="w-4 h-4 text-green-500" />
             ) : (
-              <Fuel className="w-4 h-4 text-red-500" />
+              <Fuel className="w-4 h-4 text-orange-500" />
             )}
-            <span className="text-gray-600">Order type: {getOrderType()}</span>
+            <span className="text-gray-600">{getOrderType()}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm pt-1">
+            <div className="flex items-center gap-4">
+              <span className="text-gray-500">Distance: 2.3 mi</span>
+              <span className="text-gray-500">ETA: 15 min</span>
+            </div>
+            <div className="font-semibold text-green-600">
+              {formatCurrency(order.deliveryFee || "8.00")}
+            </div>
           </div>
         </div>
 

@@ -1,50 +1,60 @@
-// Authentication utilities for managing user session
+// JWT Token Management
+export const authStorage = {
+  getToken: (): string | null => {
+    return localStorage.getItem('jwt_token');
+  },
+  
+  setToken: (token: string): void => {
+    localStorage.setItem('jwt_token', token);
+  },
+  
+  removeToken: (): void => {
+    localStorage.removeItem('jwt_token');
+  },
+  
+  isAuthenticated: (): boolean => {
+    return !!localStorage.getItem('jwt_token');
+  }
+};
+
+// Session Management
 export const auth = {
-  // Get stored auth token
-  getToken(): string | null {
-    return localStorage.getItem('authToken');
+  setSession: (user: any, token: string) => {
+    authStorage.setToken(token);
+    localStorage.setItem('customerId', user.id);
+    localStorage.setItem('customerEmail', user.email);
+    localStorage.setItem('customerName', user.fullName);
+    localStorage.setItem('driverId', 'ff1'); // Default driver ID
   },
-
-  // Get current user data
-  getUser() {
-    const customerId = localStorage.getItem('customerId');
-    const customerEmail = localStorage.getItem('customerEmail');
-    const customerName = localStorage.getItem('customerName');
-    
-    if (!customerId) return null;
-    
-    return {
-      id: customerId,
-      email: customerEmail,
-      name: customerName
-    };
-  },
-
-  // Check if user is authenticated
-  isAuthenticated(): boolean {
-    return !!this.getToken() && !!localStorage.getItem('customerId');
-  },
-
-  // Store user session after login
-  setSession(userData: any, token: string) {
-    localStorage.setItem('customerId', userData.id);
-    localStorage.setItem('customerEmail', userData.email);
-    localStorage.setItem('customerName', userData.fullName);
-    localStorage.setItem('authToken', token);
-  },
-
-  // Clear user session (logout)
-  clearSession() {
+  
+  clearSession: () => {
+    authStorage.removeToken();
     localStorage.removeItem('customerId');
     localStorage.removeItem('customerEmail');
     localStorage.removeItem('customerName');
-    localStorage.removeItem('authToken');
     localStorage.removeItem('driverId');
-  },
-
-  // Get authorization header for API calls
-  getAuthHeader() {
-    const token = this.getToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
   }
+};
+
+// API call with JWT token
+export const apiCallWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = authStorage.getToken();
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (response.status === 401) {
+    auth.clearSession();
+    window.location.href = '/login';
+  }
+
+  return response;
 };

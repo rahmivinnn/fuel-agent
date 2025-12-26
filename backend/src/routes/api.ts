@@ -5,6 +5,7 @@ import { storage } from '../services/postgres-storage';
 import { createStripePaymentIntent, createPaypalPayout } from '../services/payments';
 import { checkLocation } from '../services/geolocation';
 import { sendOrderNotificationToDrivers } from '../services/pushNotifications';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
@@ -51,8 +52,8 @@ router.get('/fuel-friends/:id', async (req, res) => {
   return sendSuccess(res, { fuelFriend, reviews }, RESPONSE_CODES.SUCCESS);
 });
 
-// Orders
-router.post('/orders', async (req, res) => {
+// Orders (Protected)
+router.post('/orders', authenticateToken, async (req, res) => {
   const trackingNumber = Math.floor(100000 + Math.random() * 900000).toString();
   const order = await storage.createOrder({
     ...req.body,
@@ -63,7 +64,7 @@ router.post('/orders', async (req, res) => {
   return sendSuccess(res, { order }, RESPONSE_CODES.CREATED, 201);
 });
 
-router.get('/orders', async (req, res) => {
+router.get('/orders', authenticateToken, async (req, res) => {
   const status = req.query.status as string | undefined;
   const driverId = req.query.driverId as string | undefined;
   const customerId = req.query.customerId as string | undefined;
@@ -107,7 +108,7 @@ router.patch('/orders/:id/status', async (req, res) => {
   return sendSuccess(res, { order }, RESPONSE_CODES.SUCCESS);
 });
 
-router.post('/orders/:id/accept', async (req, res) => {
+router.post('/orders/:id/accept', authenticateToken, async (req, res) => {
   const order = await storage.updateOrder(req.params.id, { 
     status: 'in_progress', 
     fuelFriendId: req.body.driverId 
@@ -116,7 +117,7 @@ router.post('/orders/:id/accept', async (req, res) => {
   return res.json(order);
 });
 
-router.post('/orders/:id/cancel', async (req, res) => {
+router.post('/orders/:id/cancel', authenticateToken, async (req, res) => {
   const order = await storage.updateOrder(req.params.id, { status: 'canceled' });
   if (!order) return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Order not found');
   return res.json(order);
@@ -303,7 +304,7 @@ router.delete('/notifications/:id', async (req, res) => {
   return sendSuccess(res, {}, RESPONSE_CODES.SUCCESS);
 });
 
-router.post('/customers/:id/change-password', async (req, res) => {
+router.post('/customers/:id/change-password', authenticateToken, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) {
     return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Old and new password required');

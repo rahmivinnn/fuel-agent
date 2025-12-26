@@ -14,6 +14,7 @@ import AllOrders from "@/pages/AllOrders";
 import MyOrders from "@/pages/Tracking"; // Renamed from Tracking to MyOrders
 import Wallet from "@/pages/Wallet";
 import Settings from "@/pages/Settings";
+import ManagePassword from "@/pages/ManagePassword";
 import TrackCustomer from "@/pages/TrackCustomer";
 import Message from "@/pages/Message";
 import Notifications from "@/pages/Notifications";
@@ -42,6 +43,7 @@ function Router() {
         <Route path="/my-orders" component={MyOrders} /> {/* Changed from /tracking to /my-orders */}
         <Route path="/wallet" component={Wallet} />
         <Route path="/settings" component={Settings} />
+        <Route path="/manage-password" component={ManagePassword} />
         <Route path="/track-customer/:id" component={TrackCustomer} />
         <Route path="/message/:id" component={Message} />
         <Route path="/notifications" component={Notifications} />

@@ -1,6 +1,11 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, X, MapPin, Navigation, Package } from "lucide-react";
+
+// Simple VisuallyHidden component as fallback
+const VisuallyHidden = ({ children }: { children: React.ReactNode }) => (
+  <div className="sr-only">{children}</div>
+);
 
 interface JobAcceptedModalProps {
   isOpen: boolean;
@@ -17,6 +22,13 @@ export function JobAcceptedModal({ isOpen, onClose, onTrackOrder, order }: JobAc
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md mx-4 rounded-2xl p-6">
+        <VisuallyHidden>
+          <DialogTitle>Job Started Successfully</DialogTitle>
+          <DialogDescription>
+            Your job has been accepted and started. Track your customer's location for delivery.
+          </DialogDescription>
+        </VisuallyHidden>
+        
         <div className="flex justify-end">
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-5 h-5" />

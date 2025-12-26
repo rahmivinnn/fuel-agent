@@ -1,141 +1,129 @@
 import { BottomNav } from "@/components/BottomNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Bell, Lock, HelpCircle, LogOut, ChevronRight } from "lucide-react";
+import { 
+  ChevronLeft, 
+  Info, 
+  CreditCard, 
+  Bell, 
+  Palette, 
+  HelpCircle, 
+  FileText, 
+  Shield, 
+  Trash2 
+} from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useCustomer } from "@/hooks/useCustomer";
-import { usePlatformGoogleAuth } from "@/hooks/usePlatformGoogleAuth";
+import { MobileContainer } from "@/components/MobileContainer";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { signOutGoogle } = usePlatformGoogleAuth();
-  
-  const customerId = localStorage.getItem("customerId") || "c1";
-  const { data, isLoading } = useCustomer(customerId);
-  const customer = data?.customer;
-  const isGoogleUser = localStorage.getItem("googleUser");
 
-  const handleLogout = async () => {
-    // If user signed in with Google, sign out from Google too
-    if (isGoogleUser) {
-      await signOutGoogle();
-    } else {
-      localStorage.removeItem("customerId");
-      localStorage.removeItem("customerEmail");
-      localStorage.removeItem("customerName");
-      localStorage.removeItem("verificationEmail");
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out",
-      });
-    }
-    setLocation("/");
-  };
-
-  const settingsItems = [
+  const securityItems = [
     {
-      icon: User,
-      label: "Edit Profile",
-      onClick: () => toast({ title: "Edit Profile", description: "Profile editor is available." }),
-      testId: "button-edit-profile",
+      icon: Info,
+      label: "Manage Passwords",
+      onClick: () => setLocation("/manage-password"),
     },
     {
-      icon: Bell,
-      label: "Notifications",
-      onClick: () => toast({ title: "Notifications", description: "Notifications are available." }),
-      testId: "button-notifications",
-    },
-    {
-      icon: Lock,
-      label: "Privacy & Security",
-      onClick: () => toast({ title: "Privacy & Security", description: "Privacy & Security is available." }),
-      testId: "button-privacy",
-    },
-    {
-      icon: HelpCircle,
-      label: "Help & Support",
-      onClick: () => toast({ title: "Help & Support", description: "Support center is available." }),
-      testId: "button-help",
+      icon: Info,
+      label: "Manage Payment Method",
+      onClick: () => toast({ title: "Payment Methods", description: "Payment management coming soon" }),
     },
   ];
 
+  const generalItems = [
+    {
+      icon: Bell,
+      label: "Notifications",
+      onClick: () => setLocation("/notifications"),
+    },
+    {
+      icon: Palette,
+      label: "Themes",
+      onClick: () => toast({ title: "Themes", description: "Theme selection coming soon" }),
+    },
+  ];
+
+  const customerCareItems = [
+    {
+      icon: Info,
+      label: "Help and Support",
+      onClick: () => toast({ title: "Help & Support", description: "Support center coming soon" }),
+    },
+    {
+      icon: Info,
+      label: "Terms and Conditions",
+      onClick: () => toast({ title: "Terms", description: "Terms and conditions coming soon" }),
+    },
+    {
+      icon: Info,
+      label: "Privacy & Policy",
+      onClick: () => toast({ title: "Privacy", description: "Privacy policy coming soon" }),
+    },
+    {
+      icon: Trash2,
+      label: "Request Account Deletion",
+      onClick: () => toast({ title: "Account Deletion", description: "Account deletion request coming soon", variant: "destructive" }),
+    },
+  ];
+
+  const renderSettingsItem = (item: any) => {
+    const Icon = item.icon;
+    return (
+      <button
+        key={item.label}
+        onClick={item.onClick}
+        className="w-full flex items-center gap-3 py-4 text-left hover:bg-gray-50 transition-colors"
+      >
+        <Icon className="w-5 h-5 text-gray-600" />
+        <span className="flex-1 text-base text-gray-900">{item.label}</span>
+      </button>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="p-4 space-y-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <ThemeToggle />
+    <div className="min-h-screen bg-white pb-20">
+      <MobileContainer>
+        {/* Header */}
+        <div className="flex items-center gap-4 py-4 border-b border-gray-100">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocation("/dashboard")}
+            className="text-gray-600"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </Button>
+          <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
         </div>
 
-        {/* Profile Card */}
-        {isLoading ? (
-          <Skeleton className="h-32 w-full rounded-xl" />
-        ) : customer ? (
-          <Card className="p-6 border-card-border rounded-xl">
-            <div className="flex items-center gap-4">
-              <Avatar className="w-20 h-20">
-                <AvatarImage src="" alt={customer.fullName} />
-                <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
-                  {customer.fullName.split(" ").map(n => n[0]).join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-foreground">{customer.fullName}</h2>
-                <p className="text-sm text-muted-foreground mt-1 truncate">{customer.email}</p>
-                {customer.phoneNumber && (
-                  <p className="text-sm text-muted-foreground truncate">{customer.phoneNumber}</p>
-                )}
-              </div>
+        <div className="py-6 space-y-8">
+          {/* Security & Passwords */}
+          <div>
+            <h2 className="text-sm font-medium text-gray-500 mb-4 px-1">Security & Passwords</h2>
+            <div className="space-y-1">
+              {securityItems.map(renderSettingsItem)}
             </div>
-          </Card>
-        ) : (
-          <p className="text-sm text-muted-foreground">Customer profile not found</p>
-        )}
+          </div>
 
-        {/* Settings Items */}
-        <div className="space-y-2">
-          {settingsItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                data-testid={item.testId}
-                className="w-full flex items-center gap-4 p-4 bg-card border border-card-border rounded-xl hover-elevate active-elevate-2 transition-all"
-              >
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-5 h-5 text-primary" />
-                </div>
-                <span className="flex-1 text-left text-base font-medium text-foreground">
-                  {item.label}
-                </span>
-                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              </button>
-            );
-          })}
+          {/* General Settings */}
+          <div>
+            <div className="space-y-1">
+              {generalItems.map(renderSettingsItem)}
+            </div>
+          </div>
+
+          {/* Customer Care */}
+          <div>
+            <h2 className="text-sm font-medium text-gray-500 mb-4 px-1">Customer Care</h2>
+            <div className="space-y-1">
+              {customerCareItems.map(renderSettingsItem)}
+            </div>
+          </div>
         </div>
-
-        {/* Logout Button */}
-        <Button
-          variant="destructive"
-          onClick={handleLogout}
-          className="w-full h-12 text-base font-semibold rounded-lg flex items-center justify-center gap-2"
-          data-testid="button-logout"
-        >
-          <LogOut className="w-5 h-5" />
-          Logout
-        </Button>
-
-        <div className="text-center pt-4">
-          <p className="text-xs text-muted-foreground">Version 1.0.0</p>
-          <p className="text-xs text-muted-foreground mt-1">© 2025 Fuel Friend. All rights reserved.</p>
-        </div>
-      </div>
+      </MobileContainer>
 
       <BottomNav />
     </div>
