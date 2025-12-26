@@ -323,7 +323,7 @@ async function seed() {
   const [walletUS, walletUK] = await db.insert(wallets).values([
     {
       driverId: ffUS1.id,
-      balance: "1,245.75",
+      balance: "1245.75",
       currency: "USD",
       bankName: "Chase Bank",
       cardNumber: "4532",
