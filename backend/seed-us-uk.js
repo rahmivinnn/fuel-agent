@@ -10,8 +10,8 @@ const { execSync } = require('child_process');
 console.log('🌱 Seeding database with US & UK data...');
 
 try {
-  // Run the seed script using npx
-  execSync('npx tsx src/seed.ts', { stdio: 'inherit', cwd: __dirname });
+  // Run the seed script using npm script
+  execSync('npm run seed', { stdio: 'inherit', cwd: __dirname });
   
   console.log('✅ Database seeded successfully with US & UK data!');
   console.log('📍 Locations: New York, Los Angeles, London, Manchester');
