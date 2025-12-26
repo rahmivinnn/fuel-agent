@@ -19,6 +19,8 @@ import NotificationSettings from "@/pages/NotificationSettings";
 import SupportHelp from "@/pages/SupportHelp";
 import LiveChatSupport from "@/pages/LiveChatSupport";
 import ReportIssue from "@/pages/ReportIssue";
+import TermsConditions from "@/pages/TermsConditions";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TrackCustomer from "@/pages/TrackCustomer";
 import Message from "@/pages/Message";
 import Notifications from "@/pages/Notifications";
@@ -52,6 +54,8 @@ function Router() {
         <Route path="/support-help" component={SupportHelp} />
         <Route path="/live-chat-support" component={LiveChatSupport} />
         <Route path="/report-issue" component={ReportIssue} />
+        <Route path="/terms-conditions" component={TermsConditions} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/track-customer/:id" component={TrackCustomer} />
         <Route path="/message/:id" component={Message} />
         <Route path="/notifications" component={Notifications} />

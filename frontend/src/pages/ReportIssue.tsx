@@ -18,6 +18,8 @@ export default function ReportIssue() {
     description: "",
     attachments: [] as File[],
   });
+  
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const categories = [
     "App Technical Problem",
@@ -70,12 +72,23 @@ export default function ReportIssue() {
       return;
     }
 
-    toast({
-      title: "Report Submitted",
-      description: "Your issue has been reported. Our team will review it soon.",
+    // Show success modal instead of toast
+    setShowSuccessModal(true);
+  };
+
+  const handleGoToHome = () => {
+    setShowSuccessModal(false);
+    setLocation("/dashboard");
+  };
+
+  const handleSubmitAnother = () => {
+    setShowSuccessModal(false);
+    // Reset form
+    setFormData({
+      category: "",
+      description: "",
+      attachments: [],
     });
-    
-    setLocation("/support-help");
   };
 
   return (
@@ -203,6 +216,50 @@ export default function ReportIssue() {
           </Button>
         </div>
       </MobileContainer>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md mx-4 rounded-2xl p-8">
+          <div className="sr-only">
+            <DialogTitle>Report Submitted Successfully</DialogTitle>
+            <DialogDescription>
+              Your report has been submitted and our team will review it.
+            </DialogDescription>
+          </div>
+          
+          <div className="flex flex-col items-center text-center space-y-6">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Report Submitted Successfully!
+              </h2>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Thank you for reporting the issue. Our team will review your report and get back to you as soon as possible.
+              </p>
+            </div>
+            
+            <div className="w-full space-y-3">
+              <Button 
+                onClick={handleSubmitAnother}
+                variant="outline"
+                className="w-full rounded-full py-3 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Submit another report
+              </Button>
+              
+              <Button 
+                onClick={handleGoToHome}
+                className="w-full bg-transparent hover:bg-transparent text-green-600 hover:text-green-700 py-3 text-base font-medium shadow-none"
+              >
+                Go to Home
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>

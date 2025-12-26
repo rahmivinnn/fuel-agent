@@ -55,7 +55,7 @@ export default function Settings() {
     {
       icon: Info,
       label: "Terms and Conditions",
-      onClick: () => toast({ title: "Terms", description: "Terms and conditions coming soon" }),
+      onClick: () => setLocation("/terms-conditions"),
     },
     {
       icon: Info,
