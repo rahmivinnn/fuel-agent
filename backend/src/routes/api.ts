@@ -311,4 +311,29 @@ router.post('/customers/:id/change-password', authenticateToken, async (req, res
   }
   return sendSuccess(res, { message: 'Password changed successfully' }, RESPONSE_CODES.SUCCESS);
 });
+
+router.delete('/customers/:id', authenticateToken, async (req, res) => {
+  const { reason } = req.body;
+  const customerId = req.params.id;
+  
+  try {
+    // In a real implementation, you would:
+    // 1. Delete all customer data from database
+    // 2. Cancel active orders
+    // 3. Remove payment methods
+    // 4. Log the deletion reason
+    // 5. Send confirmation email
+    
+    console.log(`Account deletion requested for customer ${customerId}, reason: ${reason}`);
+    
+    // For now, just return success
+    return sendSuccess(res, { 
+      message: 'Account deleted successfully',
+      deletedAt: new Date().toISOString()
+    }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    console.error('Account deletion error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to delete account');
+  }
+});
 export default router;

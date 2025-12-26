@@ -9,6 +9,9 @@ interface Customer {
   email: string;
   phoneNumber: string;
   password: string;
+  about?: string;
+  location?: string;
+  services?: string; // JSON string
   isEmailVerified?: boolean;
   otpCode?: string | null;
   otpExpires?: Date | null;

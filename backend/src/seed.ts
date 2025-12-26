@@ -196,7 +196,7 @@ async function seed() {
   ]).returning();
 
   // Create orders (US & UK)
-  await db.insert(orders).values([
+  const [orderUS1, orderUK1, orderUS2, orderUS3, orderUK2, orderUK3] = await db.insert(orders).values([
     {
       trackingNumber: "US001234",
       customerId: customerUS.id,
@@ -251,7 +251,57 @@ async function seed() {
       paymentStatus: "pending",
       paymentMethod: "credit_card",
     },
-  ]);
+    {
+      trackingNumber: "US001236",
+      customerId: customerUS.id,
+      stationId: stationUS1.id,
+      fuelFriendId: ffUS1.id,
+      deliveryAddress: "789 Times Square, New York, NY 10036",
+      deliveryPhone: "+1-555-0123",
+      fuelType: "Premium",
+      fuelQuantity: "18.00",
+      fuelCost: "69.30",
+      deliveryFee: "8.00",
+      totalAmount: "77.30",
+      orderType: "instant",
+      status: "completed",
+      paymentStatus: "completed",
+      paymentMethod: "credit_card",
+    },
+    {
+      trackingNumber: "UK002157",
+      customerId: customerUK.id,
+      stationId: stationUK2.id,
+      fuelFriendId: ffUK2.id,
+      deliveryAddress: "456 Deansgate, Manchester M3 2AY",
+      deliveryPhone: "+44-161-123-4567",
+      fuelType: "Diesel",
+      fuelQuantity: "25.00",
+      fuelCost: "37.00",
+      deliveryFee: "4.50",
+      totalAmount: "41.50",
+      orderType: "instant",
+      status: "completed",
+      paymentStatus: "completed",
+      paymentMethod: "paypal",
+    },
+    {
+      trackingNumber: "US001237",
+      customerId: customerUS.id,
+      stationId: stationUS2.id,
+      deliveryAddress: "321 Beverly Hills, Los Angeles, CA 90210",
+      deliveryPhone: "+1-555-0123",
+      fuelType: "Regular",
+      fuelQuantity: "10.00",
+      fuelCost: "36.50",
+      deliveryFee: "7.50",
+      totalAmount: "44.00",
+      orderType: "instant",
+      status: "cancelled",
+      paymentStatus: "refunded",
+      paymentMethod: "credit_card",
+    },
+  ]).returning();
 
   // Create wallets (US & UK)
   const [walletUS, walletUK] = await db.insert(wallets).values([

@@ -13,6 +13,9 @@ export const customers = pgTable("customers", {
   gender: text("gender"), // male, female
   city: text("city"),
   address: text("address"),
+  about: text("about"), // Profile about section
+  location: text("location"), // Current location
+  services: text("services"), // JSON string of services array
   isEmailVerified: boolean("is_email_verified").default(false),
   profilePhoto: text("profile_photo"),
   otpCode: text("otp_code"),
