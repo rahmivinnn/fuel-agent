@@ -10,8 +10,7 @@ const { execSync } = require('child_process');
 console.log('🌱 Seeding database with US & UK data...');
 
 try {
-  // Run the seed script
-  execSync('npm run db:push', { stdio: 'inherit', cwd: __dirname });
+  // Run the seed script directly
   execSync('tsx src/seed.ts', { stdio: 'inherit', cwd: __dirname });
   
   console.log('✅ Database seeded successfully with US & UK data!');
