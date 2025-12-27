@@ -5,12 +5,13 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role?: string;
+  userType?: string;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-export const generateToken = (payload: Omit<JWTPayload, 'role'>): string => {
-  return jwt.sign({ ...payload, role: 'user' }, JWT_SECRET, { expiresIn: '24h' });
+export const generateToken = (payload: Omit<JWTPayload, 'role'> & { userType?: string }): string => {
+  return jwt.sign({ ...payload, role: payload.userType || 'user' }, JWT_SECRET, { expiresIn: '24h' });
 };
 
 export const verifyToken = (token: string): JWTPayload => {

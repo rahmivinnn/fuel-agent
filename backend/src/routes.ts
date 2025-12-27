@@ -5,6 +5,7 @@ import { checkLocation } from "./geolocation";
 import { createStripePaymentIntent, createPaypalPayout } from "./payments";
 import { generateOTP, saveOTP, verifyOTP, cleanupExpiredOTPs } from './otp';
 import { sendEmailOTP } from './email';
+import { generateToken } from './utils/auth';
 
 // Lazy import WhatsApp service to prevent blocking server startup
 let whatsappService: typeof import('./whatsapp') | null = null;
@@ -559,6 +560,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== Fuel Friend Routes ==========
+
+  // Fuel Friend Registration (with OTP verification)
+  app.post("/api/fuel-friends/register", async (req, res) => {
+    try {
+      const { registerFuelFriend } = await import('./controllers/fuelFriendAuth');
+      return registerFuelFriend(req, res);
+    } catch (error) {
+      console.error('Fuel friend registration error:', error);
+      res.status(500).json({ error: "Failed to register fuel friend" });
+    }
+  });
+
+  // Fuel Friend Login
+  app.post("/api/fuel-friends/login", async (req, res) => {
+    try {
+      const { loginFuelFriend } = await import('./controllers/fuelFriendAuth');
+      return loginFuelFriend(req, res);
+    } catch (error) {
+      console.error('Fuel friend login error:', error);
+      res.status(500).json({ error: "Failed to login fuel friend" });
+    }
+  });
 
   // Get all fuel friends
   app.get("/api/fuel-friends", async (_req, res) => {

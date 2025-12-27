@@ -22,7 +22,7 @@ export default function Dashboard() {
   // Get user data from storage
   const driverName = localStorage.getItem("customerName") || 
                      localStorage.getItem("driverName") || 
-                     "Driver";
+                     "FuelFriend";
   
   // Use real API hooks
   const { data: driver, isLoading: isLoadingDriver } = useDriver(driverId);

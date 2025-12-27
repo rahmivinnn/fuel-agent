@@ -143,6 +143,7 @@ class StorageService {
       location: data.location,
       deliveryFee: data.deliveryFee,
       isAvailable: data.isAvailable || true,
+      isEmailVerified: data.isEmailVerified || false,
     }).returning();
     
     return result[0];

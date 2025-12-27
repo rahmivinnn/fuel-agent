@@ -71,7 +71,7 @@ export const fuelFriends = pgTable("fuel_friends", {
   fullName: text("full_name").notNull(),
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(), // Added password field
+  password: text("password").notNull(),
   location: text("location").notNull(),
   deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).notNull(),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
@@ -81,7 +81,8 @@ export const fuelFriends = pgTable("fuel_friends", {
   profilePhoto: text("profile_photo"),
   about: text("about"),
   isAvailable: boolean("is_available").default(true),
-  fcmToken: text("fcm_token"), // For push notifications
+  isEmailVerified: boolean("is_email_verified").default(false),
+  fcmToken: text("fcm_token"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
