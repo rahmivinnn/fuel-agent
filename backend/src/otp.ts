@@ -29,10 +29,6 @@ export function verifyOTP(identifier: string, inputOtp: string): { success: bool
   
   console.log('✅ Found stored OTP:', stored.otp);
   
-  if (stored.verified) {
-    return { success: false, error: 'OTP already used' };
-  }
-  
   if (new Date() > stored.expiresAt) {
     otpStorage.delete(identifier);
     return { success: false, error: 'OTP expired' };
@@ -42,11 +38,22 @@ export function verifyOTP(identifier: string, inputOtp: string): { success: bool
     return { success: false, error: 'Invalid OTP' };
   }
   
-  // Mark as verified
-  stored.verified = true;
-  otpStorage.set(identifier, stored);
-  
   return { success: true, message: 'OTP verified successfully' };
+}
+
+export function verifyAndConsumeOTP(identifier: string, inputOtp: string): { success: boolean; error?: string; message?: string } {
+  const result = verifyOTP(identifier, inputOtp);
+  
+  if (result.success) {
+    // Mark as verified to prevent reuse
+    const stored = otpStorage.get(identifier);
+    if (stored) {
+      stored.verified = true;
+      otpStorage.set(identifier, stored);
+    }
+  }
+  
+  return result;
 }
 
 export function cleanupExpiredOTPs(): void {

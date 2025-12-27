@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { sendSuccess, sendError } from '../utils/response';
 import { RESPONSE_CODES } from '../constants/responseCodes';
-import { verifyOTP } from '../services/otp';
+import { verifyOTP, verifyAndConsumeOTP } from '../services/otp';
 import { storage } from '../services/postgres-storage';
 import { generateToken } from '../utils/auth';
 
@@ -24,7 +24,7 @@ export const registerFuelFriend = async (req: Request, res: Response) => {
 
     // Verifikasi OTP terlebih dahulu
     const normalizedEmail = email.trim().toLowerCase();
-    const otpResult = verifyOTP(normalizedEmail, otp);
+    const otpResult = verifyAndConsumeOTP(normalizedEmail, otp);
 
     if (!otpResult.success) {
       let errorCode = RESPONSE_CODES.OTP_INVALID;
