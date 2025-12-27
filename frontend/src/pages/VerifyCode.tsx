@@ -84,9 +84,9 @@ export default function VerifyCode() {
 
         // Store fuel friend data and JWT token temporarily for success screen
         if (registerResult.fuelFriend && registerResult.token) {
-          localStorage.setItem("tempCustomerId", registerResult.fuelFriend.id);
-          localStorage.setItem("tempCustomerEmail", registerResult.fuelFriend.email);
-          localStorage.setItem("tempCustomerName", registerResult.fuelFriend.fullName);
+          localStorage.setItem("tempFuelFriendId", registerResult.fuelFriend.id);
+          localStorage.setItem("tempFuelFriendEmail", registerResult.fuelFriend.email);
+          localStorage.setItem("tempFuelFriendName", registerResult.fuelFriend.fullName);
           localStorage.setItem("tempJwtToken", registerResult.token);
         } else {
           console.error('No fuel friend data or token in response:', registerResult);

@@ -49,11 +49,10 @@ export default function Login() {
       }
 
       // Store user session with new response format
-      localStorage.setItem("jwt_token", result.data?.token || "dummy_token");
-      localStorage.setItem("customerId", result.data?.customer?.id || "c1");
-      localStorage.setItem("customerEmail", result.data?.customer?.email || data.emailOrPhone);
-      localStorage.setItem("customerName", result.data?.customer?.fullName || "User");
-      localStorage.setItem("driverId", result.data?.customer?.id || "ff1"); // Use fuel friend ID
+      localStorage.setItem("token", result.data?.token || "dummy_token");
+      localStorage.setItem("fuelFriendId", result.data?.fuelFriend?.id || "ff1");
+      localStorage.setItem("fuelFriendEmail", result.data?.fuelFriend?.email || data.emailOrPhone);
+      localStorage.setItem("fuelFriendName", result.data?.fuelFriend?.fullName || "User");
 
       toast({
         title: "Success!",
@@ -74,18 +73,16 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     const result = await signInWithGoogle();
     if (result.success) {
-      // Store additional driver info if needed
-      localStorage.setItem("driverId", result.user?.id || "ff1"); // Use actual user ID
+      localStorage.setItem("fuelFriendId", result.user?.id || "ff1");
       setLocation("/dashboard");
     }
   };
 
   const handleOTPLoginSuccess = (user: any) => {
-    localStorage.setItem("jwt_token", "dummy_token"); // Add token storage
-    localStorage.setItem("customerId", user.id || "c1");
-    localStorage.setItem("customerEmail", user.email || user.phoneNumber);
-    localStorage.setItem("customerName", user.name || "Driver");
-    localStorage.setItem("driverId", user.id || "ff1"); // Use actual user ID
+    localStorage.setItem("token", "dummy_token");
+    localStorage.setItem("fuelFriendId", user.id || "ff1");
+    localStorage.setItem("fuelFriendEmail", user.email || user.phoneNumber);
+    localStorage.setItem("fuelFriendName", user.name || "Driver");
     toast({
       title: "Success!",
       description: "Logged in successfully with OTP",
@@ -234,13 +231,12 @@ export default function Login() {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-12 rounded-[30px] border border-black/50 bg-white hover:bg-gray-50 text-[#3F4249] font-['Poppins']"
-              onClick={handleGoogleSignIn}
-              disabled={googleLoading}
+              className="w-full h-12 rounded-[30px] border border-black/50 bg-gray-100 text-gray-400 font-['Poppins'] cursor-not-allowed"
+              disabled={true}
               data-testid="button-google"
             >
-              <FcGoogle className="mr-3 h-5 w-5" />
-              {googleLoading ? "Connecting..." : "Continue with Google"}
+              <FcGoogle className="mr-3 h-5 w-5 opacity-50" />
+              Continue with Google (Coming Soon)
             </Button>
           </form>
         </Form>

@@ -9,33 +9,31 @@ export default function VerifySuccess() {
   const handleGoToHome = () => {
     // Get JWT token from registration response
     const jwtToken = localStorage.getItem("tempJwtToken");
-    const tempCustomerId = localStorage.getItem("tempCustomerId");
-    const tempCustomerEmail = localStorage.getItem("tempCustomerEmail");
-    const tempCustomerName = localStorage.getItem("tempCustomerName");
+    const tempFuelFriendId = localStorage.getItem("tempFuelFriendId");
+    const tempFuelFriendEmail = localStorage.getItem("tempFuelFriendEmail");
+    const tempFuelFriendName = localStorage.getItem("tempFuelFriendName");
     
-    if (tempCustomerId && tempCustomerEmail && tempCustomerName && jwtToken) {
+    if (tempFuelFriendId && tempFuelFriendEmail && tempFuelFriendName && jwtToken) {
       // Save permanent data with real JWT token
-      localStorage.setItem("jwt_token", jwtToken);
-      localStorage.setItem("customerId", tempCustomerId);
-      localStorage.setItem("customerEmail", tempCustomerEmail);
-      localStorage.setItem("customerName", tempCustomerName);
-      localStorage.setItem("driverId", tempCustomerId); // Use actual fuel friend ID
+      localStorage.setItem("token", jwtToken);
+      localStorage.setItem("fuelFriendId", tempFuelFriendId);
+      localStorage.setItem("fuelFriendEmail", tempFuelFriendEmail);
+      localStorage.setItem("fuelFriendName", tempFuelFriendName);
       
       // Clear temporary data
       localStorage.removeItem("tempJwtToken");
-      localStorage.removeItem("tempCustomerId");
-      localStorage.removeItem("tempCustomerEmail");
-      localStorage.removeItem("tempCustomerName");
+      localStorage.removeItem("tempFuelFriendId");
+      localStorage.removeItem("tempFuelFriendEmail");
+      localStorage.removeItem("tempFuelFriendName");
       localStorage.removeItem("verificationEmail");
       localStorage.removeItem("verificationPhone");
       localStorage.removeItem("pendingRegistration");
       
       console.log('✅ User data saved to localStorage:', {
-        jwt_token: jwtToken,
-        customerId: tempCustomerId,
-        customerEmail: tempCustomerEmail,
-        customerName: tempCustomerName,
-        driverId: tempCustomerId
+        token: jwtToken,
+        fuelFriendId: tempFuelFriendId,
+        fuelFriendEmail: tempFuelFriendEmail,
+        fuelFriendName: tempFuelFriendName
       });
       
       toast({
@@ -46,9 +44,9 @@ export default function VerifySuccess() {
       setLocation("/dashboard");
     } else {
       console.error('❌ Missing required data:', {
-        tempCustomerId,
-        tempCustomerEmail, 
-        tempCustomerName,
+        tempFuelFriendId,
+        tempFuelFriendEmail, 
+        tempFuelFriendName,
         jwtToken
       });
       

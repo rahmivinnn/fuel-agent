@@ -78,7 +78,8 @@ router.post('/auth/login', async (req, res) => {
 
     return sendSuccess(res, {
       message: 'Login successful',
-      customer: fuelFriendData, // Keep 'customer' key for frontend compatibility
+      fuelFriend: fuelFriendData,
+      fuelFriendId: fuelFriend.id,
       token
     }, RESPONSE_CODES.LOGIN_SUCCESS);
   } catch (error) {
@@ -133,11 +134,12 @@ router.post('/auth/register/complete', async (req, res) => {
       success: true,
       responseCode: RESPONSE_CODES.REGISTER_COMPLETE_SUCCESS,
       message: "Registration completed successfully",
-      customer: {
+      fuelFriend: {
         id: fuelFriend.id,
         email: fuelFriend.email,
         fullName: fuelFriend.fullName
       },
+      fuelFriendId: fuelFriend.id,
       token,
       timestamp: new Date().toISOString()
     });
