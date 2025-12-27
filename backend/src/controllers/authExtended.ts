@@ -53,61 +53,11 @@ export const googleAuth = async (req: Request, res: Response) => {
 };
 
 export const registerStep1 = async (req: Request, res: Response) => {
-  try {
-    const data = registrationStep1Schema.parse(req.body);
-
-    const existingCustomer = await storage.getCustomerByEmail(data.email);
-    if (existingCustomer) {
-      return sendError(res, RESPONSE_CODES.USER_EXISTS, 400, 'Email already registered');
-    }
-
-    return sendSuccess(res, { data }, RESPONSE_CODES.SUCCESS);
-  } catch (error) {
-    return sendError(res, RESPONSE_CODES.VALIDATION_ERROR, 400, 'Invalid registration data');
-  }
+  return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'This endpoint is not available for fuel agent app');
 };
 
 export const registerComplete = async (req: Request, res: Response) => {
-  try {
-    const { step1, step2 } = req.body;
-
-    const step1Data = registrationStep1Schema.parse(step1);
-    const step2Data = registrationStep2Schema.parse(step2);
-
-    const existingCustomer = await storage.getCustomerByEmail(step1Data.email);
-    if (existingCustomer) {
-      return sendError(res, RESPONSE_CODES.USER_EXISTS, 400, 'Email already registered');
-    }
-
-    const customer = await storage.createCustomer({
-      fullName: step1Data.fullName,
-      email: step1Data.email,
-      phoneNumber: step1Data.phoneNumber,
-      password: step1Data.password,
-    });
-
-    await storage.createVehicle({
-      customerId: customer.id,
-      brand: step2Data.brand,
-      color: step2Data.color,
-      licenseNumber: step2Data.licenseNumber,
-      fuelType: step2Data.fuelType,
-      isPrimary: true,
-    });
-
-    const token = generateToken({ userId: customer.id, email: customer.email });
-
-    return sendSuccess(res, {
-      customer: {
-        id: customer.id,
-        email: customer.email,
-        fullName: customer.fullName
-      },
-      token
-    }, RESPONSE_CODES.SUCCESS);
-  } catch (error) {
-    return sendError(res, RESPONSE_CODES.VALIDATION_ERROR, 400, 'Invalid registration data');
-  }
+  return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'This endpoint is not available for fuel agent app');
 };
 
 export const emailVerification = async (req: Request, res: Response) => {
