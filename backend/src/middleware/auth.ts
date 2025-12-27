@@ -26,6 +26,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     const user = verifyToken(token);
     console.log('✅ Token verified, user:', user);
     req.user = user;
+    console.log('🚀 Calling next() - proceeding to route handler');
     next();
   } catch (error) {
     console.log('❌ Token verification failed:', error);
