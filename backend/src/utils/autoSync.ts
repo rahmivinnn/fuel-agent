@@ -4,7 +4,8 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 
 export async function autoSyncDatabase() {
-  if (process.env.NODE_ENV === 'production') {
+  // Skip auto-sync only in strict production
+  if (process.env.NODE_ENV === 'production' && process.env.AUTO_SYNC !== 'true') {
     console.log('⚠️  Production mode: Skipping auto-sync for safety');
     return;
   }
