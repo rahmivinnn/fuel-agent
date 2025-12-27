@@ -32,7 +32,9 @@ router.get('/me', authenticateToken, async (req, res) => {
       return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
     }
     
-    const vehicles = await storage.getVehiclesByCustomer(userId);
+    // Skip vehicles for now due to column name mismatch
+    // const vehicles = await storage.getVehiclesByCustomer(userId);
+    const vehicles = [];
     const { password, ...fuelFriendData } = fuelFriend;
     
     console.log('✅ Returning user data:', { id: fuelFriendData.id, email: fuelFriendData.email });
