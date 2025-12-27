@@ -17,12 +17,32 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const fuelFriendId = localStorage.getItem("driverId") || "ff1";
+  
+  // Clean up old localStorage keys on first load
+  useEffect(() => {
+    const cleanupOldStorage = () => {
+      const oldKeys = ['customerEmail', 'customerId', 'customerName', 'driverId', 'jwt_token'];
+      let hasOldKeys = false;
+      
+      oldKeys.forEach(key => {
+        if (localStorage.getItem(key)) {
+          localStorage.removeItem(key);
+          hasOldKeys = true;
+        }
+      });
+      
+      if (hasOldKeys) {
+        console.log('Cleaned up old localStorage keys');
+      }
+    };
+    
+    cleanupOldStorage();
+  }, []);
+  
+  const fuelFriendId = localStorage.getItem("fuelFriendId") || "ff1";
   
   // Get user data from storage
-  const driverName = localStorage.getItem("customerName") || 
-                     localStorage.getItem("driverName") || 
-                     "FuelFriend";
+  const driverName = localStorage.getItem("fuelFriendName") || "FuelFriend";
   
   // Use real API hooks
   const { data: driver, isLoading: isLoadingDriver } = useDriver(fuelFriendId);

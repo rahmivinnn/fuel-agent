@@ -1,19 +1,19 @@
 // JWT Token Management
 export const authStorage = {
   getToken: (): string | null => {
-    return localStorage.getItem('jwt_token');
+    return localStorage.getItem('token');
   },
   
   setToken: (token: string): void => {
-    localStorage.setItem('jwt_token', token);
+    localStorage.setItem('token', token);
   },
   
   removeToken: (): void => {
-    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('token');
   },
   
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('jwt_token');
+    return !!localStorage.getItem('token');
   }
 };
 
@@ -21,18 +21,16 @@ export const authStorage = {
 export const auth = {
   setSession: (user: any, token: string) => {
     authStorage.setToken(token);
-    localStorage.setItem('customerId', user.id);
-    localStorage.setItem('customerEmail', user.email);
-    localStorage.setItem('customerName', user.fullName);
-    localStorage.setItem('driverId', 'ff1'); // Default driver ID
+    localStorage.setItem('fuelFriendId', user.id);
+    localStorage.setItem('fuelFriendEmail', user.email);
+    localStorage.setItem('fuelFriendName', user.fullName);
   },
   
   clearSession: () => {
     authStorage.removeToken();
-    localStorage.removeItem('customerId');
-    localStorage.removeItem('customerEmail');
-    localStorage.removeItem('customerName');
-    localStorage.removeItem('driverId');
+    localStorage.removeItem('fuelFriendId');
+    localStorage.removeItem('fuelFriendEmail');
+    localStorage.removeItem('fuelFriendName');
   }
 };
 
