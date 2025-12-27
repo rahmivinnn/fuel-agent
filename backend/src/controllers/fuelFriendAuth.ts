@@ -40,11 +40,11 @@ export const registerFuelFriend = async (req: Request, res: Response) => {
       return sendError(res, errorCode, 400, otpResult.error);
     }
 
-    // Cek apakah email sudah terdaftar
+    // Cek apakah email sudah terdaftar di fuel friends
     console.log('🔍 Checking existing fuel friend:', normalizedEmail);
     const existingFuelFriend = await storage.getFuelFriendByEmail(normalizedEmail);
     if (existingFuelFriend) {
-      return sendError(res, RESPONSE_CODES.EMAIL_ALREADY_EXISTS, 409, 'Email already registered as fuel friend');
+      return sendError(res, RESPONSE_CODES.EMAIL_ALREADY_EXISTS, 409, 'Email already registered');
     }
 
     // Buat fuel friend baru
