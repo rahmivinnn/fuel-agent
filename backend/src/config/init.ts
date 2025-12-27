@@ -1,5 +1,6 @@
 import { db } from './database';
 import { sql } from 'drizzle-orm';
+import { autoSyncDatabase } from '../utils/autoSync';
 
 export async function initializeDatabase() {
   try {
@@ -8,6 +9,9 @@ export async function initializeDatabase() {
     // Test connection
     await db.execute(sql`SELECT 1`);
     console.log('✅ Database connected successfully');
+    
+    // Auto-sync schema on startup (development only)
+    await autoSyncDatabase();
     
     // Check if tables exist
     const tableCheck = await db.execute(sql`
