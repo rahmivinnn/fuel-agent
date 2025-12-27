@@ -35,18 +35,45 @@ export default function VerifyCode() {
 
     setIsLoading(true);
     try {
-      const email = localStorage.getItem("verificationEmail") || localStorage.getItem("customerEmail");
+      const email = localStorage.getItem("verificationEmail");
       
-      const response = await fetch(`${API_BASE_URL}/api/auth/verify-code`, {
+      // First verify OTP
+      const verifyResponse = await fetch(`${API_BASE_URL}/api/otp/email/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, email }),
+        body: JSON.stringify({ email, otp: code }),
       });
 
-      const result = await response.json();
+      const verifyResult = await verifyResponse.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Invalid verification code");
+      if (!verifyResponse.ok) {
+        throw new Error(verifyResult.error || "Invalid verification code");
+      }
+
+      // If OTP is valid, create account in database
+      const pendingRegistration = localStorage.getItem("pendingRegistration");
+      if (pendingRegistration) {
+        const registrationData = JSON.parse(pendingRegistration);
+        
+        const registerResponse = await fetch(`${API_BASE_URL}/api/auth/register/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(registrationData),
+        });
+
+        const registerResult = await registerResponse.json();
+
+        if (!registerResponse.ok) {
+          throw new Error(registerResult.error || "Registration failed");
+        }
+
+        // Store customer data temporarily for success screen
+        localStorage.setItem("tempCustomerId", registerResult.customer.id);
+        localStorage.setItem("tempCustomerEmail", registerResult.customer.email);
+        localStorage.setItem("tempCustomerName", registerResult.customer.fullName);
+        
+        // Clear pending registration
+        localStorage.removeItem("pendingRegistration");
       }
 
       setLocation("/verify-success");
@@ -65,9 +92,9 @@ export default function VerifyCode() {
     if (!canResend) return;
     
     try {
-      const email = localStorage.getItem("verificationEmail") || localStorage.getItem("customerEmail");
+      const email = localStorage.getItem("verificationEmail");
       
-      const response = await fetch(`${API_BASE_URL}/api/auth/email-verification`, {
+      const response = await fetch(`${API_BASE_URL}/api/otp/email/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

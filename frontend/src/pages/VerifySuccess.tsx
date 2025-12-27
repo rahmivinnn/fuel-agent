@@ -1,8 +1,40 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function VerifySuccess() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const handleGoToHome = () => {
+    // Move temporary data to permanent storage and add JWT token
+    const tempCustomerId = localStorage.getItem("tempCustomerId");
+    const tempCustomerEmail = localStorage.getItem("tempCustomerEmail");
+    const tempCustomerName = localStorage.getItem("tempCustomerName");
+    
+    if (tempCustomerId && tempCustomerEmail && tempCustomerName) {
+      // Save permanent data with JWT token
+      localStorage.setItem("jwt_token", "verified_token_" + Date.now());
+      localStorage.setItem("customerId", tempCustomerId);
+      localStorage.setItem("customerEmail", tempCustomerEmail);
+      localStorage.setItem("customerName", tempCustomerName);
+      localStorage.setItem("driverId", "ff1"); // Default driver ID
+      
+      // Clear temporary data
+      localStorage.removeItem("tempCustomerId");
+      localStorage.removeItem("tempCustomerEmail");
+      localStorage.removeItem("tempCustomerName");
+      localStorage.removeItem("verificationEmail");
+      localStorage.removeItem("verificationPhone");
+      
+      toast({
+        title: "Welcome!",
+        description: "Your account is now active and ready to use",
+      });
+    }
+    
+    setLocation("/dashboard");
+  };
 
   return (
     <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
@@ -36,7 +68,7 @@ export default function VerifySuccess() {
 
         {/* Go to Home Button */}
         <Button
-          onClick={() => setLocation("/dashboard")}
+          onClick={handleGoToHome}
           className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mb-12"
         >
           Go to Home

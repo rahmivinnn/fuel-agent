@@ -104,39 +104,33 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      const response = await apiClient.fetch("/api/auth/register/complete", {
-        method: "POST",
-        body: JSON.stringify({ step1: step1Data, step2: step2Data }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Registration failed");
-      }
-
-      // Store user data for dashboard
-      localStorage.setItem("jwt_token", result.data.token || "dummy_token"); // Add token storage
-      localStorage.setItem("customerId", result.data.customer.id);
-      localStorage.setItem("customerEmail", result.data.customer.email);
-      localStorage.setItem("customerName", result.data.customer.fullName);
-      localStorage.setItem("driverId", "ff1"); // Default driver ID
-
-      toast({
-        title: "Success!",
-        description: "Account created successfully",
-      });
-
-      // Store email and phone for verification
+      // Store registration data temporarily (not in DB yet)
+      localStorage.setItem("pendingRegistration", JSON.stringify({ step1: step1Data, step2: step2Data }));
       localStorage.setItem("verificationEmail", step1Data.email);
-      localStorage.setItem("verificationPhone", step1Data.phoneNumber);
       
-      // Redirect to email verification page
-      setLocation("/email-verification");
+      // Send OTP code
+      const otpResponse = await apiClient.fetch("/api/otp/email/send", {
+        method: "POST",
+        body: JSON.stringify({ email: step1Data.email }),
+      });
+
+      const otpResult = await otpResponse.json();
+
+      if (!otpResponse.ok) {
+        throw new Error(otpResult.error || "Failed to send verification code");
+      }
+      
+      toast({
+        title: "Verification Code Sent!",
+        description: "Please check your email for the verification code",
+      });
+      
+      // Redirect to verify code page
+      setLocation("/verify-code");
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Registration failed",
+        description: error instanceof Error ? error.message : "Failed to send verification code",
         variant: "destructive",
       });
     } finally {
