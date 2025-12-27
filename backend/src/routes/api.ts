@@ -386,8 +386,15 @@ router.post('/otp/whatsapp/send', async (req, res) => {
 
     console.log('📱 Sending WhatsApp OTP to:', phoneNumber, 'OTP:', otp);
 
-    // Mock WhatsApp sending (replace with actual WhatsApp API)
-    return sendSuccess(res, { message: "Verification code sent successfully" }, RESPONSE_CODES.SUCCESS);
+    // Send via Baileys WhatsApp
+    const { sendWhatsAppOTP } = await import('../services/whatsapp');
+    const result = await sendWhatsAppOTP(phoneNumber, otp);
+
+    if (result.success) {
+      return sendSuccess(res, { message: "Verification code sent successfully" }, RESPONSE_CODES.SUCCESS);
+    } else {
+      return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, result.error || 'Failed to send verification code');
+    }
   } catch (error) {
     console.error('WhatsApp OTP error:', error);
     return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to send verification code');

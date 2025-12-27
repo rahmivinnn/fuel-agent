@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import apiRoutes from './routes/api';
 import { initializeDatabase } from './config/init';
+import { initializeWhatsApp } from './services/whatsapp';
 
 dotenv.config();
 
@@ -20,6 +21,9 @@ app.set('trust proxy', true);
 
 // Initialize database on startup
 initializeDatabase();
+
+// Initialize WhatsApp connection
+initializeWhatsApp();
 
 // Security middleware
 app.use(helmet());

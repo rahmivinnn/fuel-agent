@@ -1,121 +1,64 @@
-import { makeWASocket, DisconnectReason, useMultiFileAuthState } from '@whiskeysockets/baileys';
+import makeWASocket, { DisconnectReason, useMultiFileAuthState } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
+import path from 'path';
 
-class WhatsAppService {
-  private sock: ReturnType<typeof makeWASocket> | null = null;
-  public isConnected = false;
-  private sessionPath = 'whatsapp-auth';
+let sock: any = null;
+let isConnected = false;
 
-  async initialize() {
-    try {
-      const { state, saveCreds } = await useMultiFileAuthState(this.sessionPath);
-      
-      const logger = {
-        level: 'silent' as const,
-        child: () => logger,
-        info: () => {},
-        error: () => {},
-        warn: () => {},
-        debug: () => {},
-        trace: () => {}
-      };
-
-      this.sock = makeWASocket({
-        auth: state,
-        logger,
-        browser: ['FuelFriend Agent', 'Chrome', '1.0.0'],
-        syncFullHistory: false,
-        generateHighQualityLinkPreview: false,
-        markOnlineOnConnect: false,
-      });
-
-      this.sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
-        
-        if (qr) {
-          console.log('\n🔥 WHATSAPP QR CODE - SCAN WITH YOUR PHONE:');
-          console.log('='.repeat(50));
-          try {
-            const qrcode = await import('qrcode-terminal');
-            qrcode.default.generate(qr, { small: true });
-          } catch (e) {
-            console.log('QR Code:', qr);
-          }
-          console.log('='.repeat(50));
-          console.log('⬆️ Open WhatsApp > Settings > Linked Devices > Link a Device');
-          console.log('📱 Scan the QR code above to connect WhatsApp\n');
-        }
-        
-        if (connection === 'close') {
-          this.isConnected = false;
-          const shouldReconnect = (lastDisconnect?.error instanceof Boom) 
-            ? lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut
-            : true;
-          
-          console.log('❌ WhatsApp disconnected');
-          if (shouldReconnect) {
-            console.log('🔄 Reconnecting in 10 seconds...');
-            setTimeout(() => this.initialize(), 10000);
-          }
-        } else if (connection === 'open') {
-          console.log('✅ WhatsApp connected successfully!');
-          this.isConnected = true;
-        } else if (connection === 'connecting') {
-          console.log('🔄 WhatsApp connecting...');
-        }
-      });
-
-      this.sock.ev.on('creds.update', saveCreds);
-      
-    } catch (error) {
-      console.error('❌ WhatsApp initialization error:', error);
-      setTimeout(() => this.initialize(), 10000);
-    }
-  }
-
-  async sendOTP(phoneNumber: string, otp: string): Promise<{success: boolean, message: string}> {
-    for (let i = 0; i < 10; i++) {
-      if (this.isConnected) break;
-      console.log(`⏳ Waiting for WhatsApp connection... (${i+1}/10)`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+export const initializeWhatsApp = async () => {
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '../auth_info_baileys'));
     
-    if (!this.isConnected || !this.sock) {
-      throw new Error('WhatsApp not connected - scan QR code first');
-    }
+    sock = makeWASocket({
+      auth: state,
+      printQRInTerminal: true,
+    });
 
-    try {
-      let formattedNumber = phoneNumber.replace(/[^\d]/g, '');
-      if (formattedNumber.startsWith('08')) {
-        formattedNumber = '62' + formattedNumber.substring(1);
-      } else if (formattedNumber.startsWith('8')) {
-        formattedNumber = '62' + formattedNumber;
+    sock.ev.on('connection.update', (update: any) => {
+      const { connection, lastDisconnect } = update;
+      
+      if (connection === 'close') {
+        const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+        console.log('WhatsApp connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect);
+        
+        if (shouldReconnect) {
+          initializeWhatsApp();
+        }
+        isConnected = false;
+      } else if (connection === 'open') {
+        console.log('✅ WhatsApp connected successfully');
+        isConnected = true;
       }
-      
-      const jid = `${formattedNumber}@s.whatsapp.net`;
-      
-      const message = `🔐 *FuelFriend Agent OTP*\n\nKode verifikasi: *${otp}*\n\n⏰ Berlaku 10 menit\n🔒 Jangan bagikan kode ini\n\nTerima kasih! 🚗⛽`;
-      
-      await this.sock.sendMessage(jid, { text: message });
-      
-      console.log(`✅ WhatsApp OTP sent to ${phoneNumber}`);
-      return { success: true, message: 'WhatsApp OTP sent successfully' };
-      
-    } catch (error: any) {
-      console.error('❌ Failed to send WhatsApp OTP:', error);
-      throw new Error(`WhatsApp send failed: ${error.message}`);
+    });
+
+    sock.ev.on('creds.update', saveCreds);
+    
+  } catch (error) {
+    console.error('❌ WhatsApp initialization error:', error);
+  }
+};
+
+export const sendWhatsAppOTP = async (phoneNumber: string, otp: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    if (!sock || !isConnected) {
+      return { success: false, error: 'WhatsApp not connected' };
     }
+
+    // Format phone number (remove + and add country code if needed)
+    const formattedNumber = phoneNumber.replace(/\D/g, '');
+    const jid = `${formattedNumber}@s.whatsapp.net`;
+
+    const message = `Your Fuel Agent verification code is: ${otp}\n\nThis code will expire in 10 minutes. Do not share this code with anyone.`;
+
+    await sock.sendMessage(jid, { text: message });
+    
+    console.log('📱 WhatsApp OTP sent successfully to:', phoneNumber);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('❌ WhatsApp send error:', error);
+    return { success: false, error: error.message || 'Failed to send WhatsApp message' };
   }
+};
 
-  getConnectionStatus() {
-    return {
-      connected: this.isConnected,
-      hasSocket: !!this.sock
-    };
-  }
-}
-
-export const whatsappService = new WhatsAppService();
-whatsappService.initialize();
-
-export default whatsappService;
+export const isWhatsAppConnected = () => isConnected;
