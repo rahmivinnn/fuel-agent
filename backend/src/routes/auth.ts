@@ -7,11 +7,68 @@ import {
 } from '../controllers/authExtended';
 import { restartWhatsApp, addResendContact, createTestOrder } from '../controllers/misc';
 import { authenticateToken } from '../middleware/auth';
+import { sendSuccess, sendError } from '../utils/response';
+import { RESPONSE_CODES } from '../constants/responseCodes';
+import { storage } from '../services/postgres-storage';
+import { generateToken } from '../utils/auth';
+import { registrationStep1Schema, registrationStep2Schema } from '@shared/schema';
 
 const router = Router();
 
+// Get current user from JWT token
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const fuelFriend = await storage.getFuelFriend(userId);
+    
+    if (!fuelFriend) {
+      return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
+    }
+    
+    const vehicles = await storage.getVehiclesByCustomer(userId);
+    const { password, ...fuelFriendData } = fuelFriend;
+    
+    return sendSuccess(res, { 
+      customer: fuelFriendData,
+      vehicles 
+    }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.UNAUTHORIZED, 401, 'Invalid token');
+  }
+});
+
+// Login endpoint
+router.post('/login', async (req, res) => {
+  try {
+    const { emailOrPhone, password } = req.body;
+
+    if (!emailOrPhone || !password) {
+      return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 400, 'Email/phone and password are required');
+    }
+
+    const fuelFriend = await storage.getFuelFriendByEmail(emailOrPhone);
+    if (!fuelFriend) {
+      return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 401, 'Invalid credentials');
+    }
+
+    const token = generateToken({
+      userId: fuelFriend.id,
+      email: fuelFriend.email
+    });
+
+    const { password: _, ...fuelFriendData } = fuelFriend;
+
+    return sendSuccess(res, {
+      fuelFriend: fuelFriendData,
+      fuelFriendId: fuelFriend.id,
+      token
+    }, RESPONSE_CODES.LOGIN_SUCCESS);
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 500, 'Login failed');
+  }
+});
+
 // Auth routes
-router.post('/login', login);
 router.post('/google', googleAuth);
 router.post('/register/step1', registerStep1);
 router.post('/register/complete', registerComplete);
@@ -21,7 +78,7 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.get('/profile', authenticateToken, getProfile);
 
-// OTP routes - separate like old API
+// OTP routes
 router.post('/otp/email/send', sendEmailOTP);
 router.post('/otp/email/verify', verifyEmailOTP);
 router.post('/otp/whatsapp/send', sendWhatsAppOTP);

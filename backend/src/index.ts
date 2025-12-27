@@ -54,8 +54,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api', apiRoutes);
+app.use('/api/auth', authRoutes);  // Auth routes: /api/auth/*
+app.use('/api', apiRoutes);        // Other routes: /api/*
 
 // 404 handler
 app.use('*', (req, res) => {

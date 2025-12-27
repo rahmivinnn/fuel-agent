@@ -36,33 +36,52 @@ export default function Login() {
   const onSubmit = async (data: LoginData) => {
     setIsLoading(true);
     try {
+      console.log('🔄 Sending login request:', data.emailOrPhone);
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
+      console.log('📡 Response status:', response.status, response.statusText);
+      
       const result = await response.json();
-      console.log('Login response:', result); // Debug log
+      console.log('📦 Login response:', result);
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || result.message || "Invalid credentials");
+      if (!response.ok) {
+        console.error('❌ HTTP Error:', response.status, result);
+        throw new Error(result.error || result.message || "HTTP Error");
+      }
+      
+      if (!result.success) {
+        console.error('❌ API Error:', result);
+        throw new Error(result.error || result.message || "API Error");
       }
 
       // Validate token exists
       if (!result.data?.token) {
+        console.error('❌ No token in response:', result.data);
         throw new Error("No token received from server");
       }
 
+      console.log('✅ Token received:', result.data.token.substring(0, 20) + '...');
+      
       // Store only token, user data will be fetched via useAuth hook
       localStorage.setItem("token", result.data.token);
+      
+      console.log('💾 Token stored in localStorage');
+      console.log('🔍 Verify storage:', localStorage.getItem("token")?.substring(0, 20) + '...');
 
       toast({
         title: "Success!",
         description: "Logged in successfully",
       });
+      
+      console.log('🚀 Redirecting to dashboard');
       setLocation("/dashboard");
     } catch (error) {
+      console.error('💥 Login error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Invalid credentials",

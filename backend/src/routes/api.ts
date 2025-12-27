@@ -13,28 +13,6 @@ import { registrationStep1Schema, registrationStep2Schema } from '@shared/schema
 
 const router = Router();
 
-// Get current user from JWT token
-router.get('/auth/me', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const fuelFriend = await storage.getFuelFriend(userId);
-    
-    if (!fuelFriend) {
-      return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
-    }
-    
-    const vehicles = await storage.getVehiclesByCustomer(userId);
-    const { password, ...fuelFriendData } = fuelFriend;
-    
-    return sendSuccess(res, { 
-      customer: fuelFriendData, // Keep 'customer' key for frontend compatibility
-      vehicles 
-    }, RESPONSE_CODES.SUCCESS);
-  } catch (error) {
-    return sendError(res, RESPONSE_CODES.UNAUTHORIZED, 401, 'Invalid token');
-  }
-});
-
 // Check email verification status
 router.get('/auth/email-verification-status/:email', async (req, res) => {
   try {
@@ -53,99 +31,6 @@ router.get('/auth/email-verification-status/:email', async (req, res) => {
   }
 });
 
-// Login endpoint
-router.post('/auth/login', async (req, res) => {
-  try {
-    const { emailOrPhone, password } = req.body;
-
-    if (!emailOrPhone || !password) {
-      return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 400, 'Email/phone and password are required');
-    }
-
-    // Get fuel friend from database
-    const fuelFriend = await storage.getFuelFriendByEmail(emailOrPhone);
-    if (!fuelFriend) {
-      return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 401, 'Invalid credentials');
-    }
-
-    // Generate JWT token
-    const token = generateToken({
-      userId: fuelFriend.id,
-      email: fuelFriend.email
-    });
-
-    const { password: _, ...fuelFriendData } = fuelFriend;
-
-    return sendSuccess(res, {
-      fuelFriend: fuelFriendData,
-      fuelFriendId: fuelFriend.id,
-      token
-    }, RESPONSE_CODES.LOGIN_SUCCESS);
-  } catch (error) {
-    return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 500, 'Login failed');
-  }
-});
-
-// Auth Routes
-router.post('/auth/register/complete', async (req, res) => {
-  try {
-    const { step1, step2 } = req.body;
-
-    const step1Data = registrationStep1Schema.parse(step1);
-    const step2Data = registrationStep2Schema.parse(step2);
-
-    // Check if email already exists in fuel friends
-    const existingFuelFriend = await storage.getFuelFriendByEmail(step1Data.email);
-    if (existingFuelFriend) {
-      return res.status(400).json({
-        error: "Email already registered"
-      });
-    }
-
-    // Create fuel friend (driver)
-    const fuelFriend = await storage.createFuelFriend({
-      fullName: step1Data.fullName,
-      email: step1Data.email,
-      phoneNumber: step1Data.phoneNumber,
-      password: step1Data.password,
-      location: "Default Location", // Required field
-      deliveryFee: "15.00", // Default delivery fee
-      isAvailable: true,
-    });
-
-    // Create vehicle
-    await storage.createVehicle({
-      fuelFriendId: fuelFriend.id, // Use fuelFriendId instead of customerId
-      brand: step2Data.brand,
-      color: step2Data.color,
-      licenseNumber: step2Data.licenseNumber,
-      fuelType: step2Data.fuelType,
-      isPrimary: true,
-    });
-
-    // Generate JWT token
-    const token = generateToken({
-      userId: fuelFriend.id,
-      email: fuelFriend.email
-    });
-
-    res.json({
-      success: true,
-      responseCode: RESPONSE_CODES.REGISTER_COMPLETE_SUCCESS,
-      message: "Registration completed successfully",
-      fuelFriend: {
-        id: fuelFriend.id,
-        email: fuelFriend.email,
-        fullName: fuelFriend.fullName
-      },
-      fuelFriendId: fuelFriend.id,
-      token,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(400).json({ error: "Invalid registration data" });
-  }
-});
 
 // Health check
 router.get('/health', (req, res) => {
