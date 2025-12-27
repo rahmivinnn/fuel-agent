@@ -14,7 +14,8 @@ export const initializeWhatsApp = async () => {
     
     sock = makeWASocket({
       auth: state,
-      printQRInTerminal: false, // We'll handle QR manually
+      printQRInTerminal: false,
+      logger: { level: 'error', child: () => ({ level: 'error' }) } // Reduce logs
     });
 
     sock.ev.on('connection.update', (update: any) => {
@@ -27,14 +28,14 @@ export const initializeWhatsApp = async () => {
       
       if (connection === 'close') {
         const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
-        console.log('WhatsApp connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect);
         
         if (shouldReconnect) {
+          console.log('🔄 WhatsApp reconnecting...');
           setTimeout(() => initializeWhatsApp(), 5000);
         }
         isConnected = false;
       } else if (connection === 'open') {
-        console.log('✅ WhatsApp connected successfully');
+        console.log('✅ WhatsApp connected');
         isConnected = true;
       }
     });
@@ -42,7 +43,7 @@ export const initializeWhatsApp = async () => {
     sock.ev.on('creds.update', saveCreds);
     
   } catch (error) {
-    console.error('❌ WhatsApp initialization error:', error);
+    console.error('❌ WhatsApp error:', error.message);
     setTimeout(() => initializeWhatsApp(), 10000);
   }
 };
@@ -53,19 +54,29 @@ export const sendWhatsAppOTP = async (phoneNumber: string, otp: string): Promise
       return { success: false, error: 'WhatsApp not connected' };
     }
 
-    // Format phone number (remove + and add country code if needed)
-    const formattedNumber = phoneNumber.replace(/\D/g, '');
+    // Format phone number - handle international numbers
+    let formattedNumber = phoneNumber.replace(/\D/g, '');
+    
+    // Add country code if not present
+    if (!formattedNumber.match(/^(1|44|62)/)) {
+      // Default to Indonesia if no country code detected
+      if (formattedNumber.startsWith('0')) {
+        formattedNumber = '62' + formattedNumber.substring(1);
+      } else {
+        formattedNumber = '62' + formattedNumber;
+      }
+    }
+    
     const jid = `${formattedNumber}@s.whatsapp.net`;
-
     const message = `Your Fuel Agent verification code is: ${otp}\n\nThis code will expire in 10 minutes. Do not share this code with anyone.`;
 
     await sock.sendMessage(jid, { text: message });
     
-    console.log('📱 WhatsApp OTP sent successfully to:', phoneNumber);
+    console.log('📱 WhatsApp OTP sent to:', formattedNumber);
     return { success: true };
     
   } catch (error) {
-    console.error('❌ WhatsApp send error:', error);
+    console.error('❌ WhatsApp send error:', error.message);
     return { success: false, error: error.message || 'Failed to send WhatsApp message' };
   }
 };
