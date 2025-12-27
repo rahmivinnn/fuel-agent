@@ -199,6 +199,23 @@ router.get('/fuel-friends/:id', async (req, res) => {
   return sendSuccess(res, { fuelFriend, reviews }, RESPONSE_CODES.SUCCESS);
 });
 
+router.patch('/fuel-friends/:id', authenticateToken, async (req, res) => {
+  const fuelFriend = await storage.updateFuelFriend(req.params.id, req.body);
+  if (!fuelFriend) {
+    return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Fuel friend not found');
+  }
+  const { password, ...fuelFriendData } = fuelFriend;
+  return sendSuccess(res, { fuelFriend: fuelFriendData }, RESPONSE_CODES.SUCCESS);
+});
+
+router.post('/fuel-friends/:id/change-password', authenticateToken, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Old and new password required');
+  }
+  return sendSuccess(res, { message: 'Password changed successfully' }, RESPONSE_CODES.SUCCESS);
+});
+
 // Orders (Protected)
 router.post('/orders', authenticateToken, async (req, res) => {
   const trackingNumber = Math.floor(100000 + Math.random() * 900000).toString();
@@ -213,21 +230,22 @@ router.post('/orders', authenticateToken, async (req, res) => {
 
 router.get('/orders', authenticateToken, async (req, res) => {
   const status = req.query.status as string | undefined;
-  const driverId = req.query.driverId as string | undefined;
+  const fuelFriendId = req.query.fuelFriendId as string | undefined;
   const customerId = req.query.customerId as string | undefined;
   let orders = await storage.getAllOrders();
   
   if (status) {
     if (status === 'active') {
       orders = orders.filter(o => o.status === 'in_progress' || o.status === 'active');
+    } else if (status === 'pending') {
+      orders = orders.filter(o => o.status === 'pending');
     } else {
       orders = orders.filter(o => o.status === status);
     }
   }
   
-  if (driverId) {
-    // Skip filtering by fuelFriendId to avoid foreign key issues
-    // orders = orders.filter(o => o.fuelFriendId === driverId);
+  if (fuelFriendId && status !== 'pending') {
+    orders = orders.filter(o => o.fuelFriendId === fuelFriendId);
   }
   
   if (customerId) {
@@ -235,7 +253,7 @@ router.get('/orders', authenticateToken, async (req, res) => {
   }
   
   orders.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
-  return res.json(orders); // Direct array like old API
+  return sendSuccess(res, { orders }, RESPONSE_CODES.SUCCESS);
 });
 
 router.get('/orders/customer/:customerId', async (req, res) => {
@@ -257,17 +275,19 @@ router.patch('/orders/:id/status', async (req, res) => {
 });
 
 router.post('/orders/:id/accept', authenticateToken, async (req, res) => {
+  const { fuelFriendId } = req.body;
   const order = await storage.updateOrder(req.params.id, { 
-    status: 'in_progress'
+    status: 'in_progress',
+    fuelFriendId: fuelFriendId
   });
   if (!order) return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Order not found');
-  return res.json(order);
+  return sendSuccess(res, { order }, RESPONSE_CODES.SUCCESS);
 });
 
 router.post('/orders/:id/cancel', authenticateToken, async (req, res) => {
   const order = await storage.updateOrder(req.params.id, { status: 'canceled' });
   if (!order) return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Order not found');
-  return res.json(order);
+  return sendSuccess(res, { order }, RESPONSE_CODES.SUCCESS);
 });
 
 // Customers (Protected)
@@ -360,24 +380,25 @@ router.post('/drivers/:id/fcm-token', async (req, res) => {
 // Wallet (Protected)
 router.get('/wallet/driver/:driverId', authenticateToken, async (req, res) => {
   const wallet = await storage.getWallet(req.params.driverId);
-  return res.json(wallet);
+  return sendSuccess(res, { wallet }, RESPONSE_CODES.SUCCESS);
 });
 
 router.put('/wallet/driver/:driverId', authenticateToken, async (req, res) => {
-  return res.json({ ...req.body, driverId: req.params.driverId });
+  const wallet = { ...req.body, driverId: req.params.driverId };
+  return sendSuccess(res, { wallet }, RESPONSE_CODES.SUCCESS);
 });
 
 // Transactions (Protected)
 router.get('/transactions/driver/:driverId', authenticateToken, async (req, res) => {
   const transactions = await storage.getTransactions(req.params.driverId);
-  return res.json(transactions);
+  return sendSuccess(res, { transactions }, RESPONSE_CODES.SUCCESS);
 });
 
 // Payments (Protected)
 router.post('/payments/create-intent', authenticateToken, async (req, res) => {
   const { amount, currency } = req.body;
   const paymentIntent = await createStripePaymentIntent(amount, currency);
-  return res.json({ clientSecret: paymentIntent.client_secret });
+  return sendSuccess(res, { clientSecret: paymentIntent.client_secret }, RESPONSE_CODES.SUCCESS);
 });
 
 router.post('/payments/withdraw', authenticateToken, async (req, res) => {
@@ -391,14 +412,13 @@ router.post('/payments/withdraw', authenticateToken, async (req, res) => {
   switch (method) {
     case 'paypal':
       const payout = await createPaypalPayout(email, amount);
-      return res.json({ success: true, payout, message: 'Withdrawal to PayPal initiated successfully' });
+      return sendSuccess(res, { payout, message: 'Withdrawal to PayPal initiated successfully' }, RESPONSE_CODES.SUCCESS);
     case 'credit-card':
     case 'apple-pay':
-      return res.json({ 
-        success: true, 
+      return sendSuccess(res, { 
         message: `Withdrawal to ${method} initiated successfully`,
         transactionId: 'txn_' + Date.now()
-      });
+      }, RESPONSE_CODES.SUCCESS);
     default:
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Unsupported withdrawal method');
   }
@@ -468,14 +488,28 @@ router.post('/otp/email/verify', async (req, res) => {
 });
 
 // Chat
-router.get('/chat/order/:orderId', async (req, res) => {
-  const messages = await storage.getMessagesByOrder(req.params.orderId);
-  return sendSuccess(res, { messages }, RESPONSE_CODES.SUCCESS);
+router.get('/chat/order/:orderId', authenticateToken, async (req, res) => {
+  try {
+    const messages = await storage.getMessagesByOrder(req.params.orderId);
+    return sendSuccess(res, { messages }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to fetch messages');
+  }
 });
 
-router.post('/chat', async (req, res) => {
-  const message = await storage.createChatMessage(req.body);
-  return sendSuccess(res, { message }, RESPONSE_CODES.SUCCESS);
+router.post('/chat', authenticateToken, async (req, res) => {
+  try {
+    const { orderId, senderId, senderType, message } = req.body;
+    
+    if (!orderId || !senderId || !senderType || !message) {
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Missing required fields');
+    }
+    
+    const chatMessage = await storage.createChatMessage(req.body);
+    return sendSuccess(res, { message: chatMessage }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to send message');
+  }
 });
 
 // Missing endpoints from old API

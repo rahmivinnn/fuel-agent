@@ -1,14 +1,21 @@
 import { ArrowLeft, Edit, MapPin, Star, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
+import { useDriver } from "@/hooks/useDriver";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ViewProfile() {
   const [, setLocation] = useLocation();
+  const fuelFriendId = localStorage.getItem("driverId") || "ff1";
   
-  // Get user data from localStorage
-  const customerName = localStorage.getItem('customerName') || 'Shah Hussain';
-  const userAbout = localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers. Whether you\'re stranded on the road or simply looking to avoid the hassle of gas stations, our trusted Fuel Friends ensure that you get quality fuel delivered right to your location.';
-  const userLocation = localStorage.getItem('userLocation') || 'Abc Tennessee';
-  const userServices = JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]');
+  const { data: driver, isLoading } = useDriver(fuelFriendId);
+  
+  // Fallback to localStorage if API data not available
+  const customerName = driver?.fullName || localStorage.getItem('customerName') || 'Shah Hussain';
+  const userAbout = driver?.about || localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers. Whether you\'re stranded on the road or simply looking to avoid the hassle of gas stations, our trusted Fuel Friends ensure that you get quality fuel delivered right to your location.';
+  const userLocation = driver?.location || localStorage.getItem('userLocation') || 'Abc Tennessee';
+  const userServices = driver?.services || JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]');
+  const rating = driver?.rating || 4.8;
+  const reviewCount = driver?.reviewCount || 128;
 
   const handleBack = () => {
     setLocation('/dashboard');
@@ -20,6 +27,52 @@ export default function ViewProfile() {
     // Navigate to home page
     setLocation('/');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white px-4 py-4 flex items-center justify-between border-b">
+          <button onClick={handleBack} className="p-2">
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="text-xl font-semibold">My Profile</h1>
+          <button onClick={() => setLocation('/edit-profile')} className="p-2">
+            <Edit className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="px-4 py-6 space-y-6">
+          {/* Profile Section Skeleton */}
+          <div className="text-center">
+            <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
+            <Skeleton className="h-6 w-32 mx-auto mb-2" />
+            <Skeleton className="h-4 w-24 mx-auto" />
+          </div>
+
+          {/* About Section Skeleton */}
+          <div>
+            <Skeleton className="h-6 w-16 mb-3" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+
+          {/* Location Section Skeleton */}
+          <div>
+            <Skeleton className="h-6 w-24 mb-3" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+
+          {/* Services Section Skeleton */}
+          <div>
+            <Skeleton className="h-6 w-24 mb-3" />
+            <Skeleton className="h-4 w-40 mb-2" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,7 +98,7 @@ export default function ViewProfile() {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">{customerName}</h2>
           <div className="flex items-center justify-center gap-1">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-gray-600">4.8 (128 reviews)</span>
+            <span className="text-gray-600">{rating} ({reviewCount} reviews)</span>
           </div>
         </div>
 

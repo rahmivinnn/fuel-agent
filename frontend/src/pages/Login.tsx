@@ -53,7 +53,7 @@ export default function Login() {
       localStorage.setItem("customerId", result.data?.customer?.id || "c1");
       localStorage.setItem("customerEmail", result.data?.customer?.email || data.emailOrPhone);
       localStorage.setItem("customerName", result.data?.customer?.fullName || "User");
-      localStorage.setItem("driverId", "ff1");
+      localStorage.setItem("driverId", result.data?.customer?.id || "ff1"); // Use fuel friend ID
 
       toast({
         title: "Success!",
@@ -75,17 +75,17 @@ export default function Login() {
     const result = await signInWithGoogle();
     if (result.success) {
       // Store additional driver info if needed
-      localStorage.setItem("driverId", "ff1"); // Default driver ID
+      localStorage.setItem("driverId", result.user?.id || "ff1"); // Use actual user ID
       setLocation("/dashboard");
     }
   };
 
   const handleOTPLoginSuccess = (user: any) => {
     localStorage.setItem("jwt_token", "dummy_token"); // Add token storage
-    localStorage.setItem("customerId", "c1");
+    localStorage.setItem("customerId", user.id || "c1");
     localStorage.setItem("customerEmail", user.email || user.phoneNumber);
     localStorage.setItem("customerName", user.name || "Driver");
-    localStorage.setItem("driverId", "ff1"); // Default driver ID
+    localStorage.setItem("driverId", user.id || "ff1"); // Use actual user ID
     toast({
       title: "Success!",
       description: "Logged in successfully with OTP",

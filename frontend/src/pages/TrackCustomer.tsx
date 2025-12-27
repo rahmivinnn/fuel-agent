@@ -14,8 +14,40 @@ export default function TrackCustomer() {
   const { id } = useParams();
   const [order, setOrder] = useState<any>(null);
   const [driver, setDriver] = useState<any>(null);
+  const [customer, setCustomer] = useState<any>(null);
+  const [driverLocation, setDriverLocation] = useState<[number, number] | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const driverMarker = useRef<mapboxgl.Marker | null>(null);
+
+  // Get driver's current location
+  useEffect(() => {
+    const getCurrentLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const coords: [number, number] = [position.coords.longitude, position.coords.latitude];
+            setDriverLocation(coords);
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            // Fallback to Memphis coordinates
+            setDriverLocation([-90.0715, 35.1495]);
+          }
+        );
+      } else {
+        // Fallback to Memphis coordinates
+        setDriverLocation([-90.0715, 35.1495]);
+      }
+    };
+
+    getCurrentLocation();
+    
+    // Update location every 10 seconds
+    const locationInterval = setInterval(getCurrentLocation, 10000);
+    
+    return () => clearInterval(locationInterval);
+  }, []);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -29,6 +61,12 @@ export default function TrackCustomer() {
           const driverData = await driverResponse.json();
           setDriver(driverData.fuelFriend);
         }
+        
+        if (data.order?.customerId) {
+          const customerResponse = await fetch(`${API_BASE_URL}/api/customers/${data.order.customerId}`);
+          const customerData = await customerResponse.json();
+          setCustomer(customerData.customer);
+        }
       } catch (error) {
         console.error('Failed to fetch order details:', error);
       }
@@ -38,23 +76,27 @@ export default function TrackCustomer() {
   }, [id]);
 
   useEffect(() => {
-    if (map.current || !mapContainer.current) return;
+    if (map.current || !mapContainer.current || !driverLocation) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-90.0715, 35.1495], // Memphis coordinates
-      zoom: 12
+      center: driverLocation,
+      zoom: 14
     });
 
-    // Add driver marker (green)
-    new mapboxgl.Marker({ color: '#22c55e' })
-      .setLngLat([-90.0715, 35.1495])
+    // Add driver marker (green) at current location
+    driverMarker.current = new mapboxgl.Marker({ color: '#22c55e' })
+      .setLngLat(driverLocation)
       .addTo(map.current);
 
-    // Add customer marker (red)
+    // Add customer marker (red) - offset slightly for demo
+    const customerLocation: [number, number] = [
+      driverLocation[0] + 0.01, 
+      driverLocation[1] - 0.01
+    ];
     new mapboxgl.Marker({ color: '#ef4444' })
-      .setLngLat([-90.0515, 35.1395])
+      .setLngLat(customerLocation)
       .addTo(map.current);
 
     return () => {
@@ -63,7 +105,15 @@ export default function TrackCustomer() {
         map.current = null;
       }
     };
-  }, []);
+  }, [driverLocation]);
+
+  // Update driver marker position when location changes
+  useEffect(() => {
+    if (map.current && driverMarker.current && driverLocation) {
+      driverMarker.current.setLngLat(driverLocation);
+      map.current.setCenter(driverLocation);
+    }
+  }, [driverLocation]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -159,6 +209,20 @@ export default function TrackCustomer() {
           <div className="flex flex-col items-center">
             <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
               <CheckCircle className="w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Customer Info */}
+        <div>
+          <h4 className="font-semibold text-gray-900 mb-3">Customer</h4>
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">{customer?.fullName || "Customer"}</p>
+              <p className="text-sm text-gray-500">{customer?.phoneNumber || order?.deliveryPhone || "Phone not available"}</p>
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ export default function VerifySuccess() {
       localStorage.setItem("customerId", tempCustomerId);
       localStorage.setItem("customerEmail", tempCustomerEmail);
       localStorage.setItem("customerName", tempCustomerName);
-      localStorage.setItem("driverId", "ff1"); // Default driver ID
+      localStorage.setItem("driverId", tempCustomerId); // Use actual fuel friend ID
       
       // Clear temporary data
       localStorage.removeItem("tempJwtToken");
@@ -34,7 +34,8 @@ export default function VerifySuccess() {
         jwt_token: jwtToken,
         customerId: tempCustomerId,
         customerEmail: tempCustomerEmail,
-        customerName: tempCustomerName
+        customerName: tempCustomerName,
+        driverId: tempCustomerId
       });
       
       toast({

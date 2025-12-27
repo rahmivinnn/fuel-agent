@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const driverId = localStorage.getItem("driverId") || "ff1";
+  const fuelFriendId = localStorage.getItem("driverId") || "ff1";
   
   // Get user data from storage
   const driverName = localStorage.getItem("customerName") || 
@@ -25,9 +25,9 @@ export default function Dashboard() {
                      "FuelFriend";
   
   // Use real API hooks
-  const { data: driver, isLoading: isLoadingDriver } = useDriver(driverId);
-  const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending");
-  const { data: activeOrders = [], isLoading: isLoadingActive, refetch: refetchActive } = useOrders("active", driverId);
+  const { data: driver, isLoading: isLoadingDriver } = useDriver(fuelFriendId);
+  const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending", fuelFriendId);
+  const { data: activeOrders = [], isLoading: isLoadingActive, refetch: refetchActive } = useOrders("active", fuelFriendId);
   
   const acceptOrderMutation = useAcceptOrder();
   const cancelOrderMutation = useCancelOrder();
@@ -58,7 +58,7 @@ export default function Dashboard() {
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
-      await acceptOrderMutation.mutateAsync({ orderId, driverId });
+      await acceptOrderMutation.mutateAsync({ orderId, fuelFriendId });
       toast({ title: "Order Accepted!", description: "You have accepted the order" });
       setLocation(`/track-customer/${orderId}`);
     } catch (error) {

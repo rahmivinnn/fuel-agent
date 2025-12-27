@@ -6,10 +6,10 @@ import { useOrders } from "@/hooks/useOrders";
 import type { Order } from "@/lib/schemas";
 
 export default function AllOrders() {
-  const customerId = localStorage.getItem("customerId") || "c1";
+  const fuelFriendId = localStorage.getItem("driverId") || "ff1";
   
-  const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", customerId, "customer");
-  const { data: completedOrders = [], isLoading: isLoadingCompleted } = useOrders("completed", customerId, "customer");
+  const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", fuelFriendId, "driver");
+  const { data: completedOrders = [], isLoading: isLoadingCompleted } = useOrders("completed", fuelFriendId, "driver");
   
   return (
     <div className="min-h-screen bg-background pb-20">

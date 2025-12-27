@@ -8,15 +8,15 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { API_BASE_URL } from "@/lib/api";
 import { apiCallWithAuth } from "@/lib/auth";
 
-export function useOrders(status?: string, driverIdOrCustomerId?: string, mode: "driver" | "customer" = "driver") {
+export function useOrders(status?: string, fuelFriendIdOrCustomerId?: string, mode: "driver" | "customer" = "driver") {
   return useQuery({
-    queryKey: ["orders", status, driverIdOrCustomerId, mode],
+    queryKey: ["orders", status, fuelFriendIdOrCustomerId, mode],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (status) params.append("status", status);
-      if (driverIdOrCustomerId) {
-        if (mode === "driver") params.append("driverId", driverIdOrCustomerId);
-        if (mode === "customer") params.append("customerId", driverIdOrCustomerId);
+      if (fuelFriendIdOrCustomerId) {
+        if (mode === "driver") params.append("fuelFriendId", fuelFriendIdOrCustomerId);
+        if (mode === "customer") params.append("customerId", fuelFriendIdOrCustomerId);
       }
       const query = params.toString();
       
@@ -60,10 +60,10 @@ export function useOrder(orderId?: string) {
 
 export function useAcceptOrder() {
   return useMutation({
-    mutationFn: async ({ orderId, driverId }: { orderId: string; driverId: string }) => {
+    mutationFn: async ({ orderId, fuelFriendId }: { orderId: string; fuelFriendId: string }) => {
       const response = await apiCallWithAuth(`${API_BASE_URL}/api/orders/${orderId}/accept`, {
         method: 'POST',
-        body: JSON.stringify({ driverId })
+        body: JSON.stringify({ fuelFriendId })
       });
       return response.json();
     },

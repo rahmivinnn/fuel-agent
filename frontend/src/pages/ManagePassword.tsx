@@ -37,8 +37,8 @@ export default function ManagePassword() {
     }
     
     try {
-      const customerId = localStorage.getItem("customerId") || "c1";
-      const response = await apiCallWithAuth(`http://localhost:5000/api/customers/${customerId}/change-password`, {
+      const fuelFriendId = localStorage.getItem("driverId") || "ff1";
+      const response = await apiCallWithAuth(`http://localhost:5000/api/fuel-friends/${fuelFriendId}/change-password`, {
         method: 'POST',
         body: JSON.stringify({
           oldPassword: formData.currentPassword,

@@ -7,13 +7,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Edit, Star, MapPin, Camera, Loader2 } from "lucide-react";
 import { MobileContainer } from "@/components/MobileContainer";
 import { useToast } from "@/hooks/use-toast";
-import { apiService } from "@/lib/api";
+import { useDriver } from "@/hooks/useDriver";
+import { API_BASE_URL } from "@/lib/api";
+import { apiCallWithAuth } from "@/lib/auth";
 
 export default function EditProfile() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const fuelFriendId = localStorage.getItem("driverId") || "ff1";
+  
+  const { data: driver, isLoading } = useDriver(fuelFriendId);
+  
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
@@ -27,77 +32,27 @@ export default function EditProfile() {
   });
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const customerId = localStorage.getItem('driverId') || localStorage.getItem('customerId');
-        if (!customerId) {
-          // Fallback to localStorage data
-          const storedName = localStorage.getItem('customerName') || 'Shah Hussain';
-          const [firstName, ...lastNameParts] = storedName.split(' ');
-          const lastName = lastNameParts.join(' ');
-          
-          setUserData({
-            firstName: firstName || '',
-            lastName: lastName || '',
-            fullName: storedName,
-            email: localStorage.getItem('customerEmail') || 'user@example.com',
-            phoneNumber: localStorage.getItem('userPhone') || '+1234567890',
-            about: localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers.',
-            location: localStorage.getItem('userLocation') || 'Abc Tennessee',
-            services: JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),
-            avatar: ''
-          });
-          setLoading(false);
-          return;
-        }
-
-        const response = await apiService.getCustomer(customerId);
-        const customer = response.customer;
-        
-        const [firstName, ...lastNameParts] = customer.fullName.split(' ');
-        const lastName = lastNameParts.join(' ');
-        
-        setUserData({
-          firstName: firstName || '',
-          lastName: lastName || '',
-          fullName: customer.fullName,
-          email: customer.email,
-          phoneNumber: customer.phoneNumber,
-          about: customer.about || localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service.',
-          location: customer.location || localStorage.getItem('userLocation') || 'Abc Tennessee',
-          services: customer.services || JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),
-          avatar: customer.avatar || ''
-        });
-      } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        // Fallback to localStorage data
-        const storedName = localStorage.getItem('customerName') || 'Shah Hussain';
-        const [firstName, ...lastNameParts] = storedName.split(' ');
-        const lastName = lastNameParts.join(' ');
-        
-        setUserData({
-          firstName: firstName || '',
-          lastName: lastName || '',
-          fullName: storedName,
-          email: localStorage.getItem('customerEmail') || 'user@example.com',
-          phoneNumber: localStorage.getItem('userPhone') || '+1234567890',
-          about: localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service.',
-          location: localStorage.getItem('userLocation') || 'Abc Tennessee',
-          services: JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),
-          avatar: ''
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [setLocation, toast]);
+    if (driver) {
+      const [firstName, ...lastNameParts] = driver.fullName.split(' ');
+      const lastName = lastNameParts.join(' ');
+      
+      setUserData({
+        firstName: firstName || '',
+        lastName: lastName || '',
+        fullName: driver.fullName,
+        email: driver.email,
+        phoneNumber: driver.phoneNumber,
+        about: driver.about || localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service.',
+        location: driver.location || localStorage.getItem('userLocation') || 'Abc Tennessee',
+        services: driver.services || JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),
+        avatar: driver.avatar || ''
+      });
+    }
+  }, [driver]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const customerId = localStorage.getItem('driverId') || localStorage.getItem('customerId');
       const updatedData = {
         fullName: `${userData.firstName} ${userData.lastName}`.trim(),
         about: userData.about,
@@ -105,12 +60,20 @@ export default function EditProfile() {
         services: userData.services
       };
 
-      if (customerId) {
-        try {
-          await apiService.updateCustomer(customerId, updatedData);
-        } catch (error) {
-          console.error('API update failed, saving to localStorage only:', error);
+      try {
+        // Try to update via API
+        const response = await apiCallWithAuth(`${API_BASE_URL}/api/fuel-friends/${fuelFriendId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(updatedData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('API update failed');
         }
+        
+        console.log('Profile updated successfully via API');
+      } catch (error) {
+        console.error('API update failed, saving to localStorage only:', error);
       }
       
       // Always update localStorage
@@ -137,7 +100,7 @@ export default function EditProfile() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
