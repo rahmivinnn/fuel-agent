@@ -1,8 +1,8 @@
 import { ArrowLeft, Edit, MapPin, Star, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 
 export default function ViewProfile() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   // Get user data from localStorage
   const customerName = localStorage.getItem('customerName') || 'Shah Hussain';
@@ -11,14 +11,14 @@ export default function ViewProfile() {
   const userServices = JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]');
 
   const handleBack = () => {
-    navigate('/dashboard');
+    setLocation('/dashboard');
   };
 
   const handleSignOut = () => {
     // Clear all localStorage data
     localStorage.clear();
     // Navigate to home page
-    navigate('/', { replace: true });
+    setLocation('/');
   };
 
   return (
@@ -29,7 +29,7 @@ export default function ViewProfile() {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <h1 className="text-xl font-semibold">My Profile</h1>
-        <button onClick={() => navigate('/edit-profile')} className="p-2">
+        <button onClick={() => setLocation('/edit-profile')} className="p-2">
           <Edit className="w-6 h-6" />
         </button>
       </div>
