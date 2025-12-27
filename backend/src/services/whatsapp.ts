@@ -1,28 +1,36 @@
 import makeWASocket, { DisconnectReason, useMultiFileAuthState } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import path from 'path';
+import qrcode from 'qrcode-terminal';
 
 let sock: any = null;
 let isConnected = false;
 
 export const initializeWhatsApp = async () => {
   try {
+    console.log('🔄 Initializing WhatsApp connection...');
+    
     const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '../auth_info_baileys'));
     
     sock = makeWASocket({
       auth: state,
-      printQRInTerminal: true,
+      printQRInTerminal: false, // We'll handle QR manually
     });
 
     sock.ev.on('connection.update', (update: any) => {
-      const { connection, lastDisconnect } = update;
+      const { connection, lastDisconnect, qr } = update;
+      
+      if (qr) {
+        console.log('📱 Scan this QR code with WhatsApp:');
+        qrcode.generate(qr, { small: true });
+      }
       
       if (connection === 'close') {
         const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
         console.log('WhatsApp connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect);
         
         if (shouldReconnect) {
-          initializeWhatsApp();
+          setTimeout(() => initializeWhatsApp(), 5000);
         }
         isConnected = false;
       } else if (connection === 'open') {
@@ -35,6 +43,7 @@ export const initializeWhatsApp = async () => {
     
   } catch (error) {
     console.error('❌ WhatsApp initialization error:', error);
+    setTimeout(() => initializeWhatsApp(), 10000);
   }
 };
 
