@@ -15,7 +15,24 @@ export const initializeWhatsApp = async () => {
     sock = makeWASocket({
       auth: state,
       printQRInTerminal: false,
-      logger: { level: 'error', child: () => ({ level: 'error' }) } // Reduce logs
+      logger: {
+        level: 'error',
+        child: () => ({
+          level: 'error',
+          trace: () => {},
+          debug: () => {},
+          info: () => {},
+          warn: () => {},
+          error: () => {},
+          fatal: () => {}
+        }),
+        trace: () => {},
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+        fatal: () => {}
+      }
     });
 
     sock.ev.on('connection.update', (update: any) => {
