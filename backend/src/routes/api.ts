@@ -62,29 +62,23 @@ router.post('/auth/login', async (req, res) => {
       return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 400, 'Email/phone and password are required');
     }
 
-    // Get customer from database
-    const customer = await storage.getCustomerByEmail(emailOrPhone);
-    if (!customer) {
+    // Get fuel friend from database
+    const fuelFriend = await storage.getFuelFriendByEmail(emailOrPhone);
+    if (!fuelFriend) {
       return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 401, 'Invalid credentials');
     }
 
-    // In a real implementation, you would verify the password here
-    // const isValidPassword = await comparePassword(password, customer.password);
-    // if (!isValidPassword) {
-    //   return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 401, 'Invalid credentials');
-    // }
-
     // Generate JWT token
     const token = generateToken({
-      userId: customer.id,
-      email: customer.email
+      userId: fuelFriend.id,
+      email: fuelFriend.email
     });
 
-    const { password: _, ...customerData } = customer;
+    const { password: _, ...fuelFriendData } = fuelFriend;
 
     return sendSuccess(res, {
       message: 'Login successful',
-      customer: customerData,
+      customer: fuelFriendData, // Keep 'customer' key for frontend compatibility
       token
     }, RESPONSE_CODES.LOGIN_SUCCESS);
   } catch (error) {
@@ -100,26 +94,28 @@ router.post('/auth/register/complete', async (req, res) => {
     const step1Data = registrationStep1Schema.parse(step1);
     const step2Data = registrationStep2Schema.parse(step2);
 
-    // Check if email already exists
-    const existingCustomer = await storage.getCustomerByEmail(step1Data.email);
-    if (existingCustomer) {
+    // Check if email already exists in fuel friends
+    const existingFuelFriend = await storage.getFuelFriendByEmail(step1Data.email);
+    if (existingFuelFriend) {
       return res.status(400).json({
         error: "Email already registered"
       });
     }
 
-    // Create customer
-    const customer = await storage.createCustomer({
+    // Create fuel friend (driver)
+    const fuelFriend = await storage.createFuelFriend({
       fullName: step1Data.fullName,
       email: step1Data.email,
       phoneNumber: step1Data.phoneNumber,
       password: step1Data.password,
-      isEmailVerified: true, // Set to true since OTP was verified
+      location: "Default Location", // Required field
+      deliveryFee: "15.00", // Default delivery fee
+      isAvailable: true,
     });
 
     // Create vehicle
     await storage.createVehicle({
-      customerId: customer.id,
+      fuelFriendId: fuelFriend.id, // Use fuelFriendId instead of customerId
       brand: step2Data.brand,
       color: step2Data.color,
       licenseNumber: step2Data.licenseNumber,
@@ -129,8 +125,8 @@ router.post('/auth/register/complete', async (req, res) => {
 
     // Generate JWT token
     const token = generateToken({
-      userId: customer.id,
-      email: customer.email
+      userId: fuelFriend.id,
+      email: fuelFriend.email
     });
 
     res.json({
@@ -138,9 +134,9 @@ router.post('/auth/register/complete', async (req, res) => {
       responseCode: RESPONSE_CODES.REGISTER_COMPLETE_SUCCESS,
       message: "Registration completed successfully",
       customer: {
-        id: customer.id,
-        email: customer.email,
-        fullName: customer.fullName
+        id: fuelFriend.id,
+        email: fuelFriend.email,
+        fullName: fuelFriend.fullName
       },
       token,
       timestamp: new Date().toISOString()

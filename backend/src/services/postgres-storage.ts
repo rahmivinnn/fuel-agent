@@ -126,6 +126,28 @@ class StorageService {
   }
 
   // Fuel Friends methods
+  // Fuel Friend methods
+  async getFuelFriendByEmail(email: string): Promise<any | null> {
+    const result = await db.select().from(fuelFriends).where(eq(fuelFriends.email, email)).limit(1);
+    return result[0] || null;
+  }
+
+  async createFuelFriend(data: any): Promise<any> {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    
+    const result = await db.insert(fuelFriends).values({
+      fullName: data.fullName,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      password: hashedPassword,
+      location: data.location,
+      deliveryFee: data.deliveryFee,
+      isAvailable: data.isAvailable || true,
+    }).returning();
+    
+    return result[0];
+  }
+
   async getAvailableFuelFriends(): Promise<any[]> {
     return await db.select().from(fuelFriends).where(eq(fuelFriends.isAvailable, true));
   }

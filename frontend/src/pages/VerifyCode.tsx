@@ -71,13 +71,14 @@ export default function VerifyCode() {
 
         console.log('Registration result:', registerResult);
 
-        // Store customer data temporarily for success screen
-        if (registerResult.customer) {
+        // Store customer data and JWT token temporarily for success screen
+        if (registerResult.customer && registerResult.token) {
           localStorage.setItem("tempCustomerId", registerResult.customer.id);
           localStorage.setItem("tempCustomerEmail", registerResult.customer.email);
           localStorage.setItem("tempCustomerName", registerResult.customer.fullName);
+          localStorage.setItem("tempJwtToken", registerResult.token);
         } else {
-          console.error('No customer data in response:', registerResult);
+          console.error('No customer data or token in response:', registerResult);
         }
         
         // Clear pending registration

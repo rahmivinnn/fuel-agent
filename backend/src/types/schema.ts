@@ -23,10 +23,11 @@ export const customers = pgTable("customers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Vehicle Schema (Customer's vehicles)
+// Vehicle Schema (Can belong to customers or fuel friends)
 export const vehicles = pgTable("vehicles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  customerId: varchar("customer_id").references(() => customers.id).notNull(),
+  customerId: varchar("customer_id").references(() => customers.id), // Made optional
+  fuelFriendId: varchar("fuel_friend_id").references(() => fuelFriends.id), // Added fuel friend reference
   brand: text("brand").notNull(), // Honda, Toyota, etc.
   color: text("color").notNull(), // Red, Blue, etc.
   licenseNumber: text("license_number").notNull(),
@@ -70,6 +71,7 @@ export const fuelFriends = pgTable("fuel_friends", {
   fullName: text("full_name").notNull(),
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
+  password: text("password").notNull(), // Added password field
   location: text("location").notNull(),
   deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).notNull(),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),

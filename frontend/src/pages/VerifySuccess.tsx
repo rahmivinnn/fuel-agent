@@ -7,33 +7,56 @@ export default function VerifySuccess() {
   const { toast } = useToast();
 
   const handleGoToHome = () => {
-    // Move temporary data to permanent storage and add JWT token
+    // Get JWT token from registration response
+    const jwtToken = localStorage.getItem("tempJwtToken");
     const tempCustomerId = localStorage.getItem("tempCustomerId");
     const tempCustomerEmail = localStorage.getItem("tempCustomerEmail");
     const tempCustomerName = localStorage.getItem("tempCustomerName");
     
-    if (tempCustomerId && tempCustomerEmail && tempCustomerName) {
-      // Save permanent data with JWT token
-      localStorage.setItem("jwt_token", "verified_token_" + Date.now());
+    if (tempCustomerId && tempCustomerEmail && tempCustomerName && jwtToken) {
+      // Save permanent data with real JWT token
+      localStorage.setItem("jwt_token", jwtToken);
       localStorage.setItem("customerId", tempCustomerId);
       localStorage.setItem("customerEmail", tempCustomerEmail);
       localStorage.setItem("customerName", tempCustomerName);
       localStorage.setItem("driverId", "ff1"); // Default driver ID
       
       // Clear temporary data
+      localStorage.removeItem("tempJwtToken");
       localStorage.removeItem("tempCustomerId");
       localStorage.removeItem("tempCustomerEmail");
       localStorage.removeItem("tempCustomerName");
       localStorage.removeItem("verificationEmail");
       localStorage.removeItem("verificationPhone");
+      localStorage.removeItem("pendingRegistration");
+      
+      console.log('✅ User data saved to localStorage:', {
+        jwt_token: jwtToken,
+        customerId: tempCustomerId,
+        customerEmail: tempCustomerEmail,
+        customerName: tempCustomerName
+      });
       
       toast({
         title: "Welcome!",
         description: "Your account is now active and ready to use",
       });
+      
+      setLocation("/dashboard");
+    } else {
+      console.error('❌ Missing required data:', {
+        tempCustomerId,
+        tempCustomerEmail, 
+        tempCustomerName,
+        jwtToken
+      });
+      
+      toast({
+        title: "Error",
+        description: "Missing user data. Please try registering again.",
+        variant: "destructive",
+      });
     }
-    
-    setLocation("/dashboard");
   };
 
   return (
@@ -45,7 +68,7 @@ export default function VerifySuccess() {
             onClick={() => setLocation("/verify-code")}
             className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+            <img src="/Back.png" alt="Back" className="w-4 h-4" />
           </button>
         </div>
 
