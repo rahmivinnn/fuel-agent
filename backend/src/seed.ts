@@ -156,7 +156,21 @@ async function seed() {
   ]);
 
   // Create fuel friends (US & UK drivers)
-  const [ffUS1, ffUS2, ffUK1, ffUK2] = await db.insert(fuelFriends).values([
+  const [ffUS1, ffUS2, ffUK1, ffUK2, ff1] = await db.insert(fuelFriends).values([
+    {
+      id: "ff1", // Add explicit ID for default driver
+      fullName: "Default Driver",
+      phoneNumber: "+1-555-0100",
+      email: "driver@fuelfriend.com",
+      location: "Default Location",
+      deliveryFee: "5.00",
+      rating: "4.8",
+      totalReviews: 128,
+      latitude: "40.7589",
+      longitude: "-73.9851",
+      about: "Default fuel delivery driver for testing purposes.",
+      isAvailable: true,
+    },
     {
       fullName: "Michael Johnson",
       phoneNumber: "+1-555-0199",
@@ -320,7 +334,16 @@ async function seed() {
   ]).returning();
 
   // Create wallets (US & UK)
-  const [walletUS, walletUK] = await db.insert(wallets).values([
+  const [walletUS, walletUK, walletFF1] = await db.insert(wallets).values([
+    {
+      driverId: ff1.id, // Add wallet for ff1
+      balance: "1250.75",
+      currency: "USD",
+      bankName: "Default Bank",
+      cardNumber: "1234",
+      expiryDate: "12/25",
+      cvv: "123",
+    },
     {
       driverId: ffUS1.id,
       balance: "1245.75",

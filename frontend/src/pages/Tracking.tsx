@@ -25,7 +25,7 @@ export default function MyOrders() {
   }, []);
   
   const { data: newOrders = [], isLoading: isLoadingNew } = useOrders("pending");
-  const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", driverId);
+  const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("in_progress", driverId);
   const { data: completedOrders = [], isLoading: isLoadingCompleted } = useOrders("completed", driverId);
   
   const getStatusColor = (status: string) => {
