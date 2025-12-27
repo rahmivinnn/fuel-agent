@@ -43,9 +43,14 @@ export const registerFuelFriend = async (req: Request, res: Response) => {
     // Cek apakah email sudah terdaftar di fuel friends
     console.log('🔍 Checking existing fuel friend:', normalizedEmail);
     const existingFuelFriend = await storage.getFuelFriendByEmail(normalizedEmail);
+    console.log('🔍 Existing fuel friend result:', existingFuelFriend);
+    
     if (existingFuelFriend) {
+      console.log('❌ Email already exists in fuel_friends table');
       return sendError(res, RESPONSE_CODES.EMAIL_ALREADY_EXISTS, 409, 'Email already registered');
     }
+    
+    console.log('✅ Email not found in fuel_friends, proceeding with registration');
 
     // Buat fuel friend baru
     console.log('🔄 Creating fuel friend:', { fullName, email: normalizedEmail, phoneNumber, location, deliveryFee });
