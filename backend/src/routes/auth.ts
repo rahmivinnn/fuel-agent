@@ -17,22 +17,32 @@ const router = Router();
 
 // Get current user from JWT token
 router.get('/me', authenticateToken, async (req, res) => {
+  console.log('🔐 /auth/me route handler called');
+  console.log('👤 req.user:', req.user);
+  
   try {
     const userId = req.user.userId;
+    console.log('🆔 userId from token:', userId);
+    
     const fuelFriend = await storage.getFuelFriend(userId);
+    console.log('👥 fuelFriend from DB:', fuelFriend ? 'Found' : 'Not found');
     
     if (!fuelFriend) {
+      console.log('❌ User not found in database');
       return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
     }
     
     const vehicles = await storage.getVehiclesByCustomer(userId);
     const { password, ...fuelFriendData } = fuelFriend;
     
+    console.log('✅ Returning user data:', { id: fuelFriendData.id, email: fuelFriendData.email });
+    
     return sendSuccess(res, { 
       customer: fuelFriendData,
       vehicles 
     }, RESPONSE_CODES.SUCCESS);
   } catch (error) {
+    console.error('💥 /auth/me error:', error);
     return sendError(res, RESPONSE_CODES.UNAUTHORIZED, 401, 'Invalid token');
   }
 });
