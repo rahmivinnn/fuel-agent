@@ -111,6 +111,14 @@ export class PostgresStorage implements IStorage {
     return await db.select().from(fuelFriends).where(eq(fuelFriends.isAvailable, true));
   }
 
+  async updateFuelFriend(id: string, updates: Partial<FuelFriend>): Promise<FuelFriend | undefined> {
+    const result = await db.update(fuelFriends)
+      .set(updates)
+      .where(eq(fuelFriends.id, id))
+      .returning();
+    return result[0];
+  }
+
   // Order methods
   async getOrder(id: string): Promise<Order | undefined> {
     const result = await db.select().from(orders).where(eq(orders.id, id));
