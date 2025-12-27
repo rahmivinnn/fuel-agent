@@ -12,6 +12,35 @@ import { registrationStep1Schema, registrationStep2Schema } from '@shared/schema
 
 const router = Router();
 
+// Login endpoint
+router.post('/auth/login', async (req, res) => {
+  try {
+    const { emailOrPhone, password } = req.body;
+
+    if (!emailOrPhone || !password) {
+      return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 400, 'Email/phone and password are required');
+    }
+
+    // Mock login validation - replace with actual storage call
+    if (emailOrPhone === 'test@example.com' && password === 'password') {
+      return sendSuccess(res, {
+        message: 'Login successful',
+        customer: {
+          id: 'customer-123',
+          fullName: 'Test User',
+          email: 'test@example.com',
+          isEmailVerified: true
+        },
+        token: 'jwt-token-123'
+      }, RESPONSE_CODES.LOGIN_SUCCESS);
+    } else {
+      return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 401, 'Invalid credentials');
+    }
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 500, 'Login failed');
+  }
+});
+
 // Auth Routes
 router.post('/auth/register/complete', async (req, res) => {
   try {
@@ -48,11 +77,14 @@ router.post('/auth/register/complete', async (req, res) => {
 
     res.json({
       success: true,
+      responseCode: RESPONSE_CODES.REGISTER_COMPLETE_SUCCESS,
+      message: "Registration completed successfully",
       customer: {
         id: customer.id,
         email: customer.email,
         fullName: customer.fullName
-      }
+      },
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     res.status(400).json({ error: "Invalid registration data" });
@@ -329,9 +361,9 @@ router.post('/otp/email/send', async (req, res) => {
     const result = await sendEmailOTP(normalizedEmail, otp);
 
     if (result.success) {
-      res.json({ success: true, message: "Verification code sent successfully" });
+      return sendSuccess(res, { message: "Verification code sent successfully" }, RESPONSE_CODES.OTP_EMAIL_SEND_SUCCESS);
     } else {
-      res.status(500).json({ success: false, error: result.error || "Failed to send verification code" });
+      return sendError(res, RESPONSE_CODES.OTP_EMAIL_SEND_FAILED, 500, result.error || "Failed to send verification code");
     }
   } catch (error) {
     console.error('Email OTP error:', error);
@@ -360,9 +392,9 @@ router.post('/otp/email/verify', async (req, res) => {
     const result = verifyOTP(normalizedEmail, otp);
 
     if (result.success) {
-      res.json({ success: true, message: result.message });
+      return sendSuccess(res, { message: result.message }, RESPONSE_CODES.OTP_EMAIL_VERIFY_SUCCESS);
     } else {
-      res.status(400).json({ success: false, error: result.error });
+      return sendError(res, RESPONSE_CODES.OTP_EMAIL_VERIFY_FAILED, 400, result.error);
     }
   } catch (error) {
     console.error('OTP verification error:', error);

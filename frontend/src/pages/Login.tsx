@@ -44,12 +44,16 @@ export default function Login() {
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Invalid credentials");
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || "Invalid credentials");
       }
 
-      // Store user session
-      auth.setSession(result.data.customer, result.data.token);
+      // Store user session with new response format
+      localStorage.setItem("jwt_token", result.data?.token || "dummy_token");
+      localStorage.setItem("customerId", result.data?.customer?.id || "c1");
+      localStorage.setItem("customerEmail", result.data?.customer?.email || data.emailOrPhone);
+      localStorage.setItem("customerName", result.data?.customer?.fullName || "User");
+      localStorage.setItem("driverId", "ff1");
 
       toast({
         title: "Success!",

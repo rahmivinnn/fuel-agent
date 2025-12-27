@@ -46,9 +46,11 @@ export default function VerifyCode() {
 
       const verifyResult = await verifyResponse.json();
 
-      if (!verifyResponse.ok) {
-        throw new Error(verifyResult.error || "Invalid verification code");
+      if (!verifyResponse.ok || !verifyResult.success) {
+        throw new Error(verifyResult.error || verifyResult.message || "Invalid verification code");
       }
+
+      console.log('OTP verification successful:', verifyResult);
 
       // If OTP is valid, create account in database
       const pendingRegistration = localStorage.getItem("pendingRegistration");
@@ -63,14 +65,20 @@ export default function VerifyCode() {
 
         const registerResult = await registerResponse.json();
 
-        if (!registerResponse.ok) {
-          throw new Error(registerResult.error || "Registration failed");
+        if (!registerResponse.ok || !registerResult.success) {
+          throw new Error(registerResult.error || registerResult.message || "Registration failed");
         }
 
+        console.log('Registration result:', registerResult);
+
         // Store customer data temporarily for success screen
-        localStorage.setItem("tempCustomerId", registerResult.customer.id);
-        localStorage.setItem("tempCustomerEmail", registerResult.customer.email);
-        localStorage.setItem("tempCustomerName", registerResult.customer.fullName);
+        if (registerResult.customer) {
+          localStorage.setItem("tempCustomerId", registerResult.customer.id);
+          localStorage.setItem("tempCustomerEmail", registerResult.customer.email);
+          localStorage.setItem("tempCustomerName", registerResult.customer.fullName);
+        } else {
+          console.error('No customer data in response:', registerResult);
+        }
         
         // Clear pending registration
         localStorage.removeItem("pendingRegistration");

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -36,8 +37,8 @@ export default function EmailVerification() {
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to send verification code");
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || "Failed to send verification code");
       }
 
       // Store email for verification page
@@ -73,7 +74,7 @@ export default function EmailVerification() {
             onClick={() => setLocation('/register')}
             className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+            <img src="/Back.png" alt="Back" className="w-4 h-4" />
           </button>
         </div>
 
