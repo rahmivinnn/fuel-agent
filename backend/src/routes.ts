@@ -72,136 +72,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== Authentication Routes ==========
 
-  // Google Authentication
-  app.post("/api/auth/google", async (req, res) => {
-    try {
-      const { uid, email, displayName, photoURL } = req.body;
-
-      if (!uid || !email) {
-        return res.status(400).json({ error: "Invalid Google user data" });
-      }
-
-      // Check if user exists
-      let customer = await storage.getCustomerByEmail(email);
-      
-      if (!customer) {
-        // Create new customer from Google data
-        customer = await storage.createCustomer({
-          fullName: displayName || email.split('@')[0],
-          email: email,
-          phoneNumber: "", // Will be filled later
-          password: uid, // Use Google UID as password
-          isEmailVerified: true // Google emails are verified
-        });
-      }
-
-      res.json({
-        success: true,
-        customer: {
-          id: customer.id,
-          fullName: customer.fullName,
-          email: customer.email,
-          isEmailVerified: customer.isEmailVerified
-        }
-      });
-    } catch (error) {
-      console.error('Google auth error:', error);
-      res.status(500).json({ error: "Google authentication failed" });
-    }
-  });
-
-  // Login
+  // Fuel Friend Login
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { emailOrPhone, password } = loginSchema.parse(req.body);
-
-      const customer = await storage.getCustomerByEmailOrPhone(emailOrPhone);
-
-      if (!customer || customer.password !== password) {
-        return res.status(401).json({
-          error: "Invalid credentials"
-        });
-      }
-
-      res.json({
-        success: true,
-        customer: {
-          id: customer.id,
-          fullName: customer.fullName,
-          email: customer.email,
-          isEmailVerified: customer.isEmailVerified
-        }
-      });
+      const { loginFuelFriend } = await import('./controllers/fuelFriendAuth');
+      return loginFuelFriend(req, res);
     } catch (error) {
-      res.status(400).json({ error: "Invalid request" });
+      console.error('Fuel friend login error:', error);
+      res.status(500).json({ error: "Failed to login fuel friend" });
     }
   });
 
-  // Register Step 1: Personal Info
-  app.post("/api/auth/register/step1", async (req, res) => {
-    try {
-      const data = registrationStep1Schema.parse(req.body);
 
-      // Check if email already exists
-      const existingCustomer = await storage.getCustomerByEmail(data.email);
-      if (existingCustomer) {
-        return res.status(400).json({
-          error: "Email already registered"
-        });
-      }
-
-      res.json({ success: true, data });
-    } catch (error) {
-      res.status(400).json({ error: "Invalid registration data" });
-    }
-  });
-
-  // Register Step 2: Vehicle Details + Complete Registration
-  app.post("/api/auth/register/complete", async (req, res) => {
-    try {
-      const { step1, step2 } = req.body;
-
-      const step1Data = registrationStep1Schema.parse(step1);
-      const step2Data = registrationStep2Schema.parse(step2);
-
-      // Check if email already exists
-      const existingCustomer = await storage.getCustomerByEmail(step1Data.email);
-      if (existingCustomer) {
-        return res.status(400).json({
-          error: "Email already registered"
-        });
-      }
-
-      // Create customer
-      const customer = await storage.createCustomer({
-        fullName: step1Data.fullName,
-        email: step1Data.email,
-        phoneNumber: step1Data.phoneNumber,
-        password: step1Data.password,
-      });
-
-      // Create vehicle
-      await storage.createVehicle({
-        customerId: customer.id,
-        brand: step2Data.brand,
-        color: step2Data.color,
-        licenseNumber: step2Data.licenseNumber,
-        fuelType: step2Data.fuelType,
-        isPrimary: true,
-      });
-
-      res.json({
-        success: true,
-        customer: {
-          id: customer.id,
-          email: customer.email,
-          fullName: customer.fullName
-        }
-      });
-    } catch (error) {
-      res.status(400).json({ error: "Invalid registration data" });
-    }
-  });
 
   // Email/WhatsApp Verification - Send Code
   app.post("/api/auth/email-verification", async (req, res) => {

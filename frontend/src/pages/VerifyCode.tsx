@@ -52,15 +52,26 @@ export default function VerifyCode() {
 
       console.log('OTP verification successful:', verifyResult);
 
-      // If OTP is valid, create account in database
+      // If OTP is valid, create fuel friend account in database
       const pendingRegistration = localStorage.getItem("pendingRegistration");
       if (pendingRegistration) {
         const registrationData = JSON.parse(pendingRegistration);
         
-        const registerResponse = await fetch(`${API_BASE_URL}/api/auth/register/complete`, {
+        // Prepare fuel friend registration data
+        const fuelFriendData = {
+          email: email,
+          otp: code,
+          fullName: registrationData.step1.fullName,
+          phoneNumber: registrationData.step1.phoneNumber,
+          password: registrationData.step1.password,
+          location: registrationData.step2.color || "Jakarta", // Using address field
+          deliveryFee: 5000 // Default delivery fee
+        };
+        
+        const registerResponse = await fetch(`${API_BASE_URL}/api/fuel-friends/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(registrationData),
+          body: JSON.stringify(fuelFriendData),
         });
 
         const registerResult = await registerResponse.json();
@@ -69,16 +80,16 @@ export default function VerifyCode() {
           throw new Error(registerResult.error || registerResult.message || "Registration failed");
         }
 
-        console.log('Registration result:', registerResult);
+        console.log('Fuel friend registration result:', registerResult);
 
-        // Store customer data and JWT token temporarily for success screen
-        if (registerResult.customer && registerResult.token) {
-          localStorage.setItem("tempCustomerId", registerResult.customer.id);
-          localStorage.setItem("tempCustomerEmail", registerResult.customer.email);
-          localStorage.setItem("tempCustomerName", registerResult.customer.fullName);
+        // Store fuel friend data and JWT token temporarily for success screen
+        if (registerResult.fuelFriend && registerResult.token) {
+          localStorage.setItem("tempCustomerId", registerResult.fuelFriend.id);
+          localStorage.setItem("tempCustomerEmail", registerResult.fuelFriend.email);
+          localStorage.setItem("tempCustomerName", registerResult.fuelFriend.fullName);
           localStorage.setItem("tempJwtToken", registerResult.token);
         } else {
-          console.error('No customer data or token in response:', registerResult);
+          console.error('No fuel friend data or token in response:', registerResult);
         }
         
         // Clear pending registration

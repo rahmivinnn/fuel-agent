@@ -13,7 +13,9 @@ export async function autoSyncDatabase() {
   try {
     console.log('🔄 Auto-syncing database schema...');
     
-    const { stdout, stderr } = await execAsync('npx drizzle-kit push:pg');
+    const { stdout, stderr } = await execAsync('npx drizzle-kit push:pg', {
+      timeout: 30000 // 30 second timeout
+    });
     
     if (stderr && !stderr.includes('No schema changes')) {
       console.log('📊 Database schema updated:', stderr);
@@ -27,6 +29,6 @@ export async function autoSyncDatabase() {
     
   } catch (error: any) {
     console.error('❌ Auto-sync failed:', error.message);
-    // Don't crash the app, just log the error
+    console.log('💡 Try manual: npm run db:push');
   }
 }
