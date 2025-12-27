@@ -108,25 +108,13 @@ export default function Register() {
       localStorage.setItem("pendingRegistration", JSON.stringify({ step1: step1Data, step2: step2Data }));
       localStorage.setItem("verificationEmail", step1Data.email);
       
-      // Send OTP code
-      const otpResponse = await apiClient.fetch("/api/otp/email/send", {
-        method: "POST",
-        body: JSON.stringify({ email: step1Data.email }),
-      });
-
-      const otpResult = await otpResponse.json();
-
-      if (!otpResponse.ok) {
-        throw new Error(otpResult.error || "Failed to send verification code");
-      }
-      
       toast({
-        title: "Verification Code Sent!",
-        description: "Please check your email for the verification code",
+        title: "Account Ready!",
+        description: "Please verify your email to complete registration",
       });
       
-      // Redirect to verify code page
-      setLocation("/verify-code");
+      // Redirect to email verification page
+      setLocation("/email-verification");
     } catch (error) {
       toast({
         title: "Error",

@@ -36,16 +36,43 @@ export default function VerifyWhatsAppCode() {
     try {
       const phoneNumber = localStorage.getItem("verificationPhone");
       
-      const response = await fetch(`${API_BASE_URL}/api/otp/whatsapp/verify`, {
+      // First verify WhatsApp OTP
+      const verifyResponse = await fetch(`${API_BASE_URL}/api/otp/whatsapp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber, otp: code }),
       });
 
-      const result = await response.json();
+      const verifyResult = await verifyResponse.json();
 
-      if (!result.success) {
-        throw new Error(result.error || "Invalid verification code");
+      if (!verifyResponse.ok) {
+        throw new Error(verifyResult.error || "Invalid verification code");
+      }
+
+      // If OTP is valid, create account in database
+      const pendingRegistration = localStorage.getItem("pendingRegistration");
+      if (pendingRegistration) {
+        const registrationData = JSON.parse(pendingRegistration);
+        
+        const registerResponse = await fetch(`${API_BASE_URL}/api/auth/register/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(registrationData),
+        });
+
+        const registerResult = await registerResponse.json();
+
+        if (!registerResponse.ok) {
+          throw new Error(registerResult.error || "Registration failed");
+        }
+
+        // Store customer data temporarily for success screen
+        localStorage.setItem("tempCustomerId", registerResult.customer.id);
+        localStorage.setItem("tempCustomerEmail", registerResult.customer.email);
+        localStorage.setItem("tempCustomerName", registerResult.customer.fullName);
+        
+        // Clear pending registration
+        localStorage.removeItem("pendingRegistration");
       }
 
       setLocation("/verify-success");

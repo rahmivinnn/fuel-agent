@@ -28,7 +28,7 @@ export default function EmailVerification() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/email-verification`, {
+      const response = await fetch(`${API_BASE_URL}/api/otp/email/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailToUse }),

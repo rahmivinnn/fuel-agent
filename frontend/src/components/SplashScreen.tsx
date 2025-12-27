@@ -45,7 +45,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ show }) => {
             <img 
               src={isDark ? "/hexagon-dark.png" : "/hexagon.png"}
               alt="" 
-              className="w-64 h-64 object-contain filter brightness-0 invert rotate-180"
+              className="w-64 h-64 object-contain filter brightness-0 invert"
             />
           </motion.div>
 
