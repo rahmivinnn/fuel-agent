@@ -17,17 +17,17 @@ const router = Router();
 router.get('/auth/me', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const customer = await storage.getCustomer(userId);
+    const fuelFriend = await storage.getFuelFriend(userId);
     
-    if (!customer) {
+    if (!fuelFriend) {
       return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
     }
     
     const vehicles = await storage.getVehiclesByCustomer(userId);
-    const { password, ...customerData } = customer;
+    const { password, ...fuelFriendData } = fuelFriend;
     
     return sendSuccess(res, { 
-      customer: customerData, 
+      customer: fuelFriendData, // Keep 'customer' key for frontend compatibility
       vehicles 
     }, RESPONSE_CODES.SUCCESS);
   } catch (error) {
@@ -77,7 +77,6 @@ router.post('/auth/login', async (req, res) => {
     const { password: _, ...fuelFriendData } = fuelFriend;
 
     return sendSuccess(res, {
-      message: 'Login successful',
       fuelFriend: fuelFriendData,
       fuelFriendId: fuelFriend.id,
       token

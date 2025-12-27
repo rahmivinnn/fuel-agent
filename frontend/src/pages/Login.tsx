@@ -43,16 +43,19 @@ export default function Login() {
       });
 
       const result = await response.json();
+      console.log('Login response:', result); // Debug log
 
       if (!response.ok || !result.success) {
         throw new Error(result.error || result.message || "Invalid credentials");
       }
 
-      // Store user session with new response format
-      localStorage.setItem("token", result.data?.token || "dummy_token");
-      localStorage.setItem("fuelFriendId", result.data?.fuelFriend?.id || "ff1");
-      localStorage.setItem("fuelFriendEmail", result.data?.fuelFriend?.email || data.emailOrPhone);
-      localStorage.setItem("fuelFriendName", result.data?.fuelFriend?.fullName || "User");
+      // Validate token exists
+      if (!result.data?.token) {
+        throw new Error("No token received from server");
+      }
+
+      // Store only token, user data will be fetched via useAuth hook
+      localStorage.setItem("token", result.data.token);
 
       toast({
         title: "Success!",

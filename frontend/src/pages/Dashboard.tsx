@@ -10,13 +10,17 @@ import { MobileContainer } from "@/components/MobileContainer";
 import { RefreshCw, Bell, DollarSign, TrendingUp, Package, User } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useOrders, useAcceptOrder, useCancelOrder } from "@/hooks/useOrders";
-import { useDriver } from "@/hooks/useDriver";
-import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Get current user from token
+  const { data: authData, isLoading: isLoadingAuth } = useAuth();
+  const currentUser = authData?.customer;
+  const fuelFriendId = currentUser?.id;
   
   // Clean up old localStorage keys on first load
   useEffect(() => {
@@ -39,13 +43,10 @@ export default function Dashboard() {
     cleanupOldStorage();
   }, []);
   
-  const fuelFriendId = localStorage.getItem("fuelFriendId") || "ff1";
+  // Get user data from API (not localStorage)
+  const driverName = currentUser?.fullName || "FuelFriend";
   
-  // Get user data from storage
-  const driverName = localStorage.getItem("fuelFriendName") || "FuelFriend";
-  
-  // Use real API hooks
-  const { data: driver, isLoading: isLoadingDriver } = useDriver(fuelFriendId);
+  // Use real API hooks with dynamic fuelFriendId
   const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending", fuelFriendId);
   const { data: activeOrders = [], isLoading: isLoadingActive, refetch: refetchActive } = useOrders("active", fuelFriendId);
   
@@ -55,13 +56,14 @@ export default function Dashboard() {
   useEffect(() => {
     // Debug log API data
     console.log('Dashboard API Data:', {
-      driver,
+      currentUser,
+      fuelFriendId,
       pendingOrders,
       activeOrders,
       isLoadingPending,
       isLoadingActive
     });
-  }, [driver, pendingOrders, activeOrders]);
+  }, [currentUser, fuelFriendId, pendingOrders, activeOrders]);
 
   const handleRefresh = async () => {
     try {
@@ -108,13 +110,13 @@ export default function Dashboard() {
               className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center hover:shadow-lg transition-all cursor-pointer"
             >
               <span className="text-xl font-bold text-white">
-                {(driver?.fullName || driverName).charAt(0).toUpperCase()}
+                {(currentUser?.fullName || driverName).charAt(0).toUpperCase()}
               </span>
             </button>
             <div>
               <p className="text-sm text-gray-600">Hello!</p>
               <h1 className="text-xl font-semibold text-gray-900">
-                {driver?.fullName || driverName}
+                {currentUser?.fullName || driverName}
               </h1>
             </div>
           </div>

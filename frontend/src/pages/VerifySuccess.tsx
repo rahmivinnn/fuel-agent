@@ -9,18 +9,12 @@ export default function VerifySuccess() {
   const handleGoToHome = () => {
     // Get JWT token from registration response
     const jwtToken = localStorage.getItem("tempJwtToken");
-    const tempFuelFriendId = localStorage.getItem("tempFuelFriendId");
-    const tempFuelFriendEmail = localStorage.getItem("tempFuelFriendEmail");
-    const tempFuelFriendName = localStorage.getItem("tempFuelFriendName");
     
-    if (tempFuelFriendId && tempFuelFriendEmail && tempFuelFriendName && jwtToken) {
-      // Save permanent data with real JWT token
+    if (jwtToken) {
+      // Store only token, user data will be fetched via useAuth hook
       localStorage.setItem("token", jwtToken);
-      localStorage.setItem("fuelFriendId", tempFuelFriendId);
-      localStorage.setItem("fuelFriendEmail", tempFuelFriendEmail);
-      localStorage.setItem("fuelFriendName", tempFuelFriendName);
       
-      // Clear temporary data
+      // Clear all temporary data
       localStorage.removeItem("tempJwtToken");
       localStorage.removeItem("tempFuelFriendId");
       localStorage.removeItem("tempFuelFriendEmail");
@@ -29,12 +23,7 @@ export default function VerifySuccess() {
       localStorage.removeItem("verificationPhone");
       localStorage.removeItem("pendingRegistration");
       
-      console.log('✅ User data saved to localStorage:', {
-        token: jwtToken,
-        fuelFriendId: tempFuelFriendId,
-        fuelFriendEmail: tempFuelFriendEmail,
-        fuelFriendName: tempFuelFriendName
-      });
+      console.log('✅ Registration completed, token saved');
       
       toast({
         title: "Welcome!",
@@ -43,18 +32,15 @@ export default function VerifySuccess() {
       
       setLocation("/dashboard");
     } else {
-      console.error('❌ Missing required data:', {
-        tempFuelFriendId,
-        tempFuelFriendEmail, 
-        tempFuelFriendName,
-        jwtToken
-      });
+      console.error('❌ No token found from registration');
       
       toast({
         title: "Error",
-        description: "Missing user data. Please try registering again.",
+        description: "Registration incomplete. Please try again.",
         variant: "destructive",
       });
+      
+      setLocation("/register");
     }
   };
 
