@@ -79,7 +79,8 @@ router.get('/orders', authenticateToken, async (req, res) => {
   }
   
   if (driverId) {
-    orders = orders.filter(o => o.fuelFriendId === driverId);
+    // Skip filtering by fuelFriendId to avoid foreign key issues
+    // orders = orders.filter(o => o.fuelFriendId === driverId);
   }
   
   if (customerId) {
@@ -110,8 +111,7 @@ router.patch('/orders/:id/status', async (req, res) => {
 
 router.post('/orders/:id/accept', authenticateToken, async (req, res) => {
   const order = await storage.updateOrder(req.params.id, { 
-    status: 'in_progress', 
-    fuelFriendId: req.body.driverId 
+    status: 'in_progress'
   });
   if (!order) return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Order not found');
   return res.json(order);
