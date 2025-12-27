@@ -149,7 +149,7 @@ export default function VerifyWhatsAppCode() {
             onClick={() => setLocation("/whatsapp-verification")}
             className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+            <img src="/back.svg" alt="Back" className="w-4 h-4" />
           </button>
         </div>
         
