@@ -175,6 +175,16 @@ router.get('/stations/:id', async (req, res) => {
 });
 
 // Fuel Friends
+router.post('/fuel-friends/register', async (req, res) => {
+  try {
+    const { registerFuelFriend } = await import('../controllers/fuelFriendAuth');
+    return registerFuelFriend(req, res);
+  } catch (error) {
+    console.error('Fuel friend registration error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to register fuel friend');
+  }
+});
+
 router.get('/fuel-friends', async (req, res) => {
   const fuelFriends = await storage.getAvailableFuelFriends();
   return sendSuccess(res, { fuelFriends }, RESPONSE_CODES.SUCCESS);
