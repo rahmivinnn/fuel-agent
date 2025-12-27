@@ -2,6 +2,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
 import * as schema from "@shared/schema";
+import { autoSyncDatabase } from "./utils/autoSync";
 
 const { Client } = pkg;
 
@@ -14,13 +15,12 @@ const client = new Client({
 });
 
 // Connect to database
-client.connect().then(() => {
+client.connect().then(async () => {
   console.log('Database connected');
   
-  // Auto-push schema in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('⚠️  Development mode: Run "npm run db:push" to sync schema changes');
-  }
+  // Auto-sync schema on startup (development only)
+  await autoSyncDatabase();
+  
 }).catch(console.error);
 
 export const db = drizzle(client, { schema });
