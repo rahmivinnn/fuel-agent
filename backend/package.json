@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:db": "npm run db:push && npm run dev",
     "build": "tsc",
     "start": "node dist/index.js",
     "db:push": "drizzle-kit push",

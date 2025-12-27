@@ -16,6 +16,11 @@ const client = new Client({
 // Connect to database
 client.connect().then(() => {
   console.log('Database connected');
+  
+  // Auto-push schema in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('⚠️  Development mode: Run "npm run db:push" to sync schema changes');
+  }
 }).catch(console.error);
 
 export const db = drizzle(client, { schema });
