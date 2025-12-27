@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { sendSuccess, sendError } from '../utils/response';
 import { RESPONSE_CODES } from '../constants/responseCodes';
-import { verifyOTP, verifyAndConsumeOTP } from '../services/otp';
+import { verifyOTP } from '../otp';
 import { storage } from '../services/postgres-storage';
 import { generateToken } from '../utils/auth';
 
 export const registerFuelFriend = async (req: Request, res: Response) => {
   try {
+    console.log('🔄 Fuel friend registration started:', req.body);
+    
     const { 
       email, 
       otp, 
@@ -19,12 +21,16 @@ export const registerFuelFriend = async (req: Request, res: Response) => {
 
     // Validasi input
     if (!email || !otp || !fullName || !phoneNumber || !password || !location || !deliveryFee) {
+      console.log('❌ Missing required fields');
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'All fields are required');
     }
 
     // Verifikasi OTP terlebih dahulu
     const normalizedEmail = email.trim().toLowerCase();
-    const otpResult = verifyAndConsumeOTP(normalizedEmail, otp);
+    console.log('🔍 Verifying OTP for fuel friend registration:', normalizedEmail);
+    
+    const otpResult = verifyOTP(normalizedEmail, otp);
+    console.log('🔍 OTP verification result:', otpResult);
 
     if (!otpResult.success) {
       let errorCode = RESPONSE_CODES.OTP_INVALID;
@@ -35,12 +41,15 @@ export const registerFuelFriend = async (req: Request, res: Response) => {
     }
 
     // Cek apakah email sudah terdaftar
+    console.log('🔍 Checking existing fuel friend:', normalizedEmail);
     const existingFuelFriend = await storage.getFuelFriendByEmail(normalizedEmail);
     if (existingFuelFriend) {
       return sendError(res, RESPONSE_CODES.EMAIL_ALREADY_EXISTS, 409, 'Email already registered as fuel friend');
     }
 
     // Buat fuel friend baru
+    console.log('🔄 Creating fuel friend:', { fullName, email: normalizedEmail, phoneNumber, location, deliveryFee });
+    
     const fuelFriend = await storage.createFuelFriend({
       fullName,
       email: normalizedEmail,
@@ -51,6 +60,8 @@ export const registerFuelFriend = async (req: Request, res: Response) => {
       isAvailable: true,
       isEmailVerified: true // Set true karena sudah verifikasi OTP
     });
+
+    console.log('✅ Fuel friend created:', fuelFriend.id);
 
     // Generate token
     const token = generateToken({ 
@@ -74,8 +85,8 @@ export const registerFuelFriend = async (req: Request, res: Response) => {
     }, RESPONSE_CODES.SUCCESS);
 
   } catch (error) {
-    console.error('Fuel friend registration error:', error);
-    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500);
+    console.error('❌ Fuel friend registration error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, error.message || 'Registration failed');
   }
 };
 
