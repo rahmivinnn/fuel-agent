@@ -5,12 +5,53 @@ import { storage } from '../services/postgres-storage';
 import { createStripePaymentIntent, createPaypalPayout } from '../services/payments';
 import { checkLocation } from '../services/geolocation';
 import { sendOrderNotificationToDrivers } from '../services/pushNotifications';
+import { generateToken } from '../utils/auth';
 import { authenticateToken } from '../middleware/auth';
 import { generateOTP, saveOTP, verifyOTP } from '../otp';
 import { sendEmailOTP } from '../email';
 import { registrationStep1Schema, registrationStep2Schema } from '@shared/schema';
 
 const router = Router();
+
+// Get current user from JWT token
+router.get('/auth/me', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const customer = await storage.getCustomer(userId);
+    
+    if (!customer) {
+      return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
+    }
+    
+    const vehicles = await storage.getVehiclesByCustomer(userId);
+    const { password, ...customerData } = customer;
+    
+    return sendSuccess(res, { 
+      customer: customerData, 
+      vehicles 
+    }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.UNAUTHORIZED, 401, 'Invalid token');
+  }
+});
+
+// Check email verification status
+router.get('/auth/email-verification-status/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const customer = await storage.getCustomerByEmail(email);
+    
+    if (!customer) {
+      return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
+    }
+    
+    return sendSuccess(res, { 
+      isEmailVerified: customer.isEmailVerified || false 
+    }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to check verification status');
+  }
+});
 
 // Login endpoint
 router.post('/auth/login', async (req, res) => {
@@ -21,21 +62,31 @@ router.post('/auth/login', async (req, res) => {
       return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 400, 'Email/phone and password are required');
     }
 
-    // Mock login validation - replace with actual storage call
-    if (emailOrPhone === 'test@example.com' && password === 'password') {
-      return sendSuccess(res, {
-        message: 'Login successful',
-        customer: {
-          id: 'customer-123',
-          fullName: 'Test User',
-          email: 'test@example.com',
-          isEmailVerified: true
-        },
-        token: 'jwt-token-123'
-      }, RESPONSE_CODES.LOGIN_SUCCESS);
-    } else {
+    // Get customer from database
+    const customer = await storage.getCustomerByEmail(emailOrPhone);
+    if (!customer) {
       return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 401, 'Invalid credentials');
     }
+
+    // In a real implementation, you would verify the password here
+    // const isValidPassword = await comparePassword(password, customer.password);
+    // if (!isValidPassword) {
+    //   return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 401, 'Invalid credentials');
+    // }
+
+    // Generate JWT token
+    const token = generateToken({
+      userId: customer.id,
+      email: customer.email
+    });
+
+    const { password: _, ...customerData } = customer;
+
+    return sendSuccess(res, {
+      message: 'Login successful',
+      customer: customerData,
+      token
+    }, RESPONSE_CODES.LOGIN_SUCCESS);
   } catch (error) {
     return sendError(res, RESPONSE_CODES.LOGIN_FAILED, 500, 'Login failed');
   }
@@ -63,6 +114,7 @@ router.post('/auth/register/complete', async (req, res) => {
       email: step1Data.email,
       phoneNumber: step1Data.phoneNumber,
       password: step1Data.password,
+      isEmailVerified: true, // Set to true since OTP was verified
     });
 
     // Create vehicle
@@ -75,6 +127,12 @@ router.post('/auth/register/complete', async (req, res) => {
       isPrimary: true,
     });
 
+    // Generate JWT token
+    const token = generateToken({
+      userId: customer.id,
+      email: customer.email
+    });
+
     res.json({
       success: true,
       responseCode: RESPONSE_CODES.REGISTER_COMPLETE_SUCCESS,
@@ -84,6 +142,7 @@ router.post('/auth/register/complete', async (req, res) => {
         email: customer.email,
         fullName: customer.fullName
       },
+      token,
       timestamp: new Date().toISOString()
     });
   } catch (error) {

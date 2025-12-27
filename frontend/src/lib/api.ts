@@ -25,6 +25,26 @@ export class ApiService {
     this.baseUrl = API_BASE_URL;
   }
 
+  async getCurrentUser() {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+    
+    const response = await fetch(`${this.baseUrl}/auth/me`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch current user');
+    }
+    
+    return response.json();
+  }
+
   async getCustomer(customerId: string) {
     const token = localStorage.getItem('jwt_token');
     const response = await fetch(`${this.baseUrl}/customers/${customerId}`, {
