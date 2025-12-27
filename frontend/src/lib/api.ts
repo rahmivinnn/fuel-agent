@@ -26,7 +26,13 @@ export class ApiService {
   }
 
   async getCustomer(customerId: string) {
-    const response = await fetch(`${this.baseUrl}/customers/${customerId}`);
+    const token = localStorage.getItem('jwt_token');
+    const response = await fetch(`${this.baseUrl}/customers/${customerId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch customer');
     }
@@ -34,10 +40,12 @@ export class ApiService {
   }
 
   async updateCustomer(customerId: string, data: any) {
+    const token = localStorage.getItem('jwt_token');
     const response = await fetch(`${this.baseUrl}/customers/${customerId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(data),
     });

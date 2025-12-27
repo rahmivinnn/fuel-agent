@@ -14,6 +14,7 @@ import Dashboard from "@/pages/Dashboard";
 import AllOrders from "@/pages/AllOrders";
 import MyOrders from "@/pages/Tracking"; // Renamed from Tracking to MyOrders
 import MyProfile from "@/pages/MyProfile";
+import EditProfile from "@/pages/EditProfile";
 import Wallet from "@/pages/Wallet";
 import Settings from "@/pages/Settings";
 import ManagePassword from "@/pages/ManagePassword";
@@ -51,6 +52,7 @@ function Router() {
           <Route path="/orders" component={AllOrders} />
           <Route path="/my-orders" component={MyOrders} /> {/* Changed from /tracking to /my-orders */}
           <Route path="/my-profile" component={MyProfile} />
+          <Route path="/edit-profile" component={EditProfile} />
           <Route path="/wallet" component={Wallet} />
           <Route path="/settings" component={Settings} />
           <Route path="/manage-password" component={ManagePassword} />

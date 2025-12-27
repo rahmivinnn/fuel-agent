@@ -15,6 +15,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for production deployment
+app.set('trust proxy', true);
+
 // Initialize database on startup
 initializeDatabase();
 

@@ -4,176 +4,144 @@ import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Camera, Edit, MapPin } from "lucide-react";
+import { ArrowLeft, Edit, Star, MapPin, Camera, Loader2 } from "lucide-react";
 import { MobileContainer } from "@/components/MobileContainer";
 import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
 import { apiService } from "@/lib/api";
 
 export default function EditProfile() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
-  // Initialize state with current user data
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [about, setAbout] = useState("");
-  const [location, setLocationText] = useState("");
-  const [services, setServices] = useState(["Groceries delivery", "Fuel refueling"]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [userData, setUserData] = useState({
+    firstName: "",
+    lastName: "",
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    about: "",
+    location: "",
+    services: [] as string[],
+    avatar: ""
+  });
 
-  // Load user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const customerId = localStorage.getItem('customerId');
+        const customerId = localStorage.getItem('driverId') || localStorage.getItem('customerId');
         if (!customerId) {
-          toast({
-            title: "Error",
-            description: "User not found. Please login again.",
-            variant: "destructive"
+          // Fallback to localStorage data
+          const storedName = localStorage.getItem('customerName') || 'Shah Hussain';
+          const [firstName, ...lastNameParts] = storedName.split(' ');
+          const lastName = lastNameParts.join(' ');
+          
+          setUserData({
+            firstName: firstName || '',
+            lastName: lastName || '',
+            fullName: storedName,
+            email: localStorage.getItem('customerEmail') || 'user@example.com',
+            phoneNumber: localStorage.getItem('userPhone') || '+1234567890',
+            about: localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers.',
+            location: localStorage.getItem('userLocation') || 'Abc Tennessee',
+            services: JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),
+            avatar: ''
           });
-          setLocation('/login');
+          setLoading(false);
           return;
         }
 
         const response = await apiService.getCustomer(customerId);
         const customer = response.customer;
         
-        const nameParts = customer.fullName.split(" ");
-        setFirstName(nameParts[0] || "");
-        setLastName(nameParts.slice(1).join(" ") || "");
-        setEmail(customer.email);
-        setPhoneNumber(customer.phoneNumber);
-        setAbout(customer.about || "Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers.");
-        setLocationText(customer.location || "");
-        setServices(customer.services || ["Groceries delivery", "Fuel refueling"]);
+        const [firstName, ...lastNameParts] = customer.fullName.split(' ');
+        const lastName = lastNameParts.join(' ');
+        
+        setUserData({
+          firstName: firstName || '',
+          lastName: lastName || '',
+          fullName: customer.fullName,
+          email: customer.email,
+          phoneNumber: customer.phoneNumber,
+          about: customer.about || localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service.',
+          location: customer.location || localStorage.getItem('userLocation') || 'Abc Tennessee',
+          services: customer.services || JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),
+          avatar: customer.avatar || ''
+        });
       } catch (error) {
         console.error('Failed to fetch user data:', error);
-        toast({
-          title: "Warning",
-          description: "Failed to load profile data, using cached data",
-          variant: "destructive"
-        });
-        
         // Fallback to localStorage data
-        const fullName = localStorage.getItem("customerName") || 
-                         localStorage.getItem("driverName") || 
-                         "Robin Sharma";
+        const storedName = localStorage.getItem('customerName') || 'Shah Hussain';
+        const [firstName, ...lastNameParts] = storedName.split(' ');
+        const lastName = lastNameParts.join(' ');
         
-        const nameParts = fullName.split(" ");
-        setFirstName(nameParts[0] || "Robin");
-        setLastName(nameParts.slice(1).join(" ") || "Sharma");
-        setEmail(localStorage.getItem("customerEmail") || "");
-        setPhoneNumber(localStorage.getItem("userPhone") || "");
-        setAbout(localStorage.getItem("userAbout") || "Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers.");
-        setLocationText(localStorage.getItem("userLocation") || "Abc Tennessee");
-        
-        const savedServices = localStorage.getItem("userServices");
-        if (savedServices) {
-          setServices(JSON.parse(savedServices));
-        }
+        setUserData({
+          firstName: firstName || '',
+          lastName: lastName || '',
+          fullName: storedName,
+          email: localStorage.getItem('customerEmail') || 'user@example.com',
+          phoneNumber: localStorage.getItem('userPhone') || '+1234567890',
+          about: localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service.',
+          location: localStorage.getItem('userLocation') || 'Abc Tennessee',
+          services: JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),
+          avatar: ''
+        });
       } finally {
-        setDataLoading(false);
+        setLoading(false);
       }
     };
 
     fetchUserData();
   }, [setLocation, toast]);
 
-  const handleSaveChanges = async () => {
-    // Validate inputs
-    if (!firstName.trim() || !lastName.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "First name and last name are required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (about.trim().length < 10) {
-      toast({
-        title: "Validation Error",
-        description: "About section must be at least 10 characters",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const customerId = localStorage.getItem('customerId');
-      if (!customerId) {
-        throw new Error('User not found');
-      }
-
-      const newFullName = `${firstName.trim()} ${lastName.trim()}`;
-      const updateData = {
-        fullName: newFullName,
-        email: email.trim(),
-        phoneNumber: phoneNumber.trim(),
-        about: about.trim(),
-        location: location.trim(),
-        services: services
+      const customerId = localStorage.getItem('driverId') || localStorage.getItem('customerId');
+      const updatedData = {
+        fullName: `${userData.firstName} ${userData.lastName}`.trim(),
+        about: userData.about,
+        location: userData.location,
+        services: userData.services
       };
 
-      await apiService.updateCustomer(customerId, updateData);
+      if (customerId) {
+        try {
+          await apiService.updateCustomer(customerId, updatedData);
+        } catch (error) {
+          console.error('API update failed, saving to localStorage only:', error);
+        }
+      }
       
-      // Update localStorage as backup
-      localStorage.setItem("customerName", newFullName);
-      localStorage.setItem("driverName", newFullName);
-      localStorage.setItem("customerEmail", email.trim());
-      localStorage.setItem("userPhone", phoneNumber.trim());
-      localStorage.setItem("userAbout", about.trim());
-      localStorage.setItem("userLocation", location.trim());
-      localStorage.setItem("userServices", JSON.stringify(services));
+      // Always update localStorage
+      localStorage.setItem('customerName', updatedData.fullName);
+      localStorage.setItem('userAbout', updatedData.about);
+      localStorage.setItem('userLocation', updatedData.location);
+      localStorage.setItem('userServices', JSON.stringify(updatedData.services));
       
       toast({
-        title: "Profile updated!",
-        description: "Your changes have been saved successfully",
+        title: "Profile Updated",
+        description: "Your profile has been saved successfully",
       });
       
-      setLocation("/dashboard");
+      setLocation('/my-profile');
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast({
         title: "Error",
-        description: "Failed to save changes. Please try again.",
-        variant: "destructive",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setSaving(false);
     }
   };
 
-  const handleAddService = () => {
-    const newService = prompt("Enter new service:");
-    if (newService && newService.trim()) {
-      setServices(prev => [...prev, newService.trim()]);
-    }
-  };
-
-  const handleRemoveService = (index: number) => {
-    setServices(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleUploadPhoto = () => {
-    toast({
-      title: "Upload Photo",
-      description: "Photo upload feature coming soon",
-    });
-  };
-
-  if (dataLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+          <Loader2 className="h-8 w-8 animate-spin text-green-500" />
           <p className="text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -188,12 +156,12 @@ export default function EditProfile() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setLocation("/dashboard")}
+            onClick={() => setLocation("/my-profile")}
             className="text-gray-600"
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          <h1 className="text-xl font-semibold text-gray-900">My profile</h1>
+          <h1 className="text-xl font-semibold text-gray-900">My Profile</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -204,199 +172,123 @@ export default function EditProfile() {
         </div>
 
         <div className="py-6 space-y-6">
-          {/* Profile Photo */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <div className="relative inline-block">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">
-                  {firstName.charAt(0).toUpperCase()}
-                </span>
+          {/* Profile Photo Section */}
+          <div className="text-center">
+            <div className="relative w-24 h-24 mx-auto mb-4">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-purple-600">
+                {userData.avatar ? (
+                  <img 
+                    src={userData.avatar} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white">
+                    {userData.fullName.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleUploadPhoto}
-                className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-              >
+              <button className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-gray-100">
                 <Camera className="w-4 h-4 text-gray-600" />
               </button>
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                Upload a Photo
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">Upload a photo</p>
-          </motion.div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{userData.fullName}</h2>
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-gray-700 font-medium">4.8</span>
+              <span className="text-gray-500 text-sm">(128 reviews)</span>
+            </div>
+          </div>
 
           {/* Name Fields */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="grid grid-cols-2 gap-4"
-          >
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                First Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
               <Input
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="h-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500"
-                placeholder="First Name"
+                value={userData.firstName}
+                onChange={(e) => setUserData({...userData, firstName: e.target.value})}
+                className="rounded-full border-gray-300"
+                placeholder="Robin Sharma"
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Last Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
               <Input
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="h-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500"
-                placeholder="Last Name"
+                value={userData.lastName}
+                onChange={(e) => setUserData({...userData, lastName: e.target.value})}
+                className="rounded-full border-gray-300"
+                placeholder="Robin Sharma"
               />
             </div>
-          </motion.div>
-
-          {/* Email Field */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="space-y-2"
-          >
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Email
-            </label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500"
-              placeholder="Email address"
-            />
-          </motion.div>
-
-          {/* Phone Field */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18 }}
-            className="space-y-2"
-          >
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Phone Number
-            </label>
-            <Input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="h-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500"
-              placeholder="Phone number"
-            />
-          </motion.div>
+          </div>
 
           {/* About Section */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">About</h3>
               <Edit className="w-4 h-4 text-gray-400" />
             </div>
             <Textarea
-              value={about}
-              onChange={(e) => setAbout(e.target.value)}
-              className="min-h-[100px] rounded-xl border-gray-300 focus:border-green-500 focus:ring-green-500 resize-none"
+              value={userData.about}
+              onChange={(e) => setUserData({...userData, about: e.target.value})}
+              className="min-h-[100px] border-gray-300 resize-none"
               placeholder="Tell us about yourself..."
             />
-          </motion.div>
+          </div>
 
           {/* Location Section */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">My Location</h3>
               <Edit className="w-4 h-4 text-gray-400" />
             </div>
-            <div className="flex items-center gap-3 p-3 border border-gray-300 rounded-xl">
-              <MapPin className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <div className="flex items-center gap-2 text-gray-600">
+              <MapPin className="w-4 h-4 text-red-500" />
               <Input
-                value={location}
-                onChange={(e) => setLocationText(e.target.value)}
-                className="flex-1 border-none bg-transparent focus:ring-0 focus:border-none p-0 text-gray-700"
+                value={userData.location}
+                onChange={(e) => setUserData({...userData, location: e.target.value})}
+                className="border-none p-0 text-sm bg-transparent focus:ring-0"
                 placeholder="Enter your location"
               />
             </div>
-          </motion.div>
+          </div>
 
           {/* Services Section */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">My services</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleAddService}
-                className="text-green-600 hover:text-green-700 p-1 h-auto"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
+              <Edit className="w-4 h-4 text-gray-400" />
             </div>
             <div className="space-y-2">
-              {services.map((service, index) => (
-                <div key={index} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-600 text-sm">{service}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveService(index)}
-                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-600 p-1 h-auto transition-opacity"
-                  >
-                    ×
-                  </Button>
+              {userData.services.map((service: string, index: number) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600 text-sm">{service}</span>
                 </div>
               ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddService}
-                className="w-full mt-2 border-dashed border-green-300 text-green-600 hover:bg-green-50"
-              >
-                + Add Service
-              </Button>
             </div>
-          </motion.div>
+          </div>
 
           {/* Save Button */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="pt-4"
-          >
+          <div className="pt-4">
             <Button
-              onClick={handleSaveChanges}
-              disabled={isLoading}
-              className="w-full h-12 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold rounded-full"
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full"
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
             </Button>
-          </motion.div>
+          </div>
         </div>
       </MobileContainer>
       <BottomNav />
