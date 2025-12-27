@@ -16,6 +16,7 @@ import EmailOTPLogin from "@/components/EmailOTPLogin";
 import WhatsAppOTPLogin from "@/components/WhatsAppOTPLogin";
 import { API_BASE_URL } from "@/lib/api";
 import { auth } from "@/lib/auth";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -161,6 +162,7 @@ export default function Login() {
   }
 
   return (
+    <AuthGuard requireAuth={false}>
     <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
       {/* Main Content */}
       <div className="px-4 pt-6 pb-8">
@@ -277,5 +279,6 @@ export default function Login() {
       {/* Home Indicator */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#101010] rounded-full mb-2"></div>
     </div>
+    </AuthGuard>
   );
 }

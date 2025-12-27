@@ -40,43 +40,101 @@ import TestComponent from "./TestComponent";
 
 function Router() {
   return (
-    <AuthGuard>
-      <PageTransition>
-        <Switch>
-          <Route path="/test" component={TestComponent} />
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-          {/* Added app pages */}
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/orders" component={AllOrders} />
-          <Route path="/my-orders" component={MyOrders} /> {/* Changed from /tracking to /my-orders */}
-          <Route path="/my-profile" component={MyProfile} />
-          <Route path="/edit-profile" component={EditProfile} />
-          <Route path="/wallet" component={Wallet} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/manage-password" component={ManagePassword} />
-          <Route path="/notification-settings" component={NotificationSettings} />
-          <Route path="/support-help" component={SupportHelp} />
-          <Route path="/live-chat-support" component={LiveChatSupport} />
-          <Route path="/report-issue" component={ReportIssue} />
-          <Route path="/terms-conditions" component={TermsConditions} />
-          <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/track-customer/:id" component={TrackCustomer} />
-          <Route path="/message/:id" component={Message} />
-          <Route path="/notifications" component={Notifications} />
-          {/* Verification flow */}
-          <Route path="/email-verification" component={EmailVerification} />
-          <Route path="/whatsapp-verification" component={WhatsAppVerification} />
-          <Route path="/verify-code" component={VerifyCode} />
-          <Route path="/verify-whatsapp-code" component={VerifyWhatsAppCode} />
-          <Route path="/verify-success" component={VerifySuccess} />
-          <Route path="/face-verification" component={FaceVerification} />
-          <Route path="/whatsapp-login" component={WhatsAppLogin} />
-          <Route component={NotFound} />
-        </Switch>
-      </PageTransition>
-    </AuthGuard>
+    <PageTransition>
+      <Switch>
+        <Route path="/test" component={TestComponent} />
+        <Route path="/" component={Landing} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        {/* Protected routes */}
+        <Route path="/dashboard">
+          <AuthGuard>
+            <Dashboard />
+          </AuthGuard>
+        </Route>
+        <Route path="/orders">
+          <AuthGuard>
+            <AllOrders />
+          </AuthGuard>
+        </Route>
+        <Route path="/my-orders">
+          <AuthGuard>
+            <MyOrders />
+          </AuthGuard>
+        </Route>
+        <Route path="/my-profile">
+          <AuthGuard>
+            <MyProfile />
+          </AuthGuard>
+        </Route>
+        <Route path="/edit-profile">
+          <AuthGuard>
+            <EditProfile />
+          </AuthGuard>
+        </Route>
+        <Route path="/wallet">
+          <AuthGuard>
+            <Wallet />
+          </AuthGuard>
+        </Route>
+        <Route path="/settings">
+          <AuthGuard>
+            <Settings />
+          </AuthGuard>
+        </Route>
+        <Route path="/manage-password">
+          <AuthGuard>
+            <ManagePassword />
+          </AuthGuard>
+        </Route>
+        <Route path="/notification-settings">
+          <AuthGuard>
+            <NotificationSettings />
+          </AuthGuard>
+        </Route>
+        <Route path="/support-help">
+          <AuthGuard>
+            <SupportHelp />
+          </AuthGuard>
+        </Route>
+        <Route path="/live-chat-support">
+          <AuthGuard>
+            <LiveChatSupport />
+          </AuthGuard>
+        </Route>
+        <Route path="/report-issue">
+          <AuthGuard>
+            <ReportIssue />
+          </AuthGuard>
+        </Route>
+        <Route path="/terms-conditions" component={TermsConditions} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/track-customer/:id">
+          <AuthGuard>
+            <TrackCustomer />
+          </AuthGuard>
+        </Route>
+        <Route path="/message/:id">
+          <AuthGuard>
+            <Message />
+          </AuthGuard>
+        </Route>
+        <Route path="/notifications">
+          <AuthGuard>
+            <Notifications />
+          </AuthGuard>
+        </Route>
+        {/* Verification flow */}
+        <Route path="/email-verification" component={EmailVerification} />
+        <Route path="/whatsapp-verification" component={WhatsAppVerification} />
+        <Route path="/verify-code" component={VerifyCode} />
+        <Route path="/verify-whatsapp-code" component={VerifyWhatsAppCode} />
+        <Route path="/verify-success" component={VerifySuccess} />
+        <Route path="/face-verification" component={FaceVerification} />
+        <Route path="/whatsapp-login" component={WhatsAppLogin} />
+        <Route component={NotFound} />
+      </Switch>
+    </PageTransition>
   );
 }
 

@@ -33,15 +33,16 @@ export default function EditProfile() {
 
   useEffect(() => {
     if (driver) {
-      const [firstName, ...lastNameParts] = driver.fullName.split(' ');
+      const fullName = driver.fullName || '';
+      const [firstName, ...lastNameParts] = fullName.split(' ');
       const lastName = lastNameParts.join(' ');
       
       setUserData({
         firstName: firstName || '',
         lastName: lastName || '',
-        fullName: driver.fullName,
-        email: driver.email,
-        phoneNumber: driver.phoneNumber,
+        fullName: fullName,
+        email: driver.email || '',
+        phoneNumber: driver.phoneNumber || '',
         about: driver.about || localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service.',
         location: driver.location || localStorage.getItem('userLocation') || 'Abc Tennessee',
         services: driver.services || JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]'),

@@ -373,6 +373,52 @@ router.post('/otp/email/verify', async (req, res) => {
   }
 });
 
+// WhatsApp OTP Routes
+router.post('/otp/whatsapp/send', async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) {
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Phone number is required');
+    }
+
+    const otp = generateOTP();
+    saveOTP(phoneNumber, otp);
+
+    console.log('📱 Sending WhatsApp OTP to:', phoneNumber, 'OTP:', otp);
+
+    // Mock WhatsApp sending (replace with actual WhatsApp API)
+    return sendSuccess(res, { message: "Verification code sent successfully" }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    console.error('WhatsApp OTP error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to send verification code');
+  }
+});
+
+router.post('/otp/whatsapp/verify', async (req, res) => {
+  try {
+    const { phoneNumber, otp } = req.body;
+
+    if (!phoneNumber || !otp) {
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Phone number and OTP are required');
+    }
+
+    if (!/^\d{6}$/.test(otp)) {
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'OTP must be 6 digits');
+    }
+
+    const result = verifyOTP(phoneNumber, otp);
+
+    if (result.success) {
+      return sendSuccess(res, { message: result.message }, RESPONSE_CODES.SUCCESS);
+    } else {
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, result.error);
+    }
+  } catch (error) {
+    console.error('WhatsApp OTP verification error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to verify code');
+  }
+});
+
 // Chat
 router.get('/chat/order/:orderId', authenticateToken, async (req, res) => {
   try {

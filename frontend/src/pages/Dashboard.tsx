@@ -11,6 +11,7 @@ import { RefreshCw, Bell, DollarSign, TrendingUp, Package, User } from "lucide-r
 import { useQueryClient } from "@tanstack/react-query";
 import { useOrders, useAcceptOrder, useCancelOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -100,6 +101,7 @@ export default function Dashboard() {
   };
 
   return (
+    <AuthGuard requireAuth={true}>
     <div className="min-h-screen bg-white pb-20">
       <MobileContainer>
         {/* Header */}
@@ -278,5 +280,6 @@ export default function Dashboard() {
       </MobileContainer>
       <BottomNav />
     </div>
+    </AuthGuard>
   );
 }

@@ -83,13 +83,19 @@ export default function VerifyCode() {
         console.log('Fuel friend registration result:', registerResult);
 
         // Store fuel friend data and JWT token temporarily for success screen
-        if (registerResult.fuelFriend && registerResult.token) {
-          localStorage.setItem("tempFuelFriendId", registerResult.fuelFriend.id);
-          localStorage.setItem("tempFuelFriendEmail", registerResult.fuelFriend.email);
-          localStorage.setItem("tempFuelFriendName", registerResult.fuelFriend.fullName);
-          localStorage.setItem("tempJwtToken", registerResult.token);
+        const responseData = registerResult.data || registerResult;
+        const token = responseData.token;
+        const fuelFriend = responseData.fuelFriend;
+        
+        if (token && fuelFriend) {
+          localStorage.setItem("tempFuelFriendId", fuelFriend.id);
+          localStorage.setItem("tempFuelFriendEmail", fuelFriend.email);
+          localStorage.setItem("tempFuelFriendName", fuelFriend.fullName);
+          localStorage.setItem("tempJwtToken", token);
+          console.log('✅ Token and fuel friend data saved to localStorage');
         } else {
           console.error('No fuel friend data or token in response:', registerResult);
+          console.log('Response structure:', { hasData: !!registerResult.data, hasToken: !!responseData.token, hasFuelFriend: !!responseData.fuelFriend });
         }
         
         // Clear pending registration
