@@ -28,10 +28,26 @@ export default function WhatsAppVerification() {
 
     setIsLoading(true);
     try {
+      // Get email from registration data
+      const pendingRegistration = localStorage.getItem("pendingRegistration");
+      let email = localStorage.getItem("verificationEmail");
+      
+      if (pendingRegistration && !email) {
+        try {
+          const registrationData = JSON.parse(pendingRegistration);
+          email = registrationData.step1?.email;
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      }
+      
       const response = await fetch(`${API_BASE_URL}/api/otp/whatsapp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: phoneToUse }),
+        body: JSON.stringify({ 
+          phoneNumber: phoneToUse,
+          email: email // Send email too for cross-verification
+        }),
       });
 
       const result = await response.json();

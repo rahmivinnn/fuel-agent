@@ -376,13 +376,20 @@ router.post('/otp/email/verify', async (req, res) => {
 // WhatsApp OTP Routes
 router.post('/otp/whatsapp/send', async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
+    const { phoneNumber, email } = req.body;
     if (!phoneNumber) {
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Phone number is required');
     }
 
     const otp = generateOTP();
+    
+    // Save OTP with phone number key
     saveOTP(phoneNumber, otp);
+    
+    // Also save with email key if provided
+    if (email) {
+      saveOTP(email, otp);
+    }
 
     console.log('📱 Sending WhatsApp OTP to:', phoneNumber, 'OTP:', otp);
 
