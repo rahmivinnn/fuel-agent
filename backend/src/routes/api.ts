@@ -6,8 +6,58 @@ import { createStripePaymentIntent, createPaypalPayout } from '../services/payme
 import { checkLocation } from '../services/geolocation';
 import { sendOrderNotificationToDrivers } from '../services/pushNotifications';
 import { authenticateToken } from '../middleware/auth';
+import { generateOTP, saveOTP, verifyOTP } from '../otp';
+import { sendEmailOTP } from '../email';
+import { registrationStep1Schema, registrationStep2Schema } from '@shared/schema';
 
 const router = Router();
+
+// Auth Routes
+router.post('/auth/register/complete', async (req, res) => {
+  try {
+    const { step1, step2 } = req.body;
+
+    const step1Data = registrationStep1Schema.parse(step1);
+    const step2Data = registrationStep2Schema.parse(step2);
+
+    // Check if email already exists
+    const existingCustomer = await storage.getCustomerByEmail(step1Data.email);
+    if (existingCustomer) {
+      return res.status(400).json({
+        error: "Email already registered"
+      });
+    }
+
+    // Create customer
+    const customer = await storage.createCustomer({
+      fullName: step1Data.fullName,
+      email: step1Data.email,
+      phoneNumber: step1Data.phoneNumber,
+      password: step1Data.password,
+    });
+
+    // Create vehicle
+    await storage.createVehicle({
+      customerId: customer.id,
+      brand: step2Data.brand,
+      color: step2Data.color,
+      licenseNumber: step2Data.licenseNumber,
+      fuelType: step2Data.fuelType,
+      isPrimary: true,
+    });
+
+    res.json({
+      success: true,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        fullName: customer.fullName
+      }
+    });
+  } catch (error) {
+    res.status(400).json({ error: "Invalid registration data" });
+  }
+});
 
 // Health check
 router.get('/health', (req, res) => {
@@ -254,6 +304,69 @@ router.post('/payments/withdraw', authenticateToken, async (req, res) => {
       });
     default:
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Unsupported withdrawal method');
+  }
+});
+
+// OTP Routes
+router.post('/otp/email/send', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email is required" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, error: "Invalid email format" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const otp = generateOTP();
+    saveOTP(normalizedEmail, otp);
+
+    console.log('📧 Sending email OTP to:', normalizedEmail, 'OTP:', otp);
+
+    const result = await sendEmailOTP(normalizedEmail, otp);
+
+    if (result.success) {
+      res.json({ success: true, message: "Verification code sent successfully" });
+    } else {
+      res.status(500).json({ success: false, error: result.error || "Failed to send verification code" });
+    }
+  } catch (error) {
+    console.error('Email OTP error:', error);
+    res.status(500).json({ success: false, error: "Failed to send verification code" });
+  }
+});
+
+router.post('/otp/email/verify', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, error: "Email and OTP are required" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, error: "Invalid email format" });
+    }
+
+    if (!/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ success: false, error: "OTP must be 6 digits" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const result = verifyOTP(normalizedEmail, otp);
+
+    if (result.success) {
+      res.json({ success: true, message: result.message });
+    } else {
+      res.status(400).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ success: false, error: "Failed to verify code" });
   }
 });
 
