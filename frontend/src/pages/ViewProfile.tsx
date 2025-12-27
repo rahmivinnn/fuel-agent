@@ -1,21 +1,21 @@
 import { ArrowLeft, Edit, MapPin, Star, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
-import { useDriver } from "@/hooks/useDriver";
+import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ViewProfile() {
   const [, setLocation] = useLocation();
-  const fuelFriendId = localStorage.getItem("driverId") || "ff1";
   
-  const { data: driver, isLoading } = useDriver(fuelFriendId);
+  const { data: authData, isLoading } = useAuth();
+  const currentUser = authData?.customer;
   
-  // Fallback to localStorage if API data not available
-  const customerName = driver?.fullName || localStorage.getItem('customerName') || 'Shah Hussain';
-  const userAbout = driver?.about || localStorage.getItem('userAbout') || 'Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers. Whether you\'re stranded on the road or simply looking to avoid the hassle of gas stations, our trusted Fuel Friends ensure that you get quality fuel delivered right to your location.';
-  const userLocation = driver?.location || localStorage.getItem('userLocation') || 'Abc Tennessee';
-  const userServices = driver?.services || JSON.parse(localStorage.getItem('userServices') || '["Groceries delivery", "Fuel refueling"]');
-  const rating = driver?.rating || 4.8;
-  const reviewCount = driver?.reviewCount || 128;
+  // Use data from auth API
+  const customerName = currentUser?.fullName || 'FuelFriend';
+  const userAbout = currentUser?.about || 'Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers.';
+  const userLocation = currentUser?.location || 'Location not set';
+  const userServices = ['Fuel delivery', 'Emergency refueling'];
+  const rating = parseFloat(currentUser?.rating || '0') || 4.8;
+  const reviewCount = currentUser?.totalReviews || 0;
 
   const handleBack = () => {
     setLocation('/dashboard');
