@@ -12,35 +12,30 @@ export function useOrders(status?: string, driverIdOrCustomerId?: string, mode: 
   return useQuery({
     queryKey: ["orders", status, driverIdOrCustomerId, mode],
     queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        if (status) params.append("status", status);
-        if (driverIdOrCustomerId) {
-          if (mode === "driver") params.append("driverId", driverIdOrCustomerId);
-          if (mode === "customer") params.append("customerId", driverIdOrCustomerId);
-        }
-        const query = params.toString();
-        
-        const url = `${API_BASE_URL}/api/orders${query ? `?${query}` : ""}`;
-        console.log('Fetching orders:', url);
-        
-        const response = await apiCallWithAuth(url);
-        
-        if (!response.ok) {
-          console.error('Orders fetch failed:', response.status, response.statusText);
-          throw new Error(`Failed to fetch orders: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Orders response:', data);
-        
-        // Ensure we always return an array
-        const orders = Array.isArray(data) ? data : (data.orders || []);
-        return orders;
-      } catch (error) {
-        console.error('Orders fetch error:', error);
-        return []; // Return empty array on error
+      const params = new URLSearchParams();
+      if (status) params.append("status", status);
+      if (driverIdOrCustomerId) {
+        if (mode === "driver") params.append("driverId", driverIdOrCustomerId);
+        if (mode === "customer") params.append("customerId", driverIdOrCustomerId);
       }
+      const query = params.toString();
+      
+      const url = `${API_BASE_URL}/api/orders${query ? `?${query}` : ""}`;
+      console.log('Fetching orders:', url);
+      
+      const response = await apiCallWithAuth(url);
+      
+      if (!response.ok) {
+        console.error('Orders fetch failed:', response.status, response.statusText);
+        throw new Error(`Failed to fetch orders: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Orders response:', data);
+      
+      // Ensure we always return an array
+      const orders = Array.isArray(data) ? data : (data.orders || []);
+      return orders;
     },
     staleTime: 0,
     gcTime: 0,

@@ -3,9 +3,6 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mail, Send, Loader2 } from "lucide-react";
-import { MobileContainer } from "@/components/MobileContainer";
-import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/api";
 
 export default function EmailVerification() {
@@ -68,121 +65,67 @@ export default function EmailVerification() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex flex-col">
-      <MobileContainer className="flex-1 flex flex-col justify-center py-8">
+    <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
+      <div className="px-4 pt-6 pb-8">
         {/* Back Button */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-8"
-        >
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full" 
+        <div className="flex items-center gap-2 mb-8">
+          <button 
             onClick={() => setLocation('/register')}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </motion.div>
+            <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Email Icon */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="text-center mb-8"
-        >
-          <div className="relative">
-            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl" />
-            <div className="relative w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-12 h-12 text-white" />
-            </div>
+        <div className="flex justify-center mb-8">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+            <img src="/inbox.png" alt="Email" className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Check Your Email</h1>
-          <p className="text-gray-600 leading-relaxed">
-            We'll send a verification code to your email address to confirm your account
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-[#3F4249] font-['Poppins'] mb-4">Email Verification</h1>
+          <p className="text-sm text-[#606268] font-['Poppins']">
+            Enter your email address to receive verification code
           </p>
-        </motion.div>
+        </div>
 
         {/* Email Input */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-6"
-        >
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Email Address
-            </label>
-            <Input
-              type="email"
-              placeholder="Enter your email address"
-              value={email || registeredEmail}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              disabled={!!registeredEmail}
-            />
-            {registeredEmail && (
-              <p className="text-xs text-gray-500 mt-2">
-                Using email from registration
-              </p>
-            )}
-          </div>
+        <div className="mb-6">
+          <Input
+            type="email"
+            placeholder="Email address"
+            value={email || registeredEmail}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+            disabled={!!registeredEmail}
+          />
+        </div>
 
-          {/* Send Code Button */}
-          <Button
-            onClick={handleSendCode}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
-            disabled={isLoading}
+        {/* Send Code Button */}
+        <Button
+          onClick={handleSendCode}
+          className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mb-6"
+          disabled={isLoading}
+        >
+          {isLoading ? "Sending..." : "Send Code"}
+        </Button>
+
+        {/* Try Another Way */}
+        <div className="text-center">
+          <button
+            onClick={handleTryAnotherWay}
+            className="text-[#3F4249] font-['Poppins'] underline"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending Code...
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 mr-2" />
-                Send Verification Code
-              </>
-            )}
-          </Button>
+            Try another way
+          </button>
+        </div>
+      </div>
 
-          {/* Try Another Way */}
-          <div className="text-center">
-            <button
-              onClick={handleTryAnotherWay}
-              className="text-blue-600 font-medium hover:text-blue-700 underline"
-            >
-              Try WhatsApp verification instead
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Info Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50"
-        >
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Mail className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-1">What happens next?</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• We'll send a 6-digit code to your email</li>
-                <li>• Enter the code to verify your account</li>
-                <li>• Start earning with FuelFriendly!</li>
-              </ul>
-            </div>
-          </div>
-        </motion.div>
-      </MobileContainer>
+      {/* Home Indicator */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#101010] rounded-full mb-2"></div>
     </div>
   );
 }

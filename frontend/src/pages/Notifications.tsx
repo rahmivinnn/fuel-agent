@@ -1,104 +1,113 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, CheckCircle, X, Mail, User, CreditCard, MoreHorizontal, Trash2, Bell, BellOff } from "lucide-react";
+import { ArrowLeft, CheckCircle, X, Mail, User, CreditCard, MoreHorizontal, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
-import { useState, useEffect } from "react";
-import { MobileContainer } from "@/components/MobileContainer";
-
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  type: 'success' | 'error' | 'info' | 'user' | 'card';
-  icon: any;
-  time: string;
-  group: string;
-  isRead: boolean;
-  createdAt: Date;
-}
+import { useState } from "react";
 
 export default function Notifications() {
   const [, setLocation] = useLocation();
-  const [notificationList, setNotificationList] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Simulate API call
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockNotifications: Notification[] = [
-        {
-          id: 1,
-          title: "New Order Received",
-          message: "A new fuel delivery request is available. Accept or decline now.",
-          type: "success",
-          icon: CheckCircle,
-          time: "2 hours ago",
-          group: "Today",
-          isRead: false,
-          createdAt: new Date()
-        },
-        {
-          id: 2,
-          title: "Job Completed",
-          message: "Great work! Your earnings have been updated in your wallet.",
-          type: "success",
-          icon: CheckCircle,
-          time: "5 hours ago",
-          group: "Today",
-          isRead: true,
-          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000)
-        },
-        {
-          id: 3,
-          title: "Account Setup Complete",
-          message: "Your account has been setup successfully. You can now provide services to customers.",
-          type: "user",
-          icon: User,
-          time: "Yesterday",
-          group: "Yesterday",
-          isRead: true,
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
-        }
-      ];
-      
-      setNotificationList(mockNotifications);
-      setIsLoading(false);
-    };
-    
-    fetchNotifications();
-  }, []);
+  const [notificationList, setNotificationList] = useState([
+    {
+      id: 1,
+      title: "New Order Received",
+      message: "A new fuel delivery request is available. Accept or decline now.",
+      type: "success",
+      icon: CheckCircle,
+      time: "Today",
+      group: "Today"
+    },
+    {
+      id: 2,
+      title: "Job Accepted Successfully",
+      message: "Get ready to serve your customer. Track their location now.",
+      type: "success",
+      icon: CheckCircle,
+      time: "Today",
+      group: "Today"
+    },
+    {
+      id: 3,
+      title: "Job Started",
+      message: "You've started the job. Stay on track and ensure a smooth delivery.",
+      type: "error",
+      icon: X,
+      time: "Today",
+      group: "Today"
+    },
+    {
+      id: 4,
+      title: "Job Completed",
+      message: "Great work! Your earnings have been updated in your wallet.",
+      type: "info",
+      icon: Mail,
+      time: "Yesterday",
+      group: "Yesterday"
+    },
+    {
+      id: 5,
+      title: "Account setup",
+      message: "Your Account has been Setup Successful you can now give services to customers",
+      type: "user",
+      icon: User,
+      time: "Yesterday",
+      group: "Yesterday"
+    },
+    {
+      id: 6,
+      title: "Credit Card Connected",
+      message: "Credit card added ....",
+      type: "card",
+      icon: CreditCard,
+      time: "Yesterday",
+      group: "Yesterday"
+    },
+    {
+      id: 7,
+      title: "Order Canceled",
+      message: "Recently",
+      type: "info",
+      icon: Mail,
+      time: "Last week",
+      group: "Last week"
+    },
+    {
+      id: 8,
+      title: "New Customer Review",
+      message: "You've received feedback on your last job. Check your ratings now.",
+      type: "user",
+      icon: User,
+      time: "Last week",
+      group: "Last week"
+    },
+    {
+      id: 9,
+      title: "Credit Card Connected",
+      message: "Credit card added ....",
+      type: "card",
+      icon: CreditCard,
+      time: "Last week",
+      group: "Last week"
+    }
+  ]);
 
   const deleteNotification = (id: number) => {
     setNotificationList(prev => prev.filter(notification => notification.id !== id));
   };
 
-  const markAsRead = (id: number) => {
-    setNotificationList(prev => 
-      prev.map(notification => 
-        notification.id === id ? { ...notification, isRead: true } : notification
-      )
-    );
-  };
-
-  const getIconColor = (type: string, isRead: boolean) => {
-    const opacity = isRead ? "opacity-60" : "";
+  const getIconColor = (type: string) => {
     switch (type) {
       case "success":
-        return `text-green-500 bg-green-100 ${opacity}`;
+        return "text-green-500 bg-green-100";
       case "error":
-        return `text-red-500 bg-red-100 ${opacity}`;
+        return "text-red-500 bg-red-100";
       case "info":
-        return `text-blue-500 bg-blue-100 ${opacity}`;
+        return "text-blue-500 bg-blue-100";
       case "user":
-        return `text-gray-700 bg-gray-100 ${opacity}`;
+        return "text-gray-700 bg-gray-100";
       case "card":
-        return `text-orange-500 bg-orange-100 ${opacity}`;
+        return "text-orange-500 bg-orange-100";
       default:
-        return `text-gray-500 bg-gray-100 ${opacity}`;
+        return "text-gray-500 bg-gray-100";
     }
   };
 
@@ -112,130 +121,68 @@ export default function Notifications() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      <MobileContainer>
-        {/* Header */}
-        <div className="flex items-center gap-4 py-4 border-b border-gray-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setLocation("/dashboard")}
-            className="text-gray-600"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
-          <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 p-4 flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setLocation("/dashboard")}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <h1 className="text-lg font-bold ml-3">Notifications</h1>
+      </div>
 
-        {/* Loading State */}
-        {isLoading ? (
-          <div className="p-6 space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
-                <div className="flex items-start space-x-3">
-                  <Skeleton className="w-8 h-8 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-3 w-1/2" />
+      {/* Notifications List */}
+      <div className="p-4 space-y-6">
+        {Object.entries(groupedNotifications).map(([group, notifications]: [string, any]) => (
+          <div key={group}>
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">{group}</h2>
+            <div className="space-y-3">
+              {notifications.map((notification: any) => {
+                const IconComponent = notification.icon;
+                return (
+                  <div
+                    key={notification.id}
+                    className="bg-white rounded-lg p-4 flex items-start space-x-3 shadow-sm border border-gray-100"
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getIconColor(notification.type)}`}>
+                      <IconComponent className="w-4 h-4" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-sm">
+                        {notification.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {notification.message}
+                      </p>
+                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-gray-400">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => deleteNotification(notification.id)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete this notification
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : notificationList.length === 0 ? (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center py-16 px-6">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <BellOff className="w-8 h-8 text-gray-400" />
+                );
+              })}
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No Notifications</h2>
-            <p className="text-gray-600 text-center text-sm leading-relaxed">
-              You're all caught up! New notifications will appear here when you receive them.
-            </p>
           </div>
-        ) : (
-          /* Notifications List */
-          <div className="py-6">
-            {Object.entries(groupedNotifications).map(([group, notifications]: [string, any]) => (
-              <div key={group} className="mb-8">
-                <div className="flex items-center gap-3 mb-4 px-6">
-                  <div className="h-px bg-gray-200 flex-1" />
-                  <h2 className="text-sm font-medium text-gray-500 px-3">{group}</h2>
-                  <div className="h-px bg-gray-200 flex-1" />
-                </div>
-                
-                <div className="space-y-3 px-6">
-                  {notifications.map((notification: Notification) => {
-                    const IconComponent = notification.icon;
-                    return (
-                      <div
-                        key={notification.id}
-                        className={`bg-white rounded-xl p-4 border transition-all duration-200 hover:shadow-md ${
-                          notification.isRead ? 'border-gray-100' : 'border-green-200 bg-green-50/30'
-                        }`}
-                        onClick={() => !notification.isRead && markAsRead(notification.id)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getIconColor(notification.type, notification.isRead)}`}>
-                            <IconComponent className="w-4 h-4" />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <h3 className={`font-medium text-sm ${
-                                notification.isRead ? 'text-gray-700' : 'text-gray-900'
-                              }`}>
-                                {notification.title}
-                                {!notification.isRead && (
-                                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full ml-2" />
-                                )}
-                              </h3>
-                              
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-gray-400 h-8 w-8">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
-                                  {!notification.isRead && (
-                                    <DropdownMenuItem onClick={() => markAsRead(notification.id)}>
-                                      <Bell className="w-4 h-4 mr-2" />
-                                      Mark as read
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuItem 
-                                    onClick={() => deleteNotification(notification.id)}
-                                    className="text-red-600 focus:text-red-600"
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete notification
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                            
-                            <p className={`text-sm mt-1 ${
-                              notification.isRead ? 'text-gray-500' : 'text-gray-600'
-                            }`}>
-                              {notification.message}
-                            </p>
-                            
-                            <p className="text-xs text-gray-400 mt-2">
-                              {notification.time}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </MobileContainer>
+        ))}
+      </div>
     </div>
   );
 }

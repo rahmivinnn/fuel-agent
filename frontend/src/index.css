@@ -283,36 +283,15 @@
 /* Responsive base scaling: kecilkan UI di layar HP */
 @layer base {
   html { font-size: 16px; }
-  
-  /* Tablet landscape */
-  @media (min-width: 768px) and (max-width: 1024px) {
-    html { font-size: 17px; }
-    .mobile-container { max-width: 600px; }
-  }
-  
-  /* Desktop */
-  @media (min-width: 1025px) {
-    html { font-size: 18px; }
-    .mobile-container { max-width: 480px; }
-  }
-  
-  /* Small tablets */
-  @media (max-width: 768px) and (min-width: 481px) {
-    html { font-size: 16px; }
-    .mobile-container { max-width: 500px; }
-  }
-  
-  /* Large phones */
-  @media (max-width: 480px) and (min-width: 421px) {
+  /* <= 480px: sedikit lebih kecil */
+  @media (max-width: 480px) {
     html { font-size: 15px; }
   }
-  
-  /* Medium phones */
-  @media (max-width: 420px) and (min-width: 361px) {
+  /* <= 420px: lebih kecil lagi */
+  @media (max-width: 420px) {
     html { font-size: 14px; }
   }
-  
-  /* Small phones */
+  /* <= 360px: minimal agar tetap terbaca */
   @media (max-width: 360px) {
     html { font-size: 13px; }
   }
@@ -333,27 +312,8 @@
     @apply w-full max-w-md mx-auto px-4;
   }
   
-  /* Responsive containers */
-  @media (min-width: 768px) {
-    .mobile-container {
-      @apply max-w-lg px-6;
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .mobile-container {
-      @apply max-w-md px-4;
-    }
-  }
-  
   .mobile-padding {
     @apply px-4 py-6;
-  }
-  
-  @media (max-width: 360px) {
-    .mobile-padding {
-      @apply px-3 py-4;
-    }
   }
   
   .mobile-safe-area {
@@ -364,12 +324,6 @@
     @apply py-4 px-4;
   }
   
-  @media (max-width: 360px) {
-    .mobile-header {
-      @apply py-3 px-3;
-    }
-  }
-  
   .mobile-content {
     @apply px-4 py-2;
   }
@@ -378,115 +332,16 @@
     @apply rounded-xl p-4;
   }
   
-  @media (max-width: 360px) {
-    .mobile-card {
-      @apply rounded-lg p-3;
-    }
-  }
-  
   .mobile-button {
     @apply h-12 rounded-lg;
-  }
-  
-  @media (max-width: 360px) {
-    .mobile-button {
-      @apply h-10 text-sm;
-    }
   }
   
   .mobile-input {
     @apply h-12 rounded-lg;
   }
   
-  @media (max-width: 360px) {
-    .mobile-input {
-      @apply h-10;
-    }
-  }
-  
   .mobile-section {
     @apply mb-6;
-  }
-  
-  @media (max-width: 360px) {
-    .mobile-section {
-      @apply mb-4;
-    }
-  }
-  
-  /* Responsive text sizing */
-  .responsive-text-xl {
-    @apply text-xl;
-  }
-  
-  @media (max-width: 360px) {
-    .responsive-text-xl {
-      @apply text-lg;
-    }
-  }
-  
-  .responsive-text-lg {
-    @apply text-lg;
-  }
-  
-  @media (max-width: 360px) {
-    .responsive-text-lg {
-      @apply text-base;
-    }
-  }
-  
-  /* Responsive icon sizing */
-  .responsive-icon-6 {
-    @apply w-6 h-6;
-  }
-  
-  @media (max-width: 360px) {
-    .responsive-icon-6 {
-      @apply w-5 h-5;
-    }
-  }
-  
-  /* Responsive avatar sizing */
-  .responsive-avatar-12 {
-    @apply w-12 h-12;
-  }
-  
-  @media (max-width: 360px) {
-    .responsive-avatar-12 {
-      @apply w-10 h-10;
-    }
-  }
-  
-  /* Custom scrollbar styles */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgba(243, 244, 246, 0.5);
-    border-radius: 2px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.5);
-    border-radius: 2px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.7);
-  }
-  
-  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
-    background: rgb(209, 213, 219);
-  }
-  
-  .scrollbar-track-gray-100::-webkit-scrollbar-track {
-    background: rgb(243, 244, 246);
   }
 }
 
@@ -683,56 +538,6 @@
   .overflow-x-auto::-webkit-scrollbar {
     width: 0;
     height: 0;
-  }
-
-  /* Custom scrollbar for specific containers */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgba(243, 244, 246, 0.5);
-    border-radius: 2px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.5);
-    border-radius: 2px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.7);
-  }
-
-  /* Responsive grid adjustments */
-  .grid-cols-3 {
-    @apply grid-cols-2;
-  }
-  
-  @media (max-width: 360px) {
-    .grid-cols-3 {
-      @apply grid-cols-1;
-    }
-  }
-
-  /* Button spacing adjustments */
-  .space-x-2 > * + * {
-    margin-left: 0.25rem;
-  }
-  
-  .space-y-3 > * + * {
-    margin-top: 0.5rem;
-  }
-  
-  @media (max-width: 360px) {
-    .space-y-3 > * + * {
-      margin-top: 0.375rem;
-    }
   }
 
   /* React Phone Input styling to match other inputs */

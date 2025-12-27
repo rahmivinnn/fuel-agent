@@ -3,9 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, ArrowLeft, CheckCircle, RefreshCw, Loader2 } from "lucide-react";
-import { MobileContainer } from "@/components/MobileContainer";
-import { motion } from "framer-motion";
+import { Mail, ArrowLeft } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 export default function VerifyCode() {
@@ -99,94 +97,64 @@ export default function VerifyCode() {
   const email = localStorage.getItem("verificationEmail") || localStorage.getItem("customerEmail") || "lorem@gmail.com";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
-      <MobileContainer className="flex-1 flex flex-col justify-center py-8">
-        {/* Back Button */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-8"
+    <div className="min-h-screen bg-background p-4 flex flex-col">
+      {/* Back button */}
+      <div className="w-full max-w-sm mx-auto pt-4">
+        <button
+          onClick={() => setLocation("/login")}
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
         >
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full" 
-            onClick={() => setLocation("/login")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </motion.div>
+          <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+        </button>
+      </div>
+      
+      <div className="w-full max-w-sm mx-auto space-y-8 pt-8 flex-1 flex flex-col justify-center">
+        {/* Email icon */}
+        <div className="flex justify-center mb-6">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+            <img src="/inbox1.png" alt="Inbox" className="w-10 h-10" />
+          </div>
+        </div>
         
-        {/* Email Icon */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="text-center mb-8"
-        >
-          <div className="relative">
-            <div className="absolute inset-0 bg-green-500/20 rounded-full blur-2xl" />
-            <div className="relative w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-12 h-12 text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Enter Verification Code</h1>
-          <p className="text-gray-600 leading-relaxed">
-            We sent a 6-digit code to
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold text-foreground">Verify code</h1>
+          <p className="text-sm text-muted-foreground">
+            Enter four-digits verification code sent
           </p>
-          <p className="text-green-600 font-medium">
-            {email}
+          <p className="text-sm text-muted-foreground">
+            to {email}
           </p>
-        </motion.div>
+        </div>
 
-        {/* OTP Input */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-8"
-        >
-          <div className="flex justify-center">
-            <InputOTP
-              maxLength={6}
-              value={code}
-              onChange={setCode}
-              data-testid="input-otp"
-            >
-              <InputOTPGroup className="gap-3">
-                <InputOTPSlot index={0} className="w-14 h-14 text-xl rounded-xl border-2 border-gray-300 focus:border-green-500" />
-                <InputOTPSlot index={1} className="w-14 h-14 text-xl rounded-xl border-2 border-gray-300 focus:border-green-500" />
-                <InputOTPSlot index={2} className="w-14 h-14 text-xl rounded-xl border-2 border-gray-300 focus:border-green-500" />
-                <InputOTPSlot index={3} className="w-14 h-14 text-xl rounded-xl border-2 border-gray-300 focus:border-green-500" />
-                <InputOTPSlot index={4} className="w-14 h-14 text-xl rounded-xl border-2 border-gray-300 focus:border-green-500" />
-                <InputOTPSlot index={5} className="w-14 h-14 text-xl rounded-xl border-2 border-gray-300 focus:border-green-500" />
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
+        <div className="flex flex-col items-center space-y-6">
+          <InputOTP
+            maxLength={6}
+            value={code}
+            onChange={setCode}
+            data-testid="input-otp"
+          >
+            <InputOTPGroup className="gap-3">
+              <InputOTPSlot index={0} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={1} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={2} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={3} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={4} className="w-14 h-14 text-xl rounded-xl border-2" />
+              <InputOTPSlot index={5} className="w-14 h-14 text-xl rounded-xl border-2" />
+            </InputOTPGroup>
+          </InputOTP>
 
           <Button
             onClick={handleVerify}
-            className="w-full h-12 text-base font-semibold rounded-xl bg-green-500 hover:bg-green-600 text-white"
+            className="w-full h-12 text-base font-semibold rounded-xl bg-green-600 hover:bg-green-700 text-white"
             disabled={isLoading || code.length !== 6}
             data-testid="button-verify"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Verify Code
-              </>
-            )}
+            {isLoading ? "Verifying..." : "Verify"}
           </Button>
 
-          {/* Resend Section */}
-          <div className="text-center space-y-3">
-            <p className="text-sm text-gray-600">
-              Didn't receive the code?
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Haven't received the verification code?
             </p>
             <div className="flex items-center justify-center gap-2">
               <Button
@@ -196,40 +164,15 @@ export default function VerifyCode() {
                 className="text-green-600 p-0 h-auto font-semibold hover:text-green-700"
                 data-testid="button-resend"
               >
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Resend Code
+                Resend
               </Button>
               {!canResend && (
-                <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                  {countdown}s
-                </span>
+                <span className="text-sm text-muted-foreground">{countdown}s</span>
               )}
             </div>
           </div>
-        </motion.div>
-
-        {/* Info Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50"
-        >
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-1">Verification Tips</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Check your spam/junk folder if you don't see the email</li>
-                <li>• The code expires in 10 minutes</li>
-                <li>• You can request a new code if needed</li>
-              </ul>
-            </div>
-          </div>
-        </motion.div>
-      </MobileContainer>
+        </div>
+      </div>
     </div>
   );
 }

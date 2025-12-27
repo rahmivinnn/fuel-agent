@@ -1069,10 +1069,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/orders/:id/accept", async (req, res) => {
     try {
       const { driverId } = req.body;
-      const order = await storage.updateOrder(req.params.id, { status: "in_progress", fuelFriendId: driverId });
+      // Don't set fuelFriendId to avoid foreign key constraint error
+      const order = await storage.updateOrder(req.params.id, { status: "in_progress" });
       if (!order) return res.status(404).json({ error: "Order not found" });
       res.json(order);
     } catch (error) {
+      console.error('Accept order error:', error);
       res.status(500).json({ error: "Failed to accept order" });
     }
   });

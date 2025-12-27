@@ -129,51 +129,36 @@ export default function TrackCustomer() {
         </div>
 
         {/* Progress Steps */}
-        <div className="space-y-4">
-          <h4 className="font-semibold text-gray-900">Delivery Progress</h4>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Order Confirmed</p>
-                <p className="text-sm text-gray-500">Your order has been accepted</p>
-              </div>
-              <span className="text-xs text-gray-400">2:15 PM</span>
+        <div className="flex items-center justify-between px-4">
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <Car className="w-4 h-4 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Driver En Route</p>
-                <p className="text-sm text-gray-500">Driver is heading to pickup location</p>
-              </div>
-              <span className="text-xs text-gray-400">2:25 PM</span>
+          </div>
+          
+          <div className="flex-1 h-0.5 bg-green-200 mx-2 relative">
+            <div className="absolute inset-0 bg-green-500 w-1/3" />
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 border-2 border-green-200 rounded-full flex items-center justify-center">
+              <Car className="w-4 h-4 text-green-500" />
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 border-2 border-green-200 bg-green-50 rounded-full flex items-center justify-center">
-                <MapPin className="w-4 h-4 text-green-500" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-green-600">Pickup in Progress</p>
-                <p className="text-sm text-gray-500">Driver is collecting your fuel</p>
-              </div>
-              <span className="text-xs text-green-600">Now</span>
+          </div>
+          
+          <div className="flex-1 h-0.5 bg-gray-200 mx-2" />
+          
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
+              <MapPin className="w-4 h-4 text-gray-400" />
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-gray-400" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-400">Delivered</p>
-                <p className="text-sm text-gray-400">Fuel delivered to your location</p>
-              </div>
-              <span className="text-xs text-gray-400">Est. 3:00 PM</span>
+          </div>
+          
+          <div className="flex-1 h-0.5 bg-gray-200 mx-2" />
+          
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 text-gray-400" />
             </div>
           </div>
         </div>

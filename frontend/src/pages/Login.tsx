@@ -2,20 +2,19 @@ import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginData } from "@/lib/schemas";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformGoogleAuth } from "@/hooks/usePlatformGoogleAuth";
 import { FcGoogle } from "react-icons/fc";
-import { Eye, EyeOff, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { MobileContainer } from "@/components/MobileContainer";
 import { motion } from "framer-motion";
 import EmailOTPLogin from "@/components/EmailOTPLogin";
 import WhatsAppOTPLogin from "@/components/WhatsAppOTPLogin";
-import { apiService } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 import { auth } from "@/lib/auth";
 
 export default function Login() {
@@ -24,7 +23,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'password' | 'email-otp' | 'whatsapp-otp'>('password');
-  const [error, setError] = useState<string>("");
   const { signInWithGoogle, loading: googleLoading } = usePlatformGoogleAuth();
 
   const form = useForm<LoginData>({
@@ -37,25 +35,33 @@ export default function Login() {
 
   const onSubmit = async (data: LoginData) => {
     setIsLoading(true);
-    setError("");
     try {
-      const result = await apiService.login(data.emailOrPhone, data.password);
-      
-      // Store authentication data
-      localStorage.setItem('authToken', result.token);
-      localStorage.setItem('customerId', result.customer.id);
-      localStorage.setItem('customerName', result.customer.fullName);
-      localStorage.setItem('customerEmail', result.customer.email);
-      
-      auth.setSession(result.customer, result.token);
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Invalid credentials");
+      }
+
+      // Store user session
+      auth.setSession(result.data.customer, result.data.token);
+
       toast({
-        title: "Welcome back!",
+        title: "Success!",
         description: "Logged in successfully",
       });
       setLocation("/dashboard");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Invalid credentials";
-      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Invalid credentials",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -71,9 +77,11 @@ export default function Login() {
   };
 
   const handleOTPLoginSuccess = (user: any) => {
+    localStorage.setItem("jwt_token", "dummy_token"); // Add token storage
     localStorage.setItem("customerId", "c1");
     localStorage.setItem("customerEmail", user.email || user.phoneNumber);
     localStorage.setItem("customerName", user.name || "Driver");
+    localStorage.setItem("driverId", "ff1"); // Default driver ID
     toast({
       title: "Success!",
       description: "Logged in successfully with OTP",
@@ -130,174 +138,122 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <MobileContainer className="flex-1 flex flex-col justify-center py-8">
+    <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
+      {/* Main Content */}
+      <div className="px-4 pt-6 pb-8">
         {/* Back Button */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-8"
-        >
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full" 
+        <div className="flex items-center gap-2 mb-8">
+          <button 
             onClick={() => setLocation('/')}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </motion.div>
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Logo */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-center mb-8"
-        >
-          <img src="/logo.png" alt="FuelFriendly" className="w-24 h-24 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to continue driving</p>
-        </motion.div>
+        <div className="flex justify-center mb-8">
+          <img src="/logo.png" alt="FuelFriendly" className="w-[105px] h-[60px]" />
+        </div>
 
-        {/* Error Alert */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <Alert variant="destructive" className="border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-[#3F4249] font-['Poppins']">Sign In</h1>
+        </div>
 
         {/* Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="emailOrPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="emailOrPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="Email or phone number"
+                      {...field}
+                      className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
+                      data-testid="input-email-phone"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="relative">
                       <Input
-                        placeholder="Email or phone number"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 pr-12 font-['Poppins']"
                         {...field}
-                        className="h-12 rounded-xl border-gray-300 focus:border-green-500 focus:ring-green-500"
-                        data-testid="input-email-phone"
+                        data-testid="input-password"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#606268]"
+                        onClick={() => setShowPassword((v) => !v)}
+                      >
+                        {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Password"
-                          className="h-12 rounded-xl border-gray-300 focus:border-green-500 focus:ring-green-500 pr-12"
-                          {...field}
-                          data-testid="input-password"
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                          onClick={() => setShowPassword((v) => !v)}
-                        >
-                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="text-center">
+              <Link href="/forgot-password" className="text-[#FF6B6B] text-sm font-['Poppins']">Forgotten Password</Link>
+            </div>
 
-              <div className="text-right">
-                <Link href="/forgot-password" className="text-sm text-green-600 hover:text-green-700">
-                  Forgot Password?
-                </Link>
-              </div>
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mt-6"
+              disabled={isLoading}
+              data-testid="button-login"
+            >
+              {isLoading ? "Logging in..." : "Log In"}
+            </Button>
 
-              <Button
-                type="submit"
-                className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl mt-6"
-                disabled={isLoading}
-                data-testid="button-login"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
+            <div className="text-center py-4">
+              <span className="text-black/50 font-['Poppins']">Or</span>
+            </div>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 border-gray-300 hover:bg-gray-50 rounded-xl"
-                onClick={handleGoogleSignIn}
-                disabled={googleLoading}
-                data-testid="button-google"
-              >
-                {googleLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <FcGoogle className="mr-3 h-5 w-5" />
-                    Google
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </motion.div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 rounded-[30px] border border-black/50 bg-white hover:bg-gray-50 text-[#3F4249] font-['Poppins']"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
+              data-testid="button-google"
+            >
+              <FcGoogle className="mr-3 h-5 w-5" />
+              {googleLoading ? "Connecting..." : "Continue with Google"}
+            </Button>
+          </form>
+        </Form>
 
         {/* Sign Up Link */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-center mt-8"
-        >
-          <p className="text-gray-600">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-green-600 font-semibold hover:text-green-700">
+        <div className="text-center mt-5">
+          <div className="flex items-center justify-center gap-4">
+            <span className="text-black/50 font-['Poppins']">Don't have account?</span>
+            <Link href="/register" className="text-[#3AC36C] font-semibold font-['Poppins'] underline">
               Sign Up
             </Link>
-          </p>
-        </motion.div>
-      </MobileContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Home Indicator */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#101010] rounded-full mb-2"></div>
     </div>
   );
 }
