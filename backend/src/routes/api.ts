@@ -131,7 +131,7 @@ router.get('/orders', authenticateToken, async (req, res) => {
   
   if (status) {
     if (status === 'active') {
-      orders = orders.filter(o => o.status === 'in_progress' || o.status === 'active');
+      orders = orders.filter(o => o.status === 'in_progress' || o.status === 'active' || o.status === 'confirmed');
     } else if (status === 'pending') {
       orders = orders.filter(o => o.status === 'pending');
     } else {
