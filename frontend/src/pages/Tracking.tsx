@@ -27,6 +27,22 @@ export default function MyOrders() {
     }
   }, []);
   
+  // Add loading check for fuelFriendId
+  if (!fuelFriendId) {
+    return (
+      <div className="min-h-screen bg-white pb-20 overscroll-none">
+        <MobileContainer>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading...</p>
+            </div>
+          </div>
+        </MobileContainer>
+      </div>
+    );
+  }
+  
   const { data: newOrders = [], isLoading: isLoadingNew } = useOrders("pending", fuelFriendId);
   const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", fuelFriendId);
   const { data: completedOrders = [], isLoading: isLoadingCompleted } = useOrders("completed", fuelFriendId);
@@ -53,7 +69,7 @@ export default function MyOrders() {
   };
   
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-white pb-20 overscroll-none">
       <MobileContainer>
         {/* Header */}
         <div className="flex items-center gap-4 py-4 border-b border-gray-100">

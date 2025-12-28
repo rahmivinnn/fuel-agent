@@ -28,15 +28,17 @@ initializeWhatsApp();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173', 'https://fuel-agent-frontend.vercel.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  trustProxy: false, // Fix trust proxy issue
+  skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
   message: {
     success: false,
     message: 'Too many requests',

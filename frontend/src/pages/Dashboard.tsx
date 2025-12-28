@@ -117,7 +117,7 @@ export default function Dashboard() {
 
   return (
     <AuthGuard requireAuth={true}>
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-white pb-20 overscroll-none">
       <MobileContainer>
         {/* Header */}
         <div className="flex items-center justify-between py-6">
