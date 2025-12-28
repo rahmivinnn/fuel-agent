@@ -148,7 +148,7 @@ router.get('/orders', authenticateToken, async (req, res) => {
   orders.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   
   console.log('✅ Final orders to return:', orders.length);
-  return sendSuccess(res, { orders }, RESPONSE_CODES.SUCCESS);
+  return sendSuccess(res, orders, RESPONSE_CODES.SUCCESS);
 });
 
 router.get('/orders/customer/:customerId', async (req, res) => {
@@ -535,4 +535,54 @@ router.delete('/customers/:id', authenticateToken, async (req, res) => {
     return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to delete account');
   }
 });
+
+// Test endpoint to create orders for current fuel friend
+router.post('/test/create-orders', authenticateToken, async (req, res) => {
+  try {
+    const fuelFriendId = req.user.userId;
+    
+    const testOrders = [
+      {
+        trackingNumber: `TEST${Date.now()}`,
+        customerId: 'test-customer-1',
+        deliveryAddress: 'Jl. Sudirman No. 123, Jakarta Pusat',
+        deliveryPhone: '+628123456789',
+        fuelType: 'Premium',
+        fuelQuantity: '15.00',
+        totalAmount: '75000.00',
+        deliveryFee: '10000.00',
+        orderType: 'instant',
+        status: 'pending'
+      },
+      {
+        trackingNumber: `TEST${Date.now() + 1}`,
+        customerId: 'test-customer-2',
+        fuelFriendId: fuelFriendId,
+        deliveryAddress: 'Jl. Thamrin No. 456, Jakarta Pusat',
+        deliveryPhone: '+628987654321',
+        fuelType: 'Pertamax',
+        fuelQuantity: '20.00',
+        totalAmount: '100000.00',
+        deliveryFee: '15000.00',
+        orderType: 'instant',
+        status: 'in_progress'
+      }
+    ];
+    
+    const createdOrders = [];
+    for (const orderData of testOrders) {
+      const order = await storage.createOrder(orderData);
+      createdOrders.push(order);
+    }
+    
+    return sendSuccess(res, { 
+      orders: createdOrders,
+      message: `Created ${createdOrders.length} test orders for fuel friend ${fuelFriendId}` 
+    }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    console.error('Create test orders error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to create test orders');
+  }
+});
+
 export default router;

@@ -1,11 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { API_BASE_URL } from "@/lib/api";
-import { API_BASE_URL } from "@/lib/api";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { API_BASE_URL } from "@/lib/api";
 import { apiCallWithAuth } from "@/lib/auth";
 
 export function useOrders(status?: string, fuelFriendIdOrCustomerId?: string, mode: "driver" | "customer" = "driver") {
@@ -21,35 +16,37 @@ export function useOrders(status?: string, fuelFriendIdOrCustomerId?: string, mo
       const query = params.toString();
       
       const url = `${API_BASE_URL}/api/orders${query ? `?${query}` : ""}`;
-      console.log('Fetching orders:', url);
+      console.log('🔍 Fetching orders from:', url);
+      console.log('📋 Query params:', { status, fuelFriendIdOrCustomerId, mode });
       
       const response = await apiCallWithAuth(url);
       
       if (!response.ok) {
-        console.error('Orders fetch failed:', response.status, response.statusText);
+        console.error('❌ Orders fetch failed:', response.status, response.statusText);
         throw new Error(`Failed to fetch orders: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('Orders response:', data);
+      console.log('📦 Raw orders response:', data);
       
       // Handle different response formats
       let orders = [];
       if (data.success && data.data) {
-        orders = Array.isArray(data.data) ? data.data : (data.data.orders || []);
+        orders = Array.isArray(data.data) ? data.data : [];
       } else if (Array.isArray(data)) {
         orders = data;
-      } else if (data.orders) {
-        orders = data.orders;
+      } else {
+        orders = [];
       }
       
-      console.log('Processed orders:', orders);
+      console.log('✅ Processed orders:', orders.length, orders);
       return orders;
     },
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
+    enabled: !!fuelFriendIdOrCustomerId, // Only fetch if we have an ID
   });
 }
 

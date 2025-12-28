@@ -41,7 +41,6 @@ router.get('/me', authenticateToken, async (req, res) => {
     
     return sendSuccess(res, { 
       fuelFriend: fuelFriendData,
-      customer: fuelFriendData, // Keep for backward compatibility
       vehicles 
     }, RESPONSE_CODES.SUCCESS);
   } catch (error) {
