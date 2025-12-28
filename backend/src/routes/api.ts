@@ -124,6 +124,11 @@ router.get('/orders', authenticateToken, async (req, res) => {
   let orders = await storage.getAllOrders();
   console.log('📊 Total orders from DB:', orders.length);
   
+  // Debug: show all orders
+  orders.forEach(order => {
+    console.log(`Order ${order.id}: status=${order.status}, fuelFriendId=${order.fuelFriendId}, customerId=${order.customerId}`);
+  });
+  
   if (status) {
     if (status === 'active') {
       orders = orders.filter(o => o.status === 'in_progress' || o.status === 'active');
