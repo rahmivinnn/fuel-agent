@@ -285,7 +285,8 @@ router.post('/drivers/:id/fcm-token', async (req, res) => {
 
 // Wallet (Protected)
 router.get('/wallet/driver/:driverId', authenticateToken, async (req, res) => {
-  const wallet = await storage.getWallet(req.params.driverId);
+  const fuelFriendId = req.params.driverId; // Keep param name for compatibility
+  const wallet = await storage.getWallet(fuelFriendId);
   return sendSuccess(res, { wallet }, RESPONSE_CODES.SUCCESS);
 });
 
@@ -296,7 +297,8 @@ router.put('/wallet/driver/:driverId', authenticateToken, async (req, res) => {
 
 // Transactions (Protected)
 router.get('/transactions/driver/:driverId', authenticateToken, async (req, res) => {
-  const transactions = await storage.getTransactions(req.params.driverId);
+  const fuelFriendId = req.params.driverId; // Keep param name for compatibility
+  const transactions = await storage.getTransactions(fuelFriendId);
   return sendSuccess(res, { transactions }, RESPONSE_CODES.SUCCESS);
 });
 

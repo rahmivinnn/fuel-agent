@@ -218,21 +218,27 @@ class StorageService {
   }
 
   // Wallet methods
-  async getWallet(driverId: string): Promise<any> {
-    const result = await db.select().from(wallets).where(eq(wallets.driverId, driverId)).limit(1);
+  async getWallet(fuelFriendId: string): Promise<any> {
+    let result = await db.select().from(wallets).where(eq(wallets.fuelFriendId, fuelFriendId)).limit(1);
     
     if (result[0]) return result[0];
     
+    // Check if fuel friend exists before creating wallet
+    const fuelFriend = await db.select().from(fuelFriends).where(eq(fuelFriends.id, fuelFriendId)).limit(1);
+    if (!fuelFriend[0]) {
+      throw new Error(`Fuel friend with ID ${fuelFriendId} not found`);
+    }
+    
     const newWallet = await db.insert(wallets).values({
-      driverId,
+      fuelFriendId,
       balance: '0.00'
     }).returning();
     
     return newWallet[0];
   }
 
-  async getTransactions(driverId: string): Promise<any[]> {
-    const wallet = await this.getWallet(driverId);
+  async getTransactions(fuelFriendId: string): Promise<any[]> {
+    const wallet = await this.getWallet(fuelFriendId);
     return await db.select().from(transactions).where(eq(transactions.walletId, wallet.id));
   }
 
