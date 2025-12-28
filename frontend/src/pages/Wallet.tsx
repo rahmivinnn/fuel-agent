@@ -11,16 +11,19 @@ import { useToast } from "@/hooks/use-toast";
 import { useWallet, useTransactions, useWithdraw } from "@/hooks/useWallet";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function Wallet() {
   const { toast } = useToast();
   const [amount, setAmount] = useState("100.00");
   const [selectedPayment, setSelectedPayment] = useState<string>("paypal");
   const currencySymbol = getCurrencySymbol();
   
-  const driverId = localStorage.getItem("driverId") || "ff1";
+  const { data: authData } = useAuth();
+  const fuelFriendId = authData?.fuelFriend?.id;
   
-  const { data: wallet, isLoading: isLoadingWallet } = useWallet(driverId);
-  const { data: transactions = [], isLoading: isLoadingTransactions } = useTransactions(driverId);
+  const { data: wallet, isLoading: isLoadingWallet } = useWallet(fuelFriendId || "");
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useTransactions(fuelFriendId || "");
   const withdrawMutation = useWithdraw();
 
   const quickAmounts = ["100.00", "300.00", "500.00"];
@@ -52,9 +55,9 @@ export default function Wallet() {
 
     try {
       const result = await withdrawMutation.mutateAsync({
-        driverId,
         amount,
-        paymentMethod: selectedPayment,
+        email: authData?.fuelFriend?.email || "",
+        method: selectedPayment,
       });
       
       if (result.success) {
