@@ -22,8 +22,24 @@ export default function Wallet() {
   const { data: authData } = useAuth();
   const fuelFriendId = authData?.fuelFriend?.id;
   
-  const { data: wallet, isLoading: isLoadingWallet } = useWallet(fuelFriendId || "");
-  const { data: transactions = [], isLoading: isLoadingTransactions } = useTransactions(fuelFriendId || "");
+  // Add loading check for fuelFriendId
+  if (!fuelFriendId) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="p-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  const { data: wallet, isLoading: isLoadingWallet } = useWallet(fuelFriendId);
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useTransactions(fuelFriendId);
   const withdrawMutation = useWithdraw();
 
   const quickAmounts = ["100.00", "300.00", "500.00"];

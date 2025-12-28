@@ -47,6 +47,16 @@ export default function MyOrders() {
   const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", fuelFriendId);
   const { data: completedOrders = [], isLoading: isLoadingCompleted } = useOrders("completed", fuelFriendId);
   
+  console.log('My Orders Debug:', {
+    fuelFriendId,
+    newOrders,
+    activeOrders,
+    completedOrders,
+    isLoadingNew,
+    isLoadingActive,
+    isLoadingCompleted
+  });
+  
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
