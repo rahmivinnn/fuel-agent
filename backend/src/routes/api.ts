@@ -135,9 +135,15 @@ router.get('/orders', authenticateToken, async (req, res) => {
     console.log(`📋 Orders after status filter (${status}):`, orders.length);
   }
   
-  if (fuelFriendId && status !== 'pending') {
-    orders = orders.filter(o => o.fuelFriendId === fuelFriendId);
-    console.log(`👤 Orders after fuelFriendId filter (${fuelFriendId}):`, orders.length);
+  if (fuelFriendId) {
+    if (status === 'pending') {
+      // For pending orders, don't filter by fuelFriendId (show all pending orders)
+      console.log(`📋 Pending orders - showing all pending orders (not filtering by fuelFriendId)`);
+    } else {
+      // For other statuses, filter by fuelFriendId
+      orders = orders.filter(o => o.fuelFriendId === fuelFriendId);
+      console.log(`👤 Orders after fuelFriendId filter (${fuelFriendId}):`, orders.length);
+    }
   }
   
   if (customerId) {
@@ -540,48 +546,44 @@ router.delete('/customers/:id', authenticateToken, async (req, res) => {
 router.post('/test/create-orders', authenticateToken, async (req, res) => {
   try {
     const fuelFriendId = req.user.userId;
+    console.log('Creating test orders for fuelFriendId:', fuelFriendId);
     
-    const testOrders = [
-      {
-        trackingNumber: `TEST${Date.now()}`,
-        customerId: 'test-customer-1',
-        deliveryAddress: 'Jl. Sudirman No. 123, Jakarta Pusat',
-        deliveryPhone: '+628123456789',
-        fuelType: 'Premium',
-        fuelQuantity: '15.00',
-        totalAmount: '75000.00',
-        deliveryFee: '10000.00',
-        orderType: 'instant',
-        status: 'pending'
-      },
-      {
-        trackingNumber: `TEST${Date.now() + 1}`,
-        customerId: 'test-customer-2',
-        fuelFriendId: fuelFriendId,
-        deliveryAddress: 'Jl. Thamrin No. 456, Jakarta Pusat',
-        deliveryPhone: '+628987654321',
-        fuelType: 'Pertamax',
-        fuelQuantity: '20.00',
-        totalAmount: '100000.00',
-        deliveryFee: '15000.00',
-        orderType: 'instant',
-        status: 'in_progress'
-      }
-    ];
+    const order1 = await storage.createOrder({
+      trackingNumber: `TEST${Date.now()}`,
+      customerId: 'test-customer-1',
+      deliveryAddress: 'Jl. Sudirman No. 123, Jakarta Pusat',
+      deliveryPhone: '+628123456789',
+      fuelType: 'Premium',
+      fuelQuantity: '15.00',
+      totalAmount: '75000.00',
+      deliveryFee: '10000.00',
+      orderType: 'instant',
+      status: 'pending',
+      paymentStatus: 'pending'
+    });
     
-    const createdOrders = [];
-    for (const orderData of testOrders) {
-      const order = await storage.createOrder(orderData);
-      createdOrders.push(order);
-    }
+    const order2 = await storage.createOrder({
+      trackingNumber: `TEST${Date.now() + 1}`,
+      customerId: 'test-customer-2',
+      fuelFriendId: fuelFriendId,
+      deliveryAddress: 'Jl. Thamrin No. 456, Jakarta Pusat',
+      deliveryPhone: '+628987654321',
+      fuelType: 'Pertamax',
+      fuelQuantity: '20.00',
+      totalAmount: '100000.00',
+      deliveryFee: '15000.00',
+      orderType: 'instant',
+      status: 'in_progress',
+      paymentStatus: 'completed'
+    });
     
     return sendSuccess(res, { 
-      orders: createdOrders,
-      message: `Created ${createdOrders.length} test orders for fuel friend ${fuelFriendId}` 
+      orders: [order1, order2],
+      message: `Created 2 test orders` 
     }, RESPONSE_CODES.SUCCESS);
   } catch (error) {
     console.error('Create test orders error:', error);
-    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to create test orders');
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, error.message || 'Failed to create test orders');
   }
 });
 
