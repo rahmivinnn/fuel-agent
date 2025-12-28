@@ -12,8 +12,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useOrders, useAcceptOrder, useCancelOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthGuard } from "@/components/AuthGuard";
-import { apiCallWithAuth } from "@/lib/auth";
-import { API_BASE_URL } from "@/lib/api";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -158,35 +156,13 @@ export default function Dashboard() {
         <div className="py-6 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Order Requests</h3>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const response = await apiCallWithAuth(`${API_BASE_URL}/api/test/create-orders`, {
-                      method: 'POST'
-                    });
-                    if (response.ok) {
-                      toast({ title: "Test orders created!", duration: 2000 });
-                      handleRefresh();
-                    }
-                  } catch (error) {
-                    toast({ title: "Failed to create test orders", variant: "destructive" });
-                  }
-                }}
-                className="text-xs"
-              >
-                Create Test Orders
-              </Button>
-              <Button
-                variant="ghost"
-                className="text-green-600 p-0 h-auto"
-                onClick={() => setLocation("/my-orders?tab=new")}
-              >
-                See all
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              className="text-green-600 p-0 h-auto"
+              onClick={() => setLocation("/my-orders?tab=new")}
+            >
+              See all
+            </Button>
           </div>
 
           {isLoadingPending ? (
