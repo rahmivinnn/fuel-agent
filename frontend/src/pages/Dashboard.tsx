@@ -20,8 +20,15 @@ export default function Dashboard() {
   
   // Get current user from token
   const { data: authData, isLoading: isLoadingAuth } = useAuth();
-  const currentUser = authData?.customer;
+  const currentUser = authData?.fuelFriend || authData?.customer; // Try fuelFriend first, fallback to customer
   const fuelFriendId = currentUser?.id;
+  
+  console.log('🔍 Dashboard Debug:', {
+    authData,
+    currentUser,
+    fuelFriendId,
+    isLoadingAuth
+  });
   
   // Clean up old localStorage keys on first load
   useEffect(() => {
@@ -50,6 +57,14 @@ export default function Dashboard() {
   // Use real API hooks with dynamic fuelFriendId
   const { data: pendingOrders = [], isLoading: isLoadingPending, refetch: refetchPending } = useOrders("pending", fuelFriendId);
   const { data: activeOrders = [], isLoading: isLoadingActive, refetch: refetchActive } = useOrders("active", fuelFriendId);
+  
+  console.log('📊 Orders Debug:', {
+    fuelFriendId,
+    pendingOrders: pendingOrders?.length || 0,
+    activeOrders: activeOrders?.length || 0,
+    isLoadingPending,
+    isLoadingActive
+  });
   
   const acceptOrderMutation = useAcceptOrder();
   const cancelOrderMutation = useCancelOrder();

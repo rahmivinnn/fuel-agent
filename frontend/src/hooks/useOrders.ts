@@ -33,8 +33,17 @@ export function useOrders(status?: string, fuelFriendIdOrCustomerId?: string, mo
       const data = await response.json();
       console.log('Orders response:', data);
       
-      // Ensure we always return an array
-      const orders = Array.isArray(data) ? data : (data.orders || []);
+      // Handle different response formats
+      let orders = [];
+      if (data.success && data.data) {
+        orders = Array.isArray(data.data) ? data.data : (data.data.orders || []);
+      } else if (Array.isArray(data)) {
+        orders = data;
+      } else if (data.orders) {
+        orders = data.orders;
+      }
+      
+      console.log('Processed orders:', orders);
       return orders;
     },
     staleTime: 0,

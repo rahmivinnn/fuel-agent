@@ -118,7 +118,11 @@ router.get('/orders', authenticateToken, async (req, res) => {
   const status = req.query.status as string | undefined;
   const fuelFriendId = req.query.fuelFriendId as string | undefined;
   const customerId = req.query.customerId as string | undefined;
+  
+  console.log('📋 Orders query params:', { status, fuelFriendId, customerId });
+  
   let orders = await storage.getAllOrders();
+  console.log('📊 Total orders from DB:', orders.length);
   
   if (status) {
     if (status === 'active') {
@@ -128,17 +132,22 @@ router.get('/orders', authenticateToken, async (req, res) => {
     } else {
       orders = orders.filter(o => o.status === status);
     }
+    console.log(`📋 Orders after status filter (${status}):`, orders.length);
   }
   
   if (fuelFriendId && status !== 'pending') {
     orders = orders.filter(o => o.fuelFriendId === fuelFriendId);
+    console.log(`👤 Orders after fuelFriendId filter (${fuelFriendId}):`, orders.length);
   }
   
   if (customerId) {
     orders = orders.filter(o => o.customerId === customerId);
+    console.log(`👥 Orders after customerId filter (${customerId}):`, orders.length);
   }
   
   orders.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  
+  console.log('✅ Final orders to return:', orders.length);
   return sendSuccess(res, { orders }, RESPONSE_CODES.SUCCESS);
 });
 

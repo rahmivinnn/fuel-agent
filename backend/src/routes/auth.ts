@@ -40,7 +40,8 @@ router.get('/me', authenticateToken, async (req, res) => {
     console.log('✅ Returning user data:', { id: fuelFriendData.id, email: fuelFriendData.email });
     
     return sendSuccess(res, { 
-      customer: fuelFriendData,
+      fuelFriend: fuelFriendData,
+      customer: fuelFriendData, // Keep for backward compatibility
       vehicles 
     }, RESPONSE_CODES.SUCCESS);
   } catch (error) {
