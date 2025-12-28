@@ -10,9 +10,12 @@ import { MobileContainer } from "@/components/MobileContainer";
 import { useEffect, useState } from "react";
 import type { Order } from "@/lib/schemas";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function MyOrders() {
   const [, setLocation] = useLocation();
-  const driverId = localStorage.getItem("driverId") || "ff1";
+  const { data: authData } = useAuth();
+  const fuelFriendId = authData?.fuelFriend?.id;
   const [activeTab, setActiveTab] = useState("new");
   
   // Read tab from URL query parameter
@@ -24,9 +27,9 @@ export default function MyOrders() {
     }
   }, []);
   
-  const { data: newOrders = [], isLoading: isLoadingNew } = useOrders("pending");
-  const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("in_progress", driverId);
-  const { data: completedOrders = [], isLoading: isLoadingCompleted } = useOrders("completed", driverId);
+  const { data: newOrders = [], isLoading: isLoadingNew } = useOrders("pending", fuelFriendId);
+  const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", fuelFriendId);
+  const { data: completedOrders = [], isLoading: isLoadingCompleted } = useOrders("completed", fuelFriendId);
   
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
