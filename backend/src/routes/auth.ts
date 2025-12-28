@@ -24,16 +24,22 @@ router.get('/me', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     console.log('🆔 userId from token:', userId);
     
-    const fuelFriend = await storage.getFuelFriend(userId);
+    // Try to find user in fuel_friends table first
+    let fuelFriend = await storage.getFuelFriend(userId);
     console.log('👥 fuelFriend from DB:', fuelFriend ? 'Found' : 'Not found');
+    
+    // If not found by ID, try by email
+    if (!fuelFriend && req.user.email) {
+      console.log('🔍 Trying to find by email:', req.user.email);
+      fuelFriend = await storage.getFuelFriendByEmail(req.user.email);
+      console.log('📧 fuelFriend by email:', fuelFriend ? 'Found' : 'Not found');
+    }
     
     if (!fuelFriend) {
       console.log('❌ User not found in database');
       return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'User not found');
     }
     
-    // Skip vehicles for now due to column name mismatch
-    // const vehicles = await storage.getVehiclesByCustomer(userId);
     const vehicles = [];
     const { password, ...fuelFriendData } = fuelFriend;
     

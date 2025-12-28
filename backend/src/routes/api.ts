@@ -542,6 +542,20 @@ router.delete('/customers/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Debug endpoint to list all fuel friends
+router.get('/debug/fuel-friends', async (req, res) => {
+  try {
+    const fuelFriends = await storage.getAvailableFuelFriends();
+    console.log('👥 All fuel friends in DB:', fuelFriends.length);
+    fuelFriends.forEach(ff => {
+      console.log(`- ID: ${ff.id}, Email: ${ff.email}, Name: ${ff.fullName}`);
+    });
+    return sendSuccess(res, { fuelFriends }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, error.message);
+  }
+});
+
 // Test endpoint to create orders for current fuel friend
 router.post('/test/create-orders', authenticateToken, async (req, res) => {
   try {
