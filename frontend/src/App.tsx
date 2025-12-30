@@ -36,6 +36,7 @@ import VerifyWhatsAppCode from "@/pages/VerifyWhatsAppCode";
 import WhatsAppLogin from "@/pages/WhatsAppLogin";
 import { useEffect, useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
+import KYCVerification from "@/pages/KYCVerification";
 import TestComponent from "./TestComponent";
 
 function Router() {
@@ -130,6 +131,7 @@ function Router() {
         <Route path="/verify-code" component={VerifyCode} />
         <Route path="/verify-whatsapp-code" component={VerifyWhatsAppCode} />
         <Route path="/verify-success" component={VerifySuccess} />
+        <Route path="/kyc-verification" component={KYCVerification} />
         <Route path="/face-verification" component={FaceVerification} />
         <Route path="/whatsapp-login" component={WhatsAppLogin} />
         <Route component={NotFound} />

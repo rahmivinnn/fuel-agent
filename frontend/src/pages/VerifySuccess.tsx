@@ -74,13 +74,23 @@ export default function VerifySuccess() {
           </p>
         </div>
 
-        {/* Go to Home Button */}
-        <Button
-          onClick={handleGoToHome}
-          className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mb-12"
-        >
-          Go to Home
-        </Button>
+        {/* Buttons */}
+        <div className="space-y-3 mb-8">
+          <Button
+            onClick={handleGoToHome}
+            className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins']"
+          >
+            Go to Home
+          </Button>
+          
+          <Button
+            onClick={() => setLocation("/kyc-verification")}
+            variant="outline"
+            className="w-full h-12 rounded-[30px] border-2 border-[#3AC36C] text-[#3AC36C] bg-white hover:bg-green-50 font-semibold font-['Poppins']"
+          >
+            Complete Identity Verification
+          </Button>
+        </div>
 
         {/* Phone Illustration */}
         <div className="flex justify-center">

@@ -17,6 +17,8 @@ export const customers = pgTable("customers", {
   location: text("location"), // Current location
   services: text("services"), // JSON string of services array
   isEmailVerified: boolean("is_email_verified").default(false),
+  isIdentityVerified: boolean("is_identity_verified").default(false),
+  verificationStatus: text("verification_status").default("pending"), // pending, verified, rejected
   profilePhoto: text("profile_photo"),
   otpCode: text("otp_code"),
   otpExpires: timestamp("otp_expires"),
@@ -82,6 +84,8 @@ export const fuelFriends = pgTable("fuel_friends", {
   about: text("about"),
   isAvailable: boolean("is_available").default(true),
   isEmailVerified: boolean("is_email_verified").default(false),
+  isIdentityVerified: boolean("is_identity_verified").default(false),
+  verificationStatus: text("verification_status").default("pending"), // pending, verified, rejected
   fcmToken: text("fcm_token"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -221,6 +225,8 @@ export const insertProductSchema = createInsertSchema(products).omit({
 
 export const insertFuelFriendSchema = createInsertSchema(fuelFriends).omit({
   id: true,
+  isIdentityVerified: true,
+  verificationStatus: true,
   createdAt: true,
 });
 
