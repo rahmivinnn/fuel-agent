@@ -162,8 +162,8 @@ class StorageService {
     // Get face biometric photo if verified
     if (fuelFriend.isIdentityVerified) {
       const biometric = await this.getFaceBiometric(id);
-      if (biometric?.faceImageUrl) {
-        fuelFriend.profilePhoto = biometric.faceImageUrl;
+      if (biometric?.faceImage) {
+        fuelFriend.profilePhoto = biometric.faceImage;
       }
     }
     

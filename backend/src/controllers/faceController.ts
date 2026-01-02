@@ -43,7 +43,7 @@ export const saveFaceBiometric = async (req: Request, res: Response) => {
     const [biometric] = await db.insert(faceBiometrics).values({
       fuelFriendId,
       faceDescriptor: JSON.stringify(faceDescriptor),
-      faceImageUrl, // Cloudinary URL instead of Base64
+      faceImage: faceImageUrl, // Use existing column name
       confidence: confidence?.toString()
     }).returning();
 
