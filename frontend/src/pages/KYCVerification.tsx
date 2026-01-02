@@ -1,129 +1,151 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Shield, CheckCircle, AlertCircle, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
-
-// Veriff integration
-declare global {
-  interface Window {
-    createVeriffFrame: any;
-  }
-}
+import * as faceapi from 'face-api.js';
 
 export default function KYCVerification() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'camera' | 'processing' | 'success' | 'failed'>('idle');
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    // Load Veriff SDK
-    const script = document.createElement('script');
-    script.src = 'https://cdn.veriff.me/sdk/js/1.4.0/veriff.min.js';
-    script.async = true;
-    document.head.appendChild(script);
-    
+    loadModels();
     return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
+      stopCamera();
     };
   }, []);
 
-  const updateKYCStatus = async (isVerified: boolean, status: string) => {
+  const loadModels = async () => {
     try {
-      const token = localStorage.getItem("tempJwtToken") || localStorage.getItem("token");
-      const fuelFriendId = localStorage.getItem("tempFuelFriendId");
-      
-      if (!token || !fuelFriendId) return;
-      
-      const response = await fetch(`${API_BASE_URL}/api/fuel-friends/${fuelFriendId}/kyc-status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          isIdentityVerified: isVerified,
-          verificationStatus: status
-        }),
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to update KYC status');
-      }
+      const modelUrl = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl),
+        faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl),
+        faceapi.nets.faceRecognitionNet.loadFromUri(modelUrl)
+      ]);
+      setModelsLoaded(true);
     } catch (error) {
-      console.error('Error updating KYC status:', error);
+      console.error('Error loading face-api models:', error);
+      toast({
+        title: "Model Loading Error",
+        description: "Failed to load face recognition models",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleStartVerification = async () => {
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: 640, height: 480 }
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setVerificationStatus('camera');
+    } catch (error) {
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const captureFace = async () => {
+    if (!videoRef.current || !canvasRef.current || !modelsLoaded) return;
+
     setIsLoading(true);
     setVerificationStatus('processing');
-    
+
     try {
-      // Get Veriff session from backend
-      const token = localStorage.getItem("tempJwtToken") || localStorage.getItem("token");
-      const fuelFriendId = localStorage.getItem("tempFuelFriendId");
-      
-      const sessionResponse = await fetch(`${API_BASE_URL}/api/veriff/create-session`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ fuelFriendId }),
-      });
-      
-      const sessionData = await sessionResponse.json();
-      
-      if (sessionResponse.ok && sessionData.success && window.createVeriffFrame) {
-        // Real Veriff integration with actual session
-        const veriff = window.createVeriffFrame({
-          url: sessionData.data.sessionUrl,
-          onEvent: function(msg: string) {
-            console.log('Veriff event:', msg);
-            if (msg === 'FINISHED') {
-              updateKYCStatus(true, 'verified');
-              setVerificationStatus('success');
-              toast({
-                title: "Verification Successful!",
-                description: "Your identity has been verified successfully",
-              });
-            } else if (msg === 'CANCELED') {
-              updateKYCStatus(false, 'canceled');
-              setVerificationStatus('failed');
-              toast({
-                title: "Verification Canceled",
-                description: "Verification was canceled",
-                variant: "destructive",
-              });
-            }
-            setIsLoading(false);
-          }
-        });
-        veriff.mount('#veriff-root');
-      } else {
-        // Show error instead of fallback simulation
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context?.drawImage(video, 0, 0);
+
+      // Detect face and get descriptor
+      const detection = await faceapi
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (!detection) {
         setVerificationStatus('failed');
         toast({
-          title: "Service Unavailable",
-          description: "Verification service is currently unavailable. Please try again later.",
+          title: "No Face Detected",
+          description: "Please ensure your face is clearly visible",
           variant: "destructive",
         });
         setIsLoading(false);
+        return;
       }
+
+      const faceImage = canvas.toDataURL('image/jpeg', 0.8);
+      const faceDescriptor = Array.from(detection.descriptor);
+      const confidence = detection.detection.score;
+
+      // Save to backend
+      await saveFaceBiometric(faceDescriptor, faceImage, confidence);
+      
+      stopCamera();
+      setVerificationStatus('success');
+      
     } catch (error) {
-      await updateKYCStatus(false, 'failed');
+      console.error('Face capture error:', error);
       setVerificationStatus('failed');
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Verification Failed",
+        description: "Failed to process face data",
         variant: "destructive",
       });
-      setIsLoading(false);
+    }
+    setIsLoading(false);
+  };
+
+  const saveFaceBiometric = async (faceDescriptor: number[], faceImage: string, confidence: number) => {
+    const token = localStorage.getItem("tempJwtToken") || localStorage.getItem("token");
+    const fuelFriendId = localStorage.getItem("tempFuelFriendId");
+    
+    if (!token || !fuelFriendId) {
+      throw new Error('Missing authentication data');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/api/face/save-biometric`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        fuelFriendId,
+        faceDescriptor,
+        faceImage,
+        confidence
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to save biometric data');
     }
   };
 
@@ -154,8 +176,15 @@ export default function KYCVerification() {
   const handleContinue = () => {
     if (verificationStatus === 'success') {
       handleSkipForNow();
-    } else {
-      handleStartVerification();
+    } else if (verificationStatus === 'idle') {
+      if (!modelsLoaded) {
+        toast({
+          title: "Please Wait",
+          description: "Face recognition models are still loading",
+        });
+        return;
+      }
+      startCamera();
     }
   };
 
@@ -173,8 +202,27 @@ export default function KYCVerification() {
           <span className="text-sm text-[#3F4249] font-['Poppins']">Back</span>
         </div>
 
-        {/* Veriff Container */}
-        <div id="veriff-root" className="mb-8"></div>
+        {/* Camera View */}
+        {verificationStatus === 'camera' && (
+          <div className="mb-8">
+            <div className="relative bg-gray-100 rounded-2xl overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-64 object-cover"
+              />
+              <div className="absolute inset-4 border-2 border-[#3AC36C] rounded-full pointer-events-none">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border-l-2 border-t-2 border-[#3AC36C]" />
+                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 border-r-2 border-t-2 border-[#3AC36C]" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 border-l-2 border-b-2 border-[#3AC36C]" />
+                <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 border-r-2 border-b-2 border-[#3AC36C]" />
+              </div>
+            </div>
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
+        )}
 
         {/* Icon */}
         <div className="flex justify-center mb-8">
@@ -183,6 +231,8 @@ export default function KYCVerification() {
               <CheckCircle className="w-10 h-10 text-green-600" />
             ) : verificationStatus === 'failed' ? (
               <AlertCircle className="w-10 h-10 text-red-600" />
+            ) : verificationStatus === 'camera' ? (
+              <Camera className="w-10 h-10 text-blue-600" />
             ) : (
               <Shield className="w-10 h-10 text-blue-600" />
             )}
@@ -194,40 +244,43 @@ export default function KYCVerification() {
           <h1 className="text-2xl font-bold text-[#3F4249] font-['Poppins'] mb-4">
             {verificationStatus === 'success' ? 'Verification Complete!' :
              verificationStatus === 'failed' ? 'Verification Failed' :
-             verificationStatus === 'processing' ? 'Verifying Identity...' :
-             'Identity Verification'}
+             verificationStatus === 'processing' ? 'Processing Face...' :
+             verificationStatus === 'camera' ? 'Position Your Face' :
+             'Face Verification'}
           </h1>
           <p className="text-sm text-[#606268] font-['Poppins'] leading-relaxed">
             {verificationStatus === 'success' ? 
-              'Your identity has been successfully verified. You can now access all features.' :
+              'Your face has been successfully registered for biometric authentication.' :
              verificationStatus === 'failed' ? 
-              'We couldn\'t verify your identity. Please try again or contact support.' :
+              'We couldn\'t detect your face clearly. Please try again in good lighting.' :
              verificationStatus === 'processing' ? 
-              'Please wait while we verify your documents...' :
-              'Complete your identity verification to unlock all features and build trust with customers. This process is secure and takes just a few minutes.'}
+              'Please wait while we process your face data...' :
+             verificationStatus === 'camera' ? 
+              'Position your face in the center circle and ensure good lighting.' :
+              'Complete face verification to secure your account with biometric authentication.'}
           </p>
         </div>
 
         {/* Benefits List */}
         {verificationStatus === 'idle' && (
           <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-            <h3 className="font-semibold text-[#3F4249] font-['Poppins'] mb-4">Benefits of verification:</h3>
+            <h3 className="font-semibold text-[#3F4249] font-['Poppins'] mb-4">Benefits of face verification:</h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-[#3AC36C] rounded-full"></div>
-                <span className="text-sm text-[#606268] font-['Poppins']">Higher customer trust</span>
+                <span className="text-sm text-[#606268] font-['Poppins']">Secure biometric login</span>
               </li>
               <li className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-[#3AC36C] rounded-full"></div>
-                <span className="text-sm text-[#606268] font-['Poppins']">Access to premium orders</span>
+                <span className="text-sm text-[#606268] font-['Poppins']">Enhanced account security</span>
               </li>
               <li className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-[#3AC36C] rounded-full"></div>
-                <span className="text-sm text-[#606268] font-['Poppins']">Faster payment processing</span>
+                <span className="text-sm text-[#606268] font-['Poppins']">Quick identity verification</span>
               </li>
               <li className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-[#3AC36C] rounded-full"></div>
-                <span className="text-sm text-[#606268] font-['Poppins']">Verified badge on profile</span>
+                <span className="text-sm text-[#606268] font-['Poppins']">Verified driver badge</span>
               </li>
             </ul>
           </div>
@@ -245,11 +298,11 @@ export default function KYCVerification() {
           {verificationStatus === 'idle' && (
             <>
               <Button
-                onClick={handleStartVerification}
+                onClick={handleContinue}
                 className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins']"
-                disabled={isLoading}
+                disabled={isLoading || !modelsLoaded}
               >
-                {isLoading ? "Starting Verification..." : "Start Verification"}
+                {!modelsLoaded ? "Loading Models..." : "Start Face Verification"}
               </Button>
               
               <Button
@@ -258,6 +311,29 @@ export default function KYCVerification() {
                 className="w-full text-[#606268] font-semibold font-['Poppins'] hover:bg-gray-50"
               >
                 Skip for now
+              </Button>
+            </>
+          )}
+          
+          {verificationStatus === 'camera' && (
+            <>
+              <Button
+                onClick={captureFace}
+                className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins']"
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : "Capture Face"}
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  stopCamera();
+                  setVerificationStatus('idle');
+                }}
+                variant="ghost"
+                className="w-full text-[#606268] font-semibold font-['Poppins'] hover:bg-gray-50"
+              >
+                Cancel
               </Button>
             </>
           )}
@@ -283,7 +359,7 @@ export default function KYCVerification() {
           {verificationStatus === 'failed' && (
             <>
               <Button
-                onClick={handleStartVerification}
+                onClick={() => setVerificationStatus('idle')}
                 className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins']"
               >
                 Try Again

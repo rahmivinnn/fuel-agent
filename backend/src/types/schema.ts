@@ -90,6 +90,16 @@ export const fuelFriends = pgTable("fuel_friends", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Face Biometric Schema
+export const faceBiometrics = pgTable("face_biometrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fuelFriendId: varchar("fuel_friend_id").references(() => fuelFriends.id).notNull(),
+  faceDescriptor: text("face_descriptor").notNull(), // JSON string of face descriptor array
+  faceImage: text("face_image"), // Base64 encoded face image
+  confidence: decimal("confidence", { precision: 5, scale: 4 }), // Face detection confidence
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Orders Schema (Customer orders)
 export const orders = pgTable("orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -261,6 +271,11 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
   createdAt: true,
 });
 
+export const insertFaceBiometricSchema = createInsertSchema(faceBiometrics).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Registration Step Schemas
 export const registrationStep1Schema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -376,3 +391,5 @@ export type ReviewData = z.infer<typeof reviewSchema>;
 export type CheckoutStep1 = z.infer<typeof checkoutStep1Schema>;
 export type Wallet = typeof wallets.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
+export type FaceBiometric = typeof faceBiometrics.$inferSelect;
+export type InsertFaceBiometric = z.infer<typeof insertFaceBiometricSchema>;

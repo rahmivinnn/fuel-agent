@@ -10,8 +10,13 @@ import { authenticateToken } from '../middleware/auth';
 import { generateOTP, saveOTP, verifyOTP } from '../otp';
 import { sendEmailOTP } from '../email';
 import { registrationStep1Schema, registrationStep2Schema } from '@shared/schema';
+import { saveFaceBiometric, verifyFace } from '../controllers/faceController';
 
 const router = Router();
+
+// Face Biometric Routes
+router.post('/face/save-biometric', authenticateToken, saveFaceBiometric);
+router.post('/face/verify', authenticateToken, verifyFace);
 
 // Check email verification status
 router.get('/auth/email-verification-status/:email', async (req, res) => {
