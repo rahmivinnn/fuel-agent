@@ -4,10 +4,11 @@ import { RESPONSE_CODES } from '../constants/responseCodes';
 import { db } from '../db';
 import { faceBiometrics, fuelFriends } from '../shared/schema';
 import { eq } from 'drizzle-orm';
+import { uploadFaceImage } from '../services/cloudinary';
 
 export const saveFaceBiometric = async (req: Request, res: Response) => {
   try {
-    console.log('🔄 Saving face biometric:', req.body);
+    console.log('🔄 Saving face biometric with Cloudinary upload');
     const { fuelFriendId, faceDescriptor, faceImage, confidence } = req.body;
 
     // Validate required fields
@@ -24,13 +25,25 @@ export const saveFaceBiometric = async (req: Request, res: Response) => {
       return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Fuel friend not found');
     }
 
-    console.log('✅ Fuel friend found, saving biometric data');
+    console.log('✅ Fuel friend found, uploading image to Cloudinary');
+    
+    // Upload image to Cloudinary
+    let faceImageUrl = null;
+    if (faceImage) {
+      try {
+        faceImageUrl = await uploadFaceImage(faceImage, fuelFriendId);
+        console.log('✅ Image uploaded to Cloudinary:', faceImageUrl);
+      } catch (uploadError) {
+        console.error('❌ Cloudinary upload failed:', uploadError);
+        // Continue without image if upload fails
+      }
+    }
     
     // Save face biometric data
     const [biometric] = await db.insert(faceBiometrics).values({
       fuelFriendId,
       faceDescriptor: JSON.stringify(faceDescriptor),
-      faceImage,
+      faceImageUrl, // Cloudinary URL instead of Base64
       confidence: confidence?.toString()
     }).returning();
 
@@ -46,7 +59,10 @@ export const saveFaceBiometric = async (req: Request, res: Response) => {
 
     console.log('✅ Fuel friend verification status updated');
 
-    return sendSuccess(res, { biometricId: biometric.id }, RESPONSE_CODES.CREATED);
+    return sendSuccess(res, { 
+      biometricId: biometric.id,
+      imageUrl: faceImageUrl 
+    }, RESPONSE_CODES.CREATED);
 
   } catch (error) {
     console.error('❌ Save face biometric error:', error);

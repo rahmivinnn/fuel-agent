@@ -95,7 +95,7 @@ export const faceBiometrics = pgTable("face_biometrics", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fuelFriendId: varchar("fuel_friend_id").references(() => fuelFriends.id).notNull(),
   faceDescriptor: text("face_descriptor").notNull(), // JSON string of face descriptor array
-  faceImage: text("face_image"), // Base64 encoded face image
+  faceImageUrl: text("face_image_url"), // Cloudinary URL instead of Base64
   confidence: decimal("confidence", { precision: 5, scale: 4 }), // Face detection confidence
   createdAt: timestamp("created_at").defaultNow(),
 });

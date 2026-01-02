@@ -23,6 +23,19 @@ export default function KYCVerification() {
     };
   }, []);
 
+  // Assign stream when camera view mounts
+  useEffect(() => {
+    if (verificationStatus === 'camera' && streamRef.current && videoRef.current) {
+      console.log('🔗 Assigning stream on mount');
+      videoRef.current.srcObject = streamRef.current;
+      
+      videoRef.current.onloadedmetadata = () => {
+        console.log('✅ Video metadata loaded on mount');
+        videoRef.current?.play().catch(e => console.error('Play error on mount:', e));
+      };
+    }
+  }, [verificationStatus]);
+
   const loadModels = async () => {
     try {
       const modelUrl = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
@@ -44,18 +57,37 @@ export default function KYCVerification() {
 
   const startCamera = async () => {
     try {
+      console.log('🎥 Starting camera...');
+      
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 640, height: 480 }
+        video: true,
+        audio: false
       });
+      
+      console.log('✅ Got media stream:', stream);
+      console.log('📹 Video tracks:', stream.getVideoTracks());
+      
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
       setVerificationStatus('camera');
+      
+      // Wait for next tick to ensure video element is rendered
+      setTimeout(() => {
+        if (videoRef.current && stream) {
+          console.log('🔗 Assigning stream to video element');
+          videoRef.current.srcObject = stream;
+          
+          videoRef.current.onloadedmetadata = () => {
+            console.log('✅ Video metadata loaded');
+            videoRef.current?.play().catch(e => console.error('Play error:', e));
+          };
+        }
+      }, 100);
+      
     } catch (error) {
+      console.error('❌ Camera error:', error);
       toast({
         title: "Camera Error",
-        description: "Unable to access camera. Please check permissions.",
+        description: `Camera access failed: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -231,22 +263,32 @@ export default function KYCVerification() {
         {/* Camera View */}
         {verificationStatus === 'camera' && (
           <div className="mb-8">
-            <div className="relative bg-gray-100 rounded-2xl overflow-hidden">
+            <div className="relative bg-black rounded-2xl overflow-hidden">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
                 className="w-full h-64 object-cover"
+                onLoadedData={() => console.log('✅ Video loaded data')}
+                onCanPlay={() => console.log('✅ Video can play')}
+                onPlay={() => console.log('✅ Video started playing')}
+                onError={(e) => console.error('❌ Video element error:', e)}
               />
               <div className="absolute inset-4 border-2 border-[#3AC36C] rounded-full pointer-events-none">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border-l-2 border-t-2 border-[#3AC36C]" />
-                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 border-r-2 border-t-2 border-[#3AC36C]" />
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 border-l-2 border-b-2 border-[#3AC36C]" />
-                <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 border-r-2 border-b-2 border-[#3AC36C]" />
+                <div className="absolute -top-2 -left-2 w-6 h-6 border-l-4 border-t-4 border-[#3AC36C] rounded-tl-lg" />
+                <div className="absolute -top-2 -right-2 w-6 h-6 border-r-4 border-t-4 border-[#3AC36C] rounded-tr-lg" />
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 border-l-4 border-b-4 border-[#3AC36C] rounded-bl-lg" />
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-4 border-b-4 border-[#3AC36C] rounded-br-lg" />
               </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
+            
+            {/* Debug info */}
+            <div className="mt-2 text-xs text-gray-500 text-center">
+              Stream: {streamRef.current ? '✅ Active' : '❌ None'} | 
+              Video: {videoRef.current?.readyState || 'Not ready'}
+            </div>
           </div>
         )}
 
