@@ -31,23 +31,42 @@ export const saveFaceBiometric = async (req: Request, res: Response) => {
     let faceImageUrl = null;
     if (faceImage) {
       try {
+        console.log('📤 Starting Cloudinary upload...');
         faceImageUrl = await uploadFaceImage(faceImage, fuelFriendId);
-        console.log('✅ Image uploaded to Cloudinary:', faceImageUrl);
+        console.log('✅ Cloudinary upload successful:', faceImageUrl);
+        
+        if (!faceImageUrl) {
+          console.log('❌ Cloudinary returned null/empty URL');
+          throw new Error('Cloudinary upload returned empty URL');
+        }
       } catch (uploadError) {
         console.error('❌ Cloudinary upload failed:', uploadError);
-        // Continue without image if upload fails
+        return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to upload image to Cloudinary');
       }
+    } else {
+      console.log('⚠️ No face image provided in request');
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Face image is required');
     }
     
     // Save face biometric data
+    console.log('💾 Saving to database:', {
+      fuelFriendId,
+      faceDescriptorLength: JSON.stringify(faceDescriptor).length,
+      faceImageUrl,
+      confidence
+    });
+    
     const [biometric] = await db.insert(faceBiometrics).values({
       fuelFriendId,
       faceDescriptor: JSON.stringify(faceDescriptor),
-      faceImage: faceImageUrl, // Use existing column name
+      faceImageUrl: faceImageUrl, // Use correct column name
       confidence: confidence?.toString()
     }).returning();
 
-    console.log('✅ Biometric saved:', biometric.id);
+    console.log('✅ Biometric saved to DB:', {
+      id: biometric.id,
+      faceImageUrl: biometric.faceImageUrl
+    });
 
     // Update fuel friend verification status and profile photo
     await db.update(fuelFriends)

@@ -124,16 +124,33 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setLocation("/my-profile")}
-              className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center hover:shadow-lg transition-all cursor-pointer"
+              className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent hover:border-green-500 transition-all cursor-pointer"
             >
-              <span className="text-xl font-bold text-white">
-                {(currentUser?.fullName || driverName).charAt(0).toUpperCase()}
-              </span>
+              {currentUser?.profilePhoto && currentUser?.isIdentityVerified ? (
+                <img 
+                  src={currentUser.profilePhoto} 
+                  alt={currentUser.fullName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center ${currentUser?.profilePhoto && currentUser?.isIdentityVerified ? 'hidden' : ''}`}>
+                <span className="text-xl font-bold text-white">
+                  {(currentUser?.fullName || driverName).charAt(0).toUpperCase()}
+                </span>
+              </div>
             </button>
             <div>
               <p className="text-sm text-gray-600">Hello!</p>
               <h1 className="text-xl font-semibold text-gray-900">
                 {currentUser?.fullName || driverName}
+                {currentUser?.isIdentityVerified && (
+                  <span className="ml-2 text-green-600" title="Verified">✓</span>
+                )}
               </h1>
             </div>
           </div>
