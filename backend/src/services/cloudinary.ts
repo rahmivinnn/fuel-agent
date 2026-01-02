@@ -2,9 +2,9 @@ import { v2 as cloudinary } from 'cloudinary';
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: 'dxbqxchad',
-  api_key: '973127639812274',
-  api_secret: 'm4EWF_GdkoXq2Xaxejf8IjZq69s'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dxbqxchad',
+  api_key: process.env.CLOUDINARY_API_KEY || '973127639812274',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'm4EWF_GdkoXq2Xaxejf8IjZq69s'
 });
 
 export const uploadFaceImage = async (base64Image: string, fuelFriendId: string): Promise<string> => {
