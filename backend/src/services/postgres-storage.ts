@@ -1,5 +1,5 @@
 import { db } from '../config/database';
-import { customers, orders, fuelFriends, vehicles, reviews, notifications, chatMessages, wallets, transactions, fuelStations, products, paymentMethods } from '../types/schema';
+import { customers, orders, fuelFriends, vehicles, reviews, notifications, chatMessages, wallets, transactions, fuelStations, products, paymentMethods, faceBiometrics } from '../types/schema';
 import { eq, and, like } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 
@@ -292,6 +292,24 @@ class StorageService {
 
   async createOrderItem(data: any): Promise<any> {
     return { ...data, id: Date.now().toString() };
+  }
+
+  // Face Biometrics methods
+  async createFaceBiometric(data: any): Promise<any> {
+    const result = await db.insert(faceBiometrics).values({
+      fuelFriendId: data.fuelFriendId,
+      faceDescriptor: data.faceDescriptor,
+      faceImage: data.faceImage,
+      confidence: data.confidence
+    }).returning();
+    return result[0];
+  }
+
+  async getFaceBiometric(fuelFriendId: string): Promise<any | null> {
+    const result = await db.select().from(faceBiometrics)
+      .where(eq(faceBiometrics.fuelFriendId, fuelFriendId))
+      .limit(1);
+    return result[0] || null;
   }
 }
 

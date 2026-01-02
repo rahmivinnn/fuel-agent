@@ -69,7 +69,14 @@ export default function KYCVerification() {
   };
 
   const captureFace = async () => {
-    if (!videoRef.current || !canvasRef.current || !modelsLoaded) return;
+    if (!videoRef.current || !canvasRef.current || !modelsLoaded) {
+      toast({
+        title: "Not Ready",
+        description: "Camera or models not ready",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     setVerificationStatus('processing');
@@ -79,13 +86,17 @@ export default function KYCVerification() {
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
 
+      if (!context) {
+        throw new Error('Canvas context not available');
+      }
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      context?.drawImage(video, 0, 0);
+      context.drawImage(video, 0, 0);
 
       // Detect face and get descriptor
       const detection = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
         .withFaceLandmarks()
         .withFaceDescriptor();
 
@@ -93,7 +104,7 @@ export default function KYCVerification() {
         setVerificationStatus('failed');
         toast({
           title: "No Face Detected",
-          description: "Please ensure your face is clearly visible",
+          description: "Please ensure your face is clearly visible and well-lit",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -104,18 +115,26 @@ export default function KYCVerification() {
       const faceDescriptor = Array.from(detection.descriptor);
       const confidence = detection.detection.score;
 
+      console.log('Face detected with confidence:', confidence);
+      console.log('Face descriptor length:', faceDescriptor.length);
+
       // Save to backend
       await saveFaceBiometric(faceDescriptor, faceImage, confidence);
       
       stopCamera();
       setVerificationStatus('success');
       
+      toast({
+        title: "Success!",
+        description: "Face verification completed successfully",
+      });
+      
     } catch (error) {
       console.error('Face capture error:', error);
       setVerificationStatus('failed');
       toast({
         title: "Verification Failed",
-        description: "Failed to process face data",
+        description: error.message || "Failed to process face data",
         variant: "destructive",
       });
     }
@@ -125,6 +144,8 @@ export default function KYCVerification() {
   const saveFaceBiometric = async (faceDescriptor: number[], faceImage: string, confidence: number) => {
     const token = localStorage.getItem("tempJwtToken") || localStorage.getItem("token");
     const fuelFriendId = localStorage.getItem("tempFuelFriendId");
+    
+    console.log('🔄 Saving face biometric:', { fuelFriendId, descriptorLength: faceDescriptor.length, confidence });
     
     if (!token || !fuelFriendId) {
       throw new Error('Missing authentication data');
@@ -144,9 +165,14 @@ export default function KYCVerification() {
       }),
     });
     
+    const result = await response.json();
+    console.log('📤 Face biometric API response:', result);
+    
     if (!response.ok) {
-      throw new Error('Failed to save biometric data');
+      throw new Error(result.error || 'Failed to save biometric data');
     }
+    
+    return result;
   };
 
   const handleSkipForNow = () => {

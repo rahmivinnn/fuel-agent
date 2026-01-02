@@ -18,6 +18,23 @@ const router = Router();
 router.post('/face/save-biometric', authenticateToken, saveFaceBiometric);
 router.post('/face/verify', authenticateToken, verifyFace);
 
+// Test face biometric endpoint
+router.post('/face/test', async (req, res) => {
+  try {
+    console.log('🧪 Testing face biometric API');
+    const testData = {
+      fuelFriendId: 'test-id',
+      faceDescriptor: [0.1, 0.2, 0.3], // Simple test array
+      confidence: 0.95
+    };
+    console.log('📤 Test data:', testData);
+    return sendSuccess(res, testData, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    console.error('❌ Test error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, error.message);
+  }
+});
+
 // Check email verification status
 router.get('/auth/email-verification-status/:email', async (req, res) => {
   try {

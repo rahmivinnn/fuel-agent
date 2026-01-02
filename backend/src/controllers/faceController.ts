@@ -7,19 +7,25 @@ import { eq } from 'drizzle-orm';
 
 export const saveFaceBiometric = async (req: Request, res: Response) => {
   try {
+    console.log('🔄 Saving face biometric:', req.body);
     const { fuelFriendId, faceDescriptor, faceImage, confidence } = req.body;
 
     // Validate required fields
     if (!fuelFriendId || !faceDescriptor) {
+      console.log('❌ Missing required fields');
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Missing required fields');
     }
 
     // Check if fuel friend exists
+    console.log('🔍 Checking fuel friend exists:', fuelFriendId);
     const fuelFriend = await db.select().from(fuelFriends).where(eq(fuelFriends.id, fuelFriendId)).limit(1);
     if (fuelFriend.length === 0) {
+      console.log('❌ Fuel friend not found');
       return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Fuel friend not found');
     }
 
+    console.log('✅ Fuel friend found, saving biometric data');
+    
     // Save face biometric data
     const [biometric] = await db.insert(faceBiometrics).values({
       fuelFriendId,
@@ -27,6 +33,8 @@ export const saveFaceBiometric = async (req: Request, res: Response) => {
       faceImage,
       confidence: confidence?.toString()
     }).returning();
+
+    console.log('✅ Biometric saved:', biometric.id);
 
     // Update fuel friend verification status
     await db.update(fuelFriends)
@@ -36,10 +44,12 @@ export const saveFaceBiometric = async (req: Request, res: Response) => {
       })
       .where(eq(fuelFriends.id, fuelFriendId));
 
+    console.log('✅ Fuel friend verification status updated');
+
     return sendSuccess(res, { biometricId: biometric.id }, RESPONSE_CODES.CREATED);
 
   } catch (error) {
-    console.error('Save face biometric error:', error);
+    console.error('❌ Save face biometric error:', error);
     return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to save face biometric');
   }
 };
