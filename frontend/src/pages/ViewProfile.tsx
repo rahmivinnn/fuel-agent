@@ -1,7 +1,8 @@
-import { ArrowLeft, Edit, MapPin, Star, LogOut } from "lucide-react";
+import { ArrowLeft, Edit, MapPin, Star, LogOut, Shield, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export default function ViewProfile() {
   const [, setLocation] = useLocation();
@@ -16,9 +17,16 @@ export default function ViewProfile() {
   const userServices = ['Fuel delivery', 'Emergency refueling'];
   const rating = parseFloat(currentUser?.rating || '0') || 4.8;
   const reviewCount = currentUser?.totalReviews || 0;
+  const isVerified = currentUser?.isIdentityVerified || false;
+  const verificationStatus = currentUser?.verificationStatus || 'pending';
+  const profilePhoto = currentUser?.profilePhoto; // Cloudinary URL from face biometric
 
   const handleBack = () => {
     setLocation('/dashboard');
+  };
+
+  const handleKYCVerification = () => {
+    setLocation('/kyc-verification');
   };
 
   const handleSignOut = () => {
@@ -90,16 +98,75 @@ export default function ViewProfile() {
       <div className="px-4 py-6 space-y-6">
         {/* Profile Section */}
         <div className="text-center">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-white text-2xl font-bold">
-              {customerName.split(' ').map(n => n[0]).join('')}
-            </span>
-          </div>
+          {profilePhoto && isVerified ? (
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-green-500">
+              <img 
+                src={profilePhoto} 
+                alt={customerName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center hidden">
+                <span className="text-white text-2xl font-bold">
+                  {customerName.split(' ').map(n => n[0]).join('')}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">
+                {customerName.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+          )}
+          
           <h2 className="text-xl font-semibold text-gray-900 mb-2">{customerName}</h2>
           <div className="flex items-center justify-center gap-1">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <span className="text-gray-600">{rating} ({reviewCount} reviews)</span>
+            {isVerified && (
+              <CheckCircle className="w-4 h-4 text-green-600 ml-2" title="Verified" />
+            )}
           </div>
+        </div>
+
+        {/* Verification Status Section */}
+        <div className="bg-white rounded-xl p-4 border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Verification Status</h3>
+          
+          {isVerified ? (
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              <div>
+                <p className="font-medium text-green-800">Identity Verified</p>
+                <p className="text-sm text-green-600">Your account is fully verified</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <Shield className="w-6 h-6 text-orange-600" />
+                <div className="flex-1">
+                  <p className="font-medium text-orange-800">Identity Not Verified</p>
+                  <p className="text-sm text-orange-600">
+                    Complete face verification to unlock all features
+                  </p>
+                </div>
+              </div>
+              
+              <Button
+                onClick={handleKYCVerification}
+                className="w-full bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Complete Face Verification
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* About Section */}

@@ -110,6 +110,15 @@ export default function KYCVerification() {
       return;
     }
 
+    // Debug localStorage
+    console.log('💾 All localStorage data:');
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        console.log(`  ${key}: ${localStorage.getItem(key)}`);
+      }
+    }
+
     setIsLoading(true);
     setVerificationStatus('processing');
 
@@ -174,13 +183,30 @@ export default function KYCVerification() {
   };
 
   const saveFaceBiometric = async (faceDescriptor: number[], faceImage: string, confidence: number) => {
-    const token = localStorage.getItem("tempJwtToken") || localStorage.getItem("token");
-    const fuelFriendId = localStorage.getItem("tempFuelFriendId");
+    // Try multiple token sources
+    const token = localStorage.getItem("token") || 
+                  localStorage.getItem("tempJwtToken") || 
+                  localStorage.getItem("authToken");
+    
+    const fuelFriendId = localStorage.getItem("tempFuelFriendId") || 
+                         localStorage.getItem("userId") ||
+                         localStorage.getItem("fuelFriendId");
+    
+    console.log('🔐 Auth data check:', { 
+      hasToken: !!token, 
+      hasFuelFriendId: !!fuelFriendId,
+      tokenSource: token ? 'found' : 'missing',
+      fuelFriendIdSource: fuelFriendId ? 'found' : 'missing'
+    });
     
     console.log('🔄 Saving face biometric:', { fuelFriendId, descriptorLength: faceDescriptor.length, confidence });
     
-    if (!token || !fuelFriendId) {
-      throw new Error('Missing authentication data');
+    if (!token) {
+      throw new Error('No authentication token found. Please login again.');
+    }
+    
+    if (!fuelFriendId) {
+      throw new Error('No fuel friend ID found. Please complete registration.');
     }
     
     const response = await fetch(`${API_BASE_URL}/api/face/save-biometric`, {
@@ -201,7 +227,7 @@ export default function KYCVerification() {
     console.log('📤 Face biometric API response:', result);
     
     if (!response.ok) {
-      throw new Error(result.error || 'Failed to save biometric data');
+      throw new Error(result.error || result.message || 'Failed to save biometric data');
     }
     
     return result;

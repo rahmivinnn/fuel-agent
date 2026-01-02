@@ -155,7 +155,19 @@ class StorageService {
 
   async getFuelFriend(id: string): Promise<any | null> {
     const result = await db.select().from(fuelFriends).where(eq(fuelFriends.id, id)).limit(1);
-    return result[0] || null;
+    if (!result[0]) return null;
+    
+    const fuelFriend = result[0];
+    
+    // Get face biometric photo if verified
+    if (fuelFriend.isIdentityVerified) {
+      const biometric = await this.getFaceBiometric(id);
+      if (biometric?.faceImageUrl) {
+        fuelFriend.profilePhoto = biometric.faceImageUrl;
+      }
+    }
+    
+    return fuelFriend;
   }
 
   async updateFuelFriend(id: string, updates: any): Promise<any> {

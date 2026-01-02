@@ -49,15 +49,16 @@ export const saveFaceBiometric = async (req: Request, res: Response) => {
 
     console.log('✅ Biometric saved:', biometric.id);
 
-    // Update fuel friend verification status
+    // Update fuel friend verification status and profile photo
     await db.update(fuelFriends)
       .set({ 
         isIdentityVerified: true, 
-        verificationStatus: 'verified' 
+        verificationStatus: 'verified',
+        profilePhoto: faceImageUrl // Set profile photo to Cloudinary URL
       })
       .where(eq(fuelFriends.id, fuelFriendId));
 
-    console.log('✅ Fuel friend verification status updated');
+    console.log('✅ Fuel friend verification status and profile photo updated');
 
     return sendSuccess(res, { 
       biometricId: biometric.id,
