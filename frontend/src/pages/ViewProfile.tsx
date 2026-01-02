@@ -10,6 +10,15 @@ export default function ViewProfile() {
   const { data: authData, isLoading } = useAuth();
   const currentUser = authData?.customer;
   
+  // Debug logs
+  console.log('🔍 MyProfile Debug:', {
+    authData,
+    currentUser,
+    isIdentityVerified: currentUser?.isIdentityVerified,
+    verificationStatus: currentUser?.verificationStatus,
+    profilePhoto: currentUser?.profilePhoto
+  });
+  
   // Use data from auth API
   const customerName = currentUser?.fullName || 'FuelFriend';
   const userAbout = currentUser?.about || 'Fuel Friend is a reliable on-demand fuel delivery service designed to provide convenience and efficiency to customers.';

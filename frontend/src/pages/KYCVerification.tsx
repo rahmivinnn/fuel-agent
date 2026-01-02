@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield, CheckCircle, AlertCircle, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import * as faceapi from 'face-api.js';
 
 export default function KYCVerification() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'camera' | 'processing' | 'success' | 'failed'>('idle');
   const [modelsLoaded, setModelsLoaded] = useState(false);
@@ -170,6 +172,9 @@ export default function KYCVerification() {
         description: "Face verification completed successfully",
       });
       
+      // Invalidate auth cache to refresh user data
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      
     } catch (error) {
       console.error('Face capture error:', error);
       setVerificationStatus('failed');
@@ -309,12 +314,6 @@ export default function KYCVerification() {
               </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
-            
-            {/* Debug info */}
-            <div className="mt-2 text-xs text-gray-500 text-center">
-              Stream: {streamRef.current ? '✅ Active' : '❌ None'} | 
-              Video: {videoRef.current?.readyState || 'Not ready'}
-            </div>
           </div>
         )}
 

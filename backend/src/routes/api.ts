@@ -18,6 +18,42 @@ const router = Router();
 router.post('/face/save-biometric', authenticateToken, saveFaceBiometric);
 router.post('/face/verify', authenticateToken, verifyFace);
 
+// Auth me endpoint for fuel friends
+router.get('/auth/me', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const userType = req.user.userType;
+    
+    console.log('🔐 Auth me request:', { userId, userType });
+    
+    if (userType === 'fuel_friend') {
+      const fuelFriend = await storage.getFuelFriend(userId);
+      if (!fuelFriend) {
+        return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Fuel friend not found');
+      }
+      
+      const { password, ...fuelFriendData } = fuelFriend;
+      return sendSuccess(res, { 
+        customer: fuelFriendData, // Return as customer for compatibility
+        fuelFriend: fuelFriendData 
+      }, RESPONSE_CODES.SUCCESS);
+    } else {
+      // Handle regular customer
+      const customer = await storage.getCustomer(userId);
+      if (!customer) {
+        return sendError(res, RESPONSE_CODES.NOT_FOUND, 404, 'Customer not found');
+      }
+      
+      const vehicles = await storage.getVehiclesByCustomer(userId);
+      const { password, ...customerData } = customer;
+      return sendSuccess(res, { customer: customerData, vehicles }, RESPONSE_CODES.SUCCESS);
+    }
+  } catch (error) {
+    console.error('Auth me error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to get user data');
+  }
+});
+
 // Test face biometric endpoint
 router.post('/face/test', async (req, res) => {
   try {
