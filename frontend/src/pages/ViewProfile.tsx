@@ -8,7 +8,7 @@ export default function ViewProfile() {
   const [, setLocation] = useLocation();
   
   const { data: authData, isLoading } = useAuth();
-  const currentUser = authData?.customer;
+  const currentUser = authData?.fuelFriend; // Use fuelFriend directly
   
   // Debug logs
   console.log('🔍 MyProfile Debug:', {

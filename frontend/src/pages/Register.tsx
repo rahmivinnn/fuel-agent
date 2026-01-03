@@ -103,8 +103,8 @@ export default function Register() {
     if (!step1Data || !step2Data) return;
 
     setIsLoading(true);
+    
     try {
-      // Store registration data temporarily (not in DB yet)
       localStorage.setItem("pendingRegistration", JSON.stringify({ step1: step1Data, step2: step2Data }));
       localStorage.setItem("verificationEmail", step1Data.email);
       
@@ -113,7 +113,6 @@ export default function Register() {
         description: "Please verify your email to complete registration",
       });
       
-      // Redirect to email verification page
       setLocation("/email-verification");
     } catch (error) {
       toast({

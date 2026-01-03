@@ -148,9 +148,6 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600">Hello!</p>
               <h1 className="text-xl font-semibold text-gray-900">
                 {currentUser?.fullName || driverName}
-                {currentUser?.isIdentityVerified && (
-                  <span className="ml-2 text-green-600" title="Verified">✓</span>
-                )}
               </h1>
             </div>
           </div>
