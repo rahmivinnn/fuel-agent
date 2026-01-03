@@ -18,15 +18,15 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   }, [location]);
 
   return (
-    <AnimatePresence mode="sync">
+    <AnimatePresence mode="wait">
       <motion.div
         key={location}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ x: isBack ? -20 : 20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: isBack ? 20 : -20, opacity: 0 }}
         transition={{ 
-          duration: 0.15,
-          ease: "easeInOut"
+          duration: 0.2,
+          ease: [0.22, 1, 0.36, 1]
         }}
       >
         {children}

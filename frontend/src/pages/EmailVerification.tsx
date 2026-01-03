@@ -2,18 +2,15 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Bug } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
-import { CapacitorHttp } from '@capacitor/core';
 
 export default function EmailVerification() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>("");
-  const [showDebug, setShowDebug] = useState(false);
 
   // Get email from localStorage (from registration)
   const registeredEmail = localStorage.getItem("verificationEmail") || "";
@@ -31,50 +28,20 @@ export default function EmailVerification() {
     }
 
     setIsLoading(true);
-    setDebugInfo("");
     
     try {
       const url = 'https://api.kelolahrd.life/api/auth/otp/email/send';
-      setDebugInfo(`URL: ${url}\nEmail: ${emailToUse}\nMethod: POST`);
       
-      // Try Capacitor HTTP first for native apps
-      let response;
-      try {
-        const options = {
-          url: url,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          data: { email: emailToUse }
-        };
-        
-        const capacitorResponse = await CapacitorHttp.post(options);
-        response = {
-          ok: capacitorResponse.status >= 200 && capacitorResponse.status < 300,
-          status: capacitorResponse.status,
-          json: async () => capacitorResponse.data
-        };
-        setDebugInfo(prev => prev + `\nUsing Capacitor HTTP`);
-      } catch (capacitorError) {
-        // Fallback to fetch
-        setDebugInfo(prev => prev + `\nCapacitor failed, using fetch`);
-        response = await fetch(url, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36"
-          },
-          body: JSON.stringify({ email: emailToUse }),
-          mode: 'cors',
-          credentials: 'omit'
-        });
-      }
-
-      setDebugInfo(prev => prev + `\nStatus: ${response.status}`);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ email: emailToUse })
+      });
       
       const result = await response.json();
-      setDebugInfo(prev => prev + `\nResponse: ${JSON.stringify(result)}`);
 
       if (!response.ok || !result.success) {
         throw new Error(result.error || result.message || "Failed to send verification code");
@@ -89,12 +56,9 @@ export default function EmailVerification() {
       
       setLocation("/verify-code");
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Failed to send code";
-      setDebugInfo(prev => prev + `\nError: ${errorMsg}`);
-      
       toast({
         title: "Error",
-        description: errorMsg,
+        description: error instanceof Error ? error.message : "Failed to send code",
         variant: "destructive",
       });
     } finally {
@@ -154,24 +118,6 @@ export default function EmailVerification() {
         >
           {isLoading ? "Sending..." : "Send Code"}
         </Button>
-
-        {/* Debug Section */}
-        <div className="mb-6">
-          <Button
-            onClick={() => setShowDebug(!showDebug)}
-            variant="outline"
-            className="w-full h-10 rounded-lg border-orange-300 text-orange-600 hover:bg-orange-50 font-['Poppins'] mb-3"
-          >
-            <Bug className="w-4 h-4 mr-2" />
-            {showDebug ? 'Hide Debug' : 'Show Debug'}
-          </Button>
-          
-          {showDebug && debugInfo && (
-            <div className="bg-gray-100 p-3 rounded-lg text-xs font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
-              {debugInfo}
-            </div>
-          )}
-        </div>
 
         {/* Try Another Way */}
         <div className="text-center">

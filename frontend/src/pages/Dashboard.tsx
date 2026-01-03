@@ -118,66 +118,67 @@ export default function Dashboard() {
   return (
     <AuthGuard requireAuth={true}>
     <div className="min-h-screen bg-white pb-20 overscroll-none">
-      <MobileContainer>
-        {/* Header */}
-        <div className="flex items-center justify-between py-6">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setLocation("/my-profile")}
-              className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent hover:border-green-500 transition-all cursor-pointer"
-            >
-              {currentUser?.profilePhoto && currentUser?.isIdentityVerified ? (
-                <img 
-                  src={currentUser.profilePhoto} 
-                  alt={currentUser.fullName}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to initials if image fails to load
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-              ) : null}
-              <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center ${currentUser?.profilePhoto && currentUser?.isIdentityVerified ? 'hidden' : ''}`}>
-                <span className="text-xl font-bold text-white">
-                  {(currentUser?.fullName || driverName).charAt(0).toUpperCase()}
-                </span>
+      <div className="bg-white rounded-t-3xl pt-6">
+        <MobileContainer>
+          {/* Header */}
+          <div className="flex items-center justify-between pb-6">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setLocation("/my-profile")}
+                className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent hover:border-green-500 transition-all cursor-pointer"
+              >
+                {currentUser?.profilePhoto && currentUser?.isIdentityVerified ? (
+                  <img 
+                    src={currentUser.profilePhoto} 
+                    alt={currentUser.fullName}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center ${currentUser?.profilePhoto && currentUser?.isIdentityVerified ? 'hidden' : ''}`}>
+                  <span className="text-xl font-bold text-white">
+                    {(currentUser?.fullName || driverName).charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              </button>
+              <div>
+                <p className="text-sm text-gray-600">Hello!</p>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {currentUser?.fullName || driverName}
+                </h1>
               </div>
-            </button>
-            <div>
-              <p className="text-sm text-gray-600">Hello!</p>
-              <h1 className="text-xl font-semibold text-gray-900">
-                {currentUser?.fullName || driverName}
-              </h1>
+            </div>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLocation("/notifications")}
+                className="text-gray-600 hover:text-green-600 relative"
+              >
+                <Bell className="w-6 h-6" />
+                {/* Notification badge */}
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-white font-medium">3</span>
+                </div>
+              </Button>
             </div>
           </div>
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setLocation("/notifications")}
-              className="text-gray-600 hover:text-green-600 relative"
-            >
-              <Bell className="w-6 h-6" />
-              {/* Notification badge */}
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white font-medium">3</span>
-              </div>
-            </Button>
-          </div>
-        </div>
 
-        <div className="py-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Order Requests</h3>
-            <Button
-              variant="ghost"
-              className="text-green-600 p-0 h-auto"
-              onClick={() => setLocation("/my-orders?tab=new")}
-            >
-              See all
-            </Button>
-          </div>
+          <div className="py-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Order Requests</h3>
+              <Button
+                variant="ghost"
+                className="text-green-600 p-0 h-auto"
+                onClick={() => setLocation("/my-orders?tab=new")}
+              >
+                See all
+              </Button>
+            </div>
 
           {isLoadingPending ? (
             <div className="space-y-3">
@@ -236,20 +237,20 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Current Orders */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Current orders</h3>
-            <Button
-              variant="ghost"
-              className="text-green-600 p-0 h-auto hover:text-green-700"
-              onClick={() => setLocation("/my-orders?tab=active")}
-            >
-              See all
-            </Button>
           </div>
+
+          {/* Current Orders */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Current orders</h3>
+              <Button
+                variant="ghost"
+                className="text-green-600 p-0 h-auto hover:text-green-700"
+                onClick={() => setLocation("/my-orders?tab=active")}
+              >
+                See all
+              </Button>
+            </div>
 
           {isLoadingActive ? (
             <div className="space-y-3">
@@ -306,7 +307,8 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </MobileContainer>
+        </MobileContainer>
+      </div>
       <BottomNav />
     </div>
     </AuthGuard>

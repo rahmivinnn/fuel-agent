@@ -30,7 +30,7 @@ export default function MyOrders() {
   // Add loading check for fuelFriendId
   if (!fuelFriendId) {
     return (
-      <div className="min-h-screen bg-white pb-20 overscroll-none">
+      <div className="min-h-screen bg-white pb-20 overscroll-y-none touch-pan-x" style={{ overscrollBehavior: 'none' }}>
         <MobileContainer>
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -79,7 +79,7 @@ export default function MyOrders() {
   };
   
   return (
-    <div className="min-h-screen bg-white pb-20 overscroll-none">
+    <div className="min-h-screen bg-white pb-20 overscroll-y-none touch-pan-x" style={{ overscrollBehavior: 'none' }}>
       <MobileContainer>
         {/* Header */}
         <div className="flex items-center gap-4 py-4 border-b border-gray-100">

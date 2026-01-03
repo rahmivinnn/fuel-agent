@@ -34,20 +34,22 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'User-Agent']
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  skip: (req) => req.method === 'OPTIONS', // Skip rate limiting for preflight requests
-  message: {
-    success: false,
-    message: 'Too many requests',
-    responseCode: 'RC_429',
-    error: 'Rate limit exceeded',
-    timestamp: new Date().toISOString()
-  }
-});
-app.use('/api/', limiter);
+// Rate limiting - disabled in development
+if (process.env.NODE_ENV === 'production') {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    skip: (req) => req.method === 'OPTIONS',
+    message: {
+      success: false,
+      message: 'Too many requests',
+      responseCode: 'RC_429',
+      error: 'Rate limit exceeded',
+      timestamp: new Date().toISOString()
+    }
+  });
+  app.use('/api/', limiter);
+}
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

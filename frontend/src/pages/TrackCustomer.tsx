@@ -16,9 +16,45 @@ export default function TrackCustomer() {
   const [driver, setDriver] = useState<any>(null);
   const [customer, setCustomer] = useState<any>(null);
   const [driverLocation, setDriverLocation] = useState<[number, number] | null>(null);
+  const [sheetHeight, setSheetHeight] = useState(50); // Percentage of viewport height
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const driverMarker = useRef<mapboxgl.Marker | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const startHeight = useRef(0);
+
+  // Handle drag functionality
+  const handleTouchStart = (e: React.TouchEvent) => {
+    isDragging.current = true;
+    startY.current = e.touches[0].clientY;
+    startHeight.current = sheetHeight;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    
+    const currentY = e.touches[0].clientY;
+    const deltaY = startY.current - currentY;
+    const viewportHeight = window.innerHeight;
+    const deltaPercent = (deltaY / viewportHeight) * 100;
+    
+    const newHeight = Math.max(20, Math.min(80, startHeight.current + deltaPercent));
+    setSheetHeight(newHeight);
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    // Snap to nearest position
+    if (sheetHeight < 35) {
+      setSheetHeight(20); // Minimized
+    } else if (sheetHeight > 65) {
+      setSheetHeight(80); // Maximized
+    } else {
+      setSheetHeight(50); // Default
+    }
+  };
 
   // Get driver's current location
   useEffect(() => {
@@ -116,9 +152,9 @@ export default function TrackCustomer() {
   }, [driverLocation]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 flex items-center">
+      <div className="absolute top-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 p-4 flex items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -129,15 +165,29 @@ export default function TrackCustomer() {
         <h1 className="text-lg font-bold ml-3">Track Customer</h1>
       </div>
 
-      {/* Map Container */}
-      <div className="relative h-[60vh] rounded-b-3xl overflow-hidden">
+      {/* Map Container - Fixed Full Screen */}
+      <div className="fixed inset-0 z-0">
         <div ref={mapContainer} className="w-full h-full" />
       </div>
 
-      {/* Bottom Sheet */}
-      <div className="bg-white rounded-t-3xl -mt-6 relative z-10 p-6 space-y-6">
-        {/* Progress bar */}
-        <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto" />
+      {/* Bottom Sheet - Draggable */}
+      <div 
+        ref={sheetRef}
+        className="fixed bottom-0 left-0 right-0 z-10 bg-white rounded-t-3xl transition-all duration-300 ease-out"
+        style={{ height: `${sheetHeight}vh` }}
+      >
+        {/* Drag Handle */}
+        <div 
+          className="w-full p-4 cursor-grab active:cursor-grabbing"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto" />
+        </div>
+        
+        {/* Content - Scrollable */}
+        <div className="px-6 pb-6 space-y-6 overflow-y-auto" style={{ height: `calc(${sheetHeight}vh - 60px)` }}>
         
         {/* Driver Info */}
         <div className="flex items-center justify-between">
@@ -239,6 +289,7 @@ export default function TrackCustomer() {
               <span className="text-gray-600">Drop Off</span>
               <span className="text-gray-900">{order?.deliveryAddress?.split(',')[0] || "Abc-Tennessee"}</span>
             </div>
+          </div>
           </div>
         </div>
       </div>
