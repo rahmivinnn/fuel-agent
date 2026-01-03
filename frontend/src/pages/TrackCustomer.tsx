@@ -88,20 +88,45 @@ export default function TrackCustomer() {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/orders/${id}`);
+        const token = localStorage.getItem('jwt_token');
+        const response = await fetch(`${API_BASE_URL}/api/orders/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         const data = await response.json();
-        setOrder(data.order);
         
-        if (data.order?.fuelFriendId) {
-          const driverResponse = await fetch(`${API_BASE_URL}/api/fuel-friends/${data.order.fuelFriendId}`);
-          const driverData = await driverResponse.json();
-          setDriver(driverData.fuelFriend);
-        }
-        
-        if (data.order?.customerId) {
-          const customerResponse = await fetch(`${API_BASE_URL}/api/customers/${data.order.customerId}`);
-          const customerData = await customerResponse.json();
-          setCustomer(customerData.customer);
+        if (data.success) {
+          setOrder(data.data || data.order);
+          
+          if (data.data?.fuelFriendId || data.order?.fuelFriendId) {
+            const fuelFriendId = data.data?.fuelFriendId || data.order?.fuelFriendId;
+            const driverResponse = await fetch(`${API_BASE_URL}/api/fuel-friends/${fuelFriendId}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            const driverData = await driverResponse.json();
+            if (driverData.success) {
+              setDriver(driverData.data || driverData.fuelFriend);
+            }
+          }
+          
+          if (data.data?.customerId || data.order?.customerId) {
+            const customerId = data.data?.customerId || data.order?.customerId;
+            const customerResponse = await fetch(`${API_BASE_URL}/api/customers/${customerId}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            const customerData = await customerResponse.json();
+            if (customerData.success) {
+              setCustomer(customerData.data || customerData.customer);
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to fetch order details:', error);
@@ -126,11 +151,17 @@ export default function TrackCustomer() {
       .setLngLat(driverLocation)
       .addTo(map.current);
 
-    // Add customer marker (red) - offset slightly for demo
-    const customerLocation: [number, number] = [
-      driverLocation[0] + 0.01, 
-      driverLocation[1] - 0.01
-    ];
+    // Add customer marker (red) - use real customer location if available
+    let customerLocation: [number, number];
+    if (order?.deliveryLatitude && order?.deliveryLongitude) {
+      customerLocation = [order.deliveryLongitude, order.deliveryLatitude];
+    } else {
+      // Fallback: offset slightly from driver location
+      customerLocation = [
+        driverLocation[0] + 0.01, 
+        driverLocation[1] - 0.01
+      ];
+    }
     new mapboxgl.Marker({ color: '#ef4444' })
       .setLngLat(customerLocation)
       .addTo(map.current);
@@ -203,8 +234,8 @@ export default function TrackCustomer() {
               />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{driver?.fullName || "Cristopert Dastin"}</h3>
-              <p className="text-sm text-gray-500">{driver?.location || "Tennessee"}</p>
+              <h3 className="font-semibold text-gray-900">{driver?.fullName || "Loading..."}</h3>
+              <p className="text-sm text-gray-500">{driver?.location || order?.pickupLocation || "Location not available"}</p>
             </div>
           </div>
           
@@ -224,8 +255,13 @@ export default function TrackCustomer() {
 
         {/* Delivery Time */}
         <div>
-          <h4 className="font-semibold text-gray-900 mb-1">Your Delivery Time</h4>
-          <p className="text-gray-600">Before {order?.estimatedDeliveryTime || "8:30 PM"}</p>
+          <h4 className="font-semibold text-gray-900 mb-1">Delivery Time</h4>
+          <p className="text-gray-600">
+            {order?.estimatedDeliveryTime ? 
+              `Before ${new Date(order.estimatedDeliveryTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` : 
+              "Calculating..."
+            }
+          </p>
         </div>
 
         {/* Progress Steps */}
@@ -283,11 +319,19 @@ export default function TrackCustomer() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Pickup</span>
-              <span className="text-gray-900">{order?.stationId || "Abc Station-Tennessee"}</span>
+              <span className="text-gray-900">{order?.pickupLocation || order?.stationName || "Loading..."}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Drop Off</span>
-              <span className="text-gray-900">{order?.deliveryAddress?.split(',')[0] || "Abc-Tennessee"}</span>
+              <span className="text-gray-900">{order?.deliveryAddress || "Loading..."}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Fuel Type</span>
+              <span className="text-gray-900">{order?.fuelType || "Loading..."}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Amount</span>
+              <span className="text-gray-900">{order?.totalAmount ? `$${order.totalAmount}` : "Loading..."}</span>
             </div>
           </div>
           </div>

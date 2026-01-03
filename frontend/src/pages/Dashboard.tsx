@@ -12,11 +12,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useOrders, useAcceptOrder, useCancelOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthGuard } from "@/components/AuthGuard";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Initialize notifications
+  useNotifications();
   
   // Get current user from token
   const { data: authData, isLoading: isLoadingAuth } = useAuth();
@@ -118,10 +122,10 @@ export default function Dashboard() {
   return (
     <AuthGuard requireAuth={true}>
     <div className="min-h-screen bg-white pb-20 overscroll-none">
-      <div className="bg-white rounded-t-3xl pt-6">
+      <div className="bg-white rounded-t-3xl pt-8">
         <MobileContainer>
           {/* Header */}
-          <div className="flex items-center justify-between pb-6">
+          <div className="flex items-center justify-between pb-6 px-2">
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setLocation("/my-profile")}
@@ -215,26 +219,9 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white border border-gray-100 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                    <Skeleton className="h-6 w-16 rounded-full" />
-                  </div>
-                  <div className="space-y-2 mb-3">
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-3 w-3/4" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Skeleton className="h-8 w-20 rounded-lg" />
-                    <Skeleton className="h-8 w-20 rounded-lg" />
-                  </div>
-                </div>
-              ))}
+            <div className="text-center py-8">
+              <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 mb-4">No orders</p>
             </div>
           )}
           </div>
@@ -285,25 +272,9 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="space-y-3">
-              {[1, 2].map((i) => (
-                <div key={i} className="bg-white border border-gray-100 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                    <Skeleton className="h-6 w-16 rounded-full" />
-                  </div>
-                  <div className="space-y-2 mb-3">
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-3 w-3/4" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Skeleton className="h-8 w-24 rounded-lg" />
-                  </div>
-                </div>
-              ))}
+            <div className="text-center py-8">
+              <User className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 mb-4">No orders</p>
             </div>
           )}
         </div>

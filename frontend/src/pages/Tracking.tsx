@@ -186,25 +186,9 @@ export default function MyOrders() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                      </div>
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <div className="space-y-2 mb-3">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-3/4" />
-                      </div>
-                      <div className="flex gap-2">
-                        <Skeleton className="h-8 w-24 rounded-lg" />
-                        <Skeleton className="h-8 w-24 rounded-lg" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <Package2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No orders</p>
                 </div>
               )}
             </TabsContent>
@@ -293,26 +277,9 @@ export default function MyOrders() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                      </div>
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <div className="space-y-2 mb-3">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-3/4" />
-                      </div>
-                      <div className="flex gap-2">
-                        <Skeleton className="h-8 w-16 rounded-lg" />
-                        <Skeleton className="h-8 w-20 rounded-lg" />
-                        <Skeleton className="h-8 w-24 rounded-lg" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <Package2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No orders</p>
                 </div>
               )}
             </TabsContent>
@@ -366,21 +333,9 @@ export default function MyOrders() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                      </div>
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <div className="space-y-2 mb-3">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-3/4" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <Package2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No orders</p>
                 </div>
               )}
             </TabsContent>
