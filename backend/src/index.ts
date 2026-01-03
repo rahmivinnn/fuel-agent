@@ -25,13 +25,13 @@ initializeDatabase();
 // Initialize WhatsApp connection
 initializeWhatsApp();
 
-// Security middleware
-app.use(helmet());
+// Add preflight handler
+app.options('*', cors());
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173', 'https://fuel-agent-frontend.vercel.app'],
+  origin: true, // Allow all origins for mobile apps
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'User-Agent']
 }));
 
 // Rate limiting

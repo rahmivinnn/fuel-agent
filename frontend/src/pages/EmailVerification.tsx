@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Bug } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
+import { CapacitorHttp } from '@capacitor/core';
 
 export default function EmailVerification() {
   const [, setLocation] = useLocation();
@@ -33,14 +34,42 @@ export default function EmailVerification() {
     setDebugInfo("");
     
     try {
-      const url = 'https://api.kelolahrd.life/auth/otp/email/send';
+      const url = 'https://api.kelolahrd.life/api/auth/otp/email/send';
       setDebugInfo(`URL: ${url}\nEmail: ${emailToUse}\nMethod: POST`);
       
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailToUse }),
-      });
+      // Try Capacitor HTTP first for native apps
+      let response;
+      try {
+        const options = {
+          url: url,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          data: { email: emailToUse }
+        };
+        
+        const capacitorResponse = await CapacitorHttp.post(options);
+        response = {
+          ok: capacitorResponse.status >= 200 && capacitorResponse.status < 300,
+          status: capacitorResponse.status,
+          json: async () => capacitorResponse.data
+        };
+        setDebugInfo(prev => prev + `\nUsing Capacitor HTTP`);
+      } catch (capacitorError) {
+        // Fallback to fetch
+        setDebugInfo(prev => prev + `\nCapacitor failed, using fetch`);
+        response = await fetch(url, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36"
+          },
+          body: JSON.stringify({ email: emailToUse }),
+          mode: 'cors',
+          credentials: 'omit'
+        });
+      }
 
       setDebugInfo(prev => prev + `\nStatus: ${response.status}`);
       
