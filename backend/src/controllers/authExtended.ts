@@ -15,6 +15,72 @@ import {
   resetPasswordSchema
 } from '../schemas/validation';
 
+export const googleCallback = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Authorization code required');
+    }
+
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
+        client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/callback`
+      })
+    });
+
+    const tokens = await tokenResponse.json();
+    
+    if (!tokenResponse.ok) {
+      throw new Error(tokens.error_description || 'Token exchange failed');
+    }
+
+    // Get user info
+    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    });
+
+    const userInfo = await userResponse.json();
+    
+    if (!userResponse.ok) {
+      throw new Error('Failed to get user info');
+    }
+
+    // Create or get fuel friend
+    let fuelFriend = await storage.getFuelFriendByEmail(userInfo.email);
+    
+    if (!fuelFriend) {
+      fuelFriend = await storage.createFuelFriend({
+        fullName: userInfo.name || userInfo.email.split('@')[0],
+        email: userInfo.email,
+        phoneNumber: '',
+        password: userInfo.id,
+        location: '',
+        deliveryFee: '5000.00',
+        isEmailVerified: true
+      });
+    }
+
+    const token = generateToken({ userId: fuelFriend.id, email: fuelFriend.email });
+    const { password, ...fuelFriendData } = fuelFriend;
+
+    return sendSuccess(res, {
+      fuelFriend: fuelFriendData,
+      token
+    }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Google authentication failed');
+  }
+};
+
 export const googleAuth = async (req: Request, res: Response) => {
   try {
     const { uid, email, displayName } = req.body;

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { login, getProfile, getWhatsAppStatus } from '../controllers/authOTP';
 import { sendEmailOTP, verifyEmailOTP, sendWhatsAppOTP, verifyWhatsAppOTP } from '../controllers/otpController';
 import { 
-  googleAuth, registerStep1, registerComplete, emailVerification, 
+  googleAuth, googleCallback, registerStep1, registerComplete, emailVerification, 
   verifyCode, forgotPassword, resetPassword 
 } from '../controllers/authExtended';
 import { restartWhatsApp, addResendContact, createTestOrder } from '../controllers/misc';
@@ -107,6 +107,7 @@ router.post('/login', async (req, res) => {
 
 // Auth routes
 router.post('/google', googleAuth);
+router.post('/google/callback', googleCallback);
 router.post('/register/step1', registerStep1);
 router.post('/register/complete', registerComplete);
 router.post('/email-verification', emailVerification);
@@ -126,5 +127,35 @@ router.post('/otp/whatsapp/restart', restartWhatsApp);
 // Misc routes
 router.post('/resend/contact', addResendContact);
 router.post('/test/create-order', createTestOrder);
+router.post('/test/notification', async (req, res) => {
+  try {
+    const { title, body, token } = req.body;
+    
+    if (!title || !body) {
+      return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Title and body required');
+    }
+
+    // Import push notification service
+    const { sendPushNotification } = await import('../services/pushNotifications');
+    
+    const result = await sendPushNotification({
+      token: token || 'test-token',
+      title: title || 'Test Notification',
+      body: body || 'This is a test notification from Fuel Friend',
+      data: {
+        type: 'test',
+        timestamp: new Date().toISOString()
+      }
+    });
+
+    return sendSuccess(res, {
+      message: 'Test notification sent',
+      result
+    }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    console.error('Test notification error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to send test notification');
+  }
+});
 
 export default router;

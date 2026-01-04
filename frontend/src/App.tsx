@@ -34,7 +34,7 @@ import FaceVerification from "@/pages/FaceVerification";
 import WhatsAppVerification from "@/pages/WhatsAppVerification";
 import VerifyWhatsAppCode from "@/pages/VerifyWhatsAppCode";
 import WhatsAppLogin from "@/pages/WhatsAppLogin";
-import GoogleCallback from "@/pages/GoogleCallback";
+import AuthCallback from "@/pages/AuthCallback";
 import { useEffect, useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import KYCVerification from "@/pages/KYCVerification";
@@ -136,7 +136,7 @@ function Router() {
         <Route path="/face-verification" component={FaceVerification} />
         <Route path="/whatsapp-login" component={WhatsAppLogin} />
         {/* OAuth callbacks */}
-        <Route path="/auth/google/callback" component={GoogleCallback} />
+        <Route path="/auth/callback" component={AuthCallback} />
         <Route component={NotFound} />
       </Switch>
     </PageTransition>

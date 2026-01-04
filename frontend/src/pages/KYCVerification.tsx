@@ -469,9 +469,6 @@ export default function KYCVerification() {
           )}
         </div>
       </div>
-
-      {/* Home Indicator */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#101010] rounded-full mb-2"></div>
     </div>
   );
 }
