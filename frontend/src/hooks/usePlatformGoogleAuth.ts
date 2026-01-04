@@ -12,11 +12,8 @@ export const usePlatformGoogleAuth = () => {
     try {
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
       
-      // For APK, use localhost with port
-      const isAPK = window.location.protocol === 'file:' || window.location.hostname === 'localhost';
-      const redirectUri = isAPK 
-        ? 'http://localhost:3000/auth/callback'
-        : `${window.location.origin}/auth/callback`;
+      // Use registered redirect URI from Google Console
+      const redirectUri = 'http://localhost/auth/callback';
       
       console.log('Is APK:', isAPK);
       console.log('Redirect URI:', redirectUri);
