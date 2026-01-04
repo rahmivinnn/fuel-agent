@@ -53,14 +53,19 @@ export default function VerifySuccess() {
             onClick={() => setLocation("/verify-code")}
             className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
           >
-            <img src="/Back.png" alt="Back" className="w-4 h-4" />
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="w-4 h-4">
+              <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
 
         {/* Success Icon */}
         <div className="flex justify-center mb-8">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-            <img src="/checklist-screen.png" alt="Success" className="w-10 h-10" />
+          <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-lg">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="18" fill="#3AC36C"/>
+              <path d="M12 20L18 26L28 14" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
         </div>
 
@@ -78,16 +83,24 @@ export default function VerifySuccess() {
         <div className="space-y-3 mb-8">
           <Button
             onClick={handleGoToHome}
-            className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins']"
+            className="w-full h-12 rounded-[30px] bg-gradient-to-r from-[#3AC36C] to-[#2A9D5F] hover:from-[#2A9D5F] hover:to-[#1E7A47] text-white font-semibold font-['Poppins'] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
           >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-2">
+              <path d="M2 8L8 2L14 8M8 2V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             Go to Home
           </Button>
           
           <Button
             onClick={() => setLocation("/kyc-verification")}
             variant="outline"
-            className="w-full h-12 rounded-[30px] border-2 border-[#3AC36C] text-[#3AC36C] bg-white hover:bg-green-50 font-semibold font-['Poppins']"
+            className="w-full h-12 rounded-[30px] border-2 border-[#3AC36C] text-[#3AC36C] bg-white hover:bg-green-50 font-semibold font-['Poppins'] shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
           >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-2">
+              <path d="M8 7C9.65685 7 11 5.65685 11 4C11 2.34315 9.65685 1 8 1C6.34315 1 5 2.34315 5 4C5 5.65685 6.34315 7 8 7Z" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M14 15C14 11.134 11.866 8 8 8C4.13401 8 2 11.134 2 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M10 4L12 6L16 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             Complete Identity Verification
           </Button>
         </div>

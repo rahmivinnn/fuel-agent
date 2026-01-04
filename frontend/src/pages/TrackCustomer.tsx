@@ -16,6 +16,9 @@ export default function TrackCustomer() {
   const [driver, setDriver] = useState<any>(null);
   const [customer, setCustomer] = useState<any>(null);
   const [driverLocation, setDriverLocation] = useState<[number, number] | null>(null);
+  const [distance, setDistance] = useState<string>("");
+  const [duration, setDuration] = useState<string>("");
+  const [routeCoordinates, setRouteCoordinates] = useState<number[][]>([]);
   const [sheetHeight, setSheetHeight] = useState(50); // Percentage of viewport height
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -25,7 +28,39 @@ export default function TrackCustomer() {
   const startY = useRef(0);
   const startHeight = useRef(0);
 
-  // Handle drag functionality
+  // Get route from Mapbox Directions API
+  const getRoute = async (start: [number, number], end: [number, number]) => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`
+      );
+      const data = await response.json();
+      
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const coordinates = route.geometry.coordinates;
+        const distance = route.distance;
+        const duration = route.duration;
+        
+        setRouteCoordinates(coordinates);
+        setDistance(distance < 1000 ? `${Math.round(distance)}m` : `${(distance/1000).toFixed(1)}km`);
+        setDuration(`${Math.round(duration/60)}min`);
+        
+        return coordinates;
+      }
+    } catch (error) {
+      console.error('Error getting route:', error);
+    }
+    return null;
+  };
+
+  // Update route when locations change
+  useEffect(() => {
+    if (driverLocation && order?.deliveryLatitude && order?.deliveryLongitude) {
+      const customerLocation: [number, number] = [order.deliveryLongitude, order.deliveryLatitude];
+      getRoute(driverLocation, customerLocation);
+    }
+  }, [driverLocation, order]);
   const handleTouchStart = (e: React.TouchEvent) => {
     isDragging.current = true;
     startY.current = e.touches[0].clientY;
@@ -88,44 +123,83 @@ export default function TrackCustomer() {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        const token = localStorage.getItem('jwt_token');
+        console.log('Fetching order details for ID:', id);
+        const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+        console.log('Using token:', token ? 'Token found' : 'No token');
+        
         const response = await fetch(`${API_BASE_URL}/api/orders/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
+        
+        console.log('Order API response status:', response.status);
         const data = await response.json();
+        console.log('Order API response data:', data);
         
         if (data.success) {
-          setOrder(data.data || data.order);
+          const orderData = data.data?.order || data.data || data.order;
+          console.log('Setting order data:', orderData);
+          setOrder(orderData);
           
-          if (data.data?.fuelFriendId || data.order?.fuelFriendId) {
-            const fuelFriendId = data.data?.fuelFriendId || data.order?.fuelFriendId;
-            const driverResponse = await fetch(`${API_BASE_URL}/api/fuel-friends/${fuelFriendId}`, {
+          if (orderData?.fuelFriendId) {
+            console.log('Fetching driver for ID:', orderData.fuelFriendId);
+            const driverResponse = await fetch(`${API_BASE_URL}/api/fuel-friends/${orderData.fuelFriendId}`, {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
               }
             });
             const driverData = await driverResponse.json();
+            console.log('Driver data:', driverData);
             if (driverData.success) {
               setDriver(driverData.data || driverData.fuelFriend);
             }
           }
           
-          if (data.data?.customerId || data.order?.customerId) {
-            const customerId = data.data?.customerId || data.order?.customerId;
-            const customerResponse = await fetch(`${API_BASE_URL}/api/customers/${customerId}`, {
+          if (orderData?.customerId) {
+            console.log('Fetching customer for ID:', orderData.customerId);
+            const customerResponse = await fetch(`${API_BASE_URL}/api/customers/${orderData.customerId}`, {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
               }
             });
             const customerData = await customerResponse.json();
+            console.log('Customer data:', customerData);
             if (customerData.success) {
               setCustomer(customerData.data || customerData.customer);
             }
+          }
+        } else {
+          console.error('API returned error:', data);
+          // If no specific order, show current fuel friend as driver
+          const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+          const authResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          const authData = await authResponse.json();
+          if (authData.success && authData.data.fuelFriend) {
+            setDriver(authData.data.fuelFriend);
+            // Set dummy order for demo
+            setOrder({
+              id: id,
+              pickupLocation: "Gas Station",
+              deliveryAddress: "Customer Location",
+              fuelType: "Premium",
+              totalAmount: "50.00",
+              status: "in_progress",
+              deliveryLatitude: -6.2088,
+              deliveryLongitude: 106.8456
+            });
+            setCustomer({
+              fullName: "Customer",
+              phoneNumber: "+1234567890"
+            });
           }
         }
       } catch (error) {
@@ -133,7 +207,12 @@ export default function TrackCustomer() {
       }
     };
     
-    if (id) fetchOrderDetails();
+    if (id) {
+      console.log('Order ID from params:', id);
+      fetchOrderDetails();
+    } else {
+      console.error('No order ID provided');
+    }
   }, [id]);
 
   useEffect(() => {
@@ -151,20 +230,52 @@ export default function TrackCustomer() {
       .setLngLat(driverLocation)
       .addTo(map.current);
 
-    // Add customer marker (red) - use real customer location if available
-    let customerLocation: [number, number];
+    // Add route line between driver and customer using real road data
     if (order?.deliveryLatitude && order?.deliveryLongitude) {
-      customerLocation = [order.deliveryLongitude, order.deliveryLatitude];
-    } else {
-      // Fallback: offset slightly from driver location
-      customerLocation = [
-        driverLocation[0] + 0.01, 
-        driverLocation[1] - 0.01
-      ];
+      const customerLocation: [number, number] = [order.deliveryLongitude, order.deliveryLatitude];
+      
+      map.current.on('load', () => {
+        // Add route source
+        map.current!.addSource('route', {
+          'type': 'geojson',
+          'data': {
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+              'type': 'LineString',
+              'coordinates': []
+            }
+          }
+        });
+        
+        // Add route layer
+        map.current!.addLayer({
+          'id': 'route',
+          'type': 'line',
+          'source': 'route',
+          'layout': {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          'paint': {
+            'line-color': '#3AC36C',
+            'line-width': 4,
+            'line-opacity': 0.8
+          }
+        });
+      });
+      
+      // Add customer marker
+      new mapboxgl.Marker({ color: '#ef4444' })
+        .setLngLat(customerLocation)
+        .addTo(map.current);
+        
+      // Fit map to show both markers
+      const bounds = new mapboxgl.LngLatBounds();
+      bounds.extend(driverLocation);
+      bounds.extend(customerLocation);
+      map.current.fitBounds(bounds, { padding: 50 });
     }
-    new mapboxgl.Marker({ color: '#ef4444' })
-      .setLngLat(customerLocation)
-      .addTo(map.current);
 
     return () => {
       if (map.current) {
@@ -174,7 +285,22 @@ export default function TrackCustomer() {
     };
   }, [driverLocation]);
 
-  // Update driver marker position when location changes
+  // Update route on map when coordinates change
+  useEffect(() => {
+    if (map.current && routeCoordinates.length > 0) {
+      const source = map.current.getSource('route') as mapboxgl.GeoJSONSource;
+      if (source) {
+        source.setData({
+          'type': 'Feature',
+          'properties': {},
+          'geometry': {
+            'type': 'LineString',
+            'coordinates': routeCoordinates
+          }
+        });
+      }
+    }
+  }, [routeCoordinates]);
   useEffect(() => {
     if (map.current && driverMarker.current && driverLocation) {
       driverMarker.current.setLngLat(driverLocation);
@@ -220,6 +346,22 @@ export default function TrackCustomer() {
         {/* Content - Scrollable */}
         <div className="px-6 pb-6 space-y-6 overflow-y-auto" style={{ height: `calc(${sheetHeight}vh - 60px)` }}>
         
+        {/* Distance Info */}
+        {distance && (
+          <div className="bg-green-50 rounded-lg p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <MapPin className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Distance to Customer</span>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-green-800">{distance}</p>
+                <p className="text-xs text-green-600">~{duration} away</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Driver Info */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -259,7 +401,9 @@ export default function TrackCustomer() {
           <p className="text-gray-600">
             {order?.estimatedDeliveryTime ? 
               `Before ${new Date(order.estimatedDeliveryTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` : 
-              "Calculating..."
+              order?.createdAt ? 
+                `Before ${new Date(new Date(order.createdAt).getTime() + 30 * 60000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` :
+                "30 minutes"
             }
           </p>
         </div>
@@ -319,19 +463,23 @@ export default function TrackCustomer() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Pickup</span>
-              <span className="text-gray-900">{order?.pickupLocation || order?.stationName || "Loading..."}</span>
+              <span className="text-gray-900">{order?.pickupLocation || order?.stationName || order?.stationId || "Loading..."}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Drop Off</span>
-              <span className="text-gray-900">{order?.deliveryAddress || "Loading..."}</span>
+              <span className="text-gray-900">{order?.deliveryAddress || order?.customerAddress || "Loading..."}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Fuel Type</span>
-              <span className="text-gray-900">{order?.fuelType || "Loading..."}</span>
+              <span className="text-gray-900">{order?.fuelType || order?.productType || "Loading..."}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Amount</span>
-              <span className="text-gray-900">{order?.totalAmount ? `$${order.totalAmount}` : "Loading..."}</span>
+              <span className="text-gray-900">{order?.totalAmount ? `$${order.totalAmount}` : order?.amount ? `$${order.amount}` : "Loading..."}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Status</span>
+              <span className="text-gray-900 capitalize">{order?.status || "Loading..."}</span>
             </div>
           </div>
           </div>

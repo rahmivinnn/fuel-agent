@@ -157,15 +157,20 @@ export default function VerifyCode() {
           onClick={() => setLocation("/login")}
           className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E5E7EB] text-[#3F4249] hover:text-[#3AC36C] hover:border-[#3AC36C] transition-colors"
         >
-          <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="w-4 h-4">
+            <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
       </div>
       
       <div className="w-full max-w-sm mx-auto space-y-8 pt-8 flex-1 flex flex-col justify-center">
         {/* Email icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-            <img src="/inbox1.png" alt="Inbox" className="w-10 h-10" />
+          <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-lg">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <path d="M6.66667 13.3333L20 23.3333L33.3333 13.3333M6.66667 30H33.3333C35.1743 30 36.6667 28.5076 36.6667 26.6667V13.3333C36.6667 11.4924 35.1743 10 33.3333 10H6.66667C4.82572 10 3.33333 11.4924 3.33333 13.3333V26.6667C3.33333 28.5076 4.82572 30 6.66667 30Z" stroke="#3AC36C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="20" cy="20" r="3" fill="#3AC36C"/>
+            </svg>
           </div>
         </div>
         
@@ -198,10 +203,13 @@ export default function VerifyCode() {
 
           <Button
             onClick={handleVerify}
-            className="w-full h-12 text-base font-semibold rounded-xl bg-green-600 hover:bg-green-700 text-white"
+            className="w-full h-12 text-base font-semibold rounded-[30px] bg-gradient-to-r from-[#3AC36C] to-[#2A9D5F] hover:from-[#2A9D5F] hover:to-[#1E7A47] text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
             disabled={isLoading || code.length !== 6}
             data-testid="button-verify"
           >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-2">
+              <path d="M13.5 4.5L6 12L2.5 8.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             {isLoading ? "Verifying..." : "Verify"}
           </Button>
 
@@ -214,9 +222,13 @@ export default function VerifyCode() {
                 variant="ghost"
                 onClick={handleResend}
                 disabled={!canResend}
-                className="text-green-600 p-0 h-auto font-semibold hover:text-green-700"
+                className="text-[#3AC36C] p-0 h-auto font-semibold hover:text-[#2A9D5F] transition-colors duration-300 flex items-center gap-1"
                 data-testid="button-resend"
               >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 7C1 10.866 4.13401 14 8 14C11.866 14 15 10.866 15 7C15 3.13401 11.866 0 8 0C5.49 0 3.27 1.51 2.32 3.68" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M1 3V7H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
                 Resend
               </Button>
               {!canResend && (

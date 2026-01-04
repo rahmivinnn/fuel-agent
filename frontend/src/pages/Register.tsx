@@ -17,6 +17,7 @@ import { MobileContainer } from "@/components/MobileContainer";
 import EmailOTPLogin from "@/components/EmailOTPLogin";
 import WhatsAppOTPLogin from "@/components/WhatsAppOTPLogin";
 import { Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { apiClient } from "@/lib/api";
 
@@ -146,7 +147,9 @@ export default function Register() {
             {currentStep === 1 ? (
               <ArrowLeft className="w-4 h-4" />
             ) : (
-              <img src="/icon-back.png" alt="Back" className="w-4 h-4" />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="w-4 h-4">
+                <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             )}
           </button>
           {currentStep === 1 && (
@@ -156,7 +159,7 @@ export default function Register() {
 
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <img src="/logo.png" alt="FuelFriendly" className="w-[105px] h-[60px]" />
+          <img src="/logo.svg" alt="FuelFriendly" className="w-[105px] h-[60px]" />
         </div>
 
         {/* Title */}
@@ -168,17 +171,23 @@ export default function Register() {
         <div className="flex items-center justify-center mb-12 relative">
           <div className="flex items-center">
             {/* Step 1 */}
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-              currentStep > 1 ? 'bg-[#3AC36C]' : currentStep === 1 ? 'bg-white border-2 border-[#3AC36C]' : 'bg-white border-2 border-[#606268]'
-            }`}>
+            <motion.div 
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                currentStep > 1 ? 'bg-gradient-to-br from-[#3AC36C] to-[#2A9D5F]' : 
+                currentStep === 1 ? 'bg-white border-3 border-[#3AC36C] shadow-[0_0_0_4px_rgba(58,195,108,0.2)]' : 
+                'bg-gray-100 border-2 border-gray-300'
+              }`}
+              animate={{ scale: currentStep === 1 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
               {currentStep > 1 ? (
-                <Check className="w-4 h-4 text-white stroke-[2.5]" />
+                <Check className="w-5 h-5 text-white stroke-[3]" />
               ) : (
-                <span className={`text-base font-semibold ${
-                  currentStep === 1 ? 'text-[#3AC36C]' : 'text-[#606268]'
+                <span className={`text-lg font-bold ${
+                  currentStep === 1 ? 'text-[#3AC36C]' : 'text-gray-500'
                 }`}>1</span>
               )}
-            </div>
+            </motion.div>
             
             {/* Dots between 1 and 2 */}
             <div className="flex items-center gap-1 mx-2">
@@ -215,17 +224,23 @@ export default function Register() {
             </div>
             
             {/* Step 2 */}
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-              currentStep > 2 ? 'bg-[#3AC36C]' : currentStep === 2 ? 'bg-white border-2 border-[#3AC36C]' : 'bg-white border-2 border-[#606268]'
-            }`}>
+            <motion.div 
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                currentStep > 2 ? 'bg-gradient-to-br from-[#3AC36C] to-[#2A9D5F]' : 
+                currentStep === 2 ? 'bg-white border-3 border-[#3AC36C] shadow-[0_0_0_4px_rgba(58,195,108,0.2)]' : 
+                'bg-gray-100 border-2 border-gray-300'
+              }`}
+              animate={{ scale: currentStep === 2 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
               {currentStep > 2 ? (
-                <Check className="w-4 h-4 text-white stroke-[2.5]" />
+                <Check className="w-5 h-5 text-white stroke-[3]" />
               ) : (
-                <span className={`text-base font-semibold ${
-                  currentStep === 2 ? 'text-[#3AC36C]' : 'text-[#606268]'
+                <span className={`text-lg font-bold ${
+                  currentStep === 2 ? 'text-[#3AC36C]' : 'text-gray-500'
                 }`}>2</span>
               )}
-            </div>
+            </motion.div>
             
             {/* Dots between 2 and 3 */}
             <div className="flex items-center gap-1 mx-2">
@@ -262,27 +277,58 @@ export default function Register() {
             </div>
             
             {/* Step 3 */}
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-              currentStep >= 3 ? 'bg-white border-2 border-[#3AC36C]' : 'bg-white border-2 border-[#606268]'
-            }`}>
-              <span className={`text-base font-semibold ${
-                currentStep >= 3 ? 'text-[#3AC36C]' : 'text-[#606268]'
+            <motion.div 
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                currentStep >= 3 ? 'bg-white border-3 border-[#3AC36C] shadow-[0_0_0_4px_rgba(58,195,108,0.2)]' : 
+                'bg-gray-100 border-2 border-gray-300'
+              }`}
+              animate={{ scale: currentStep === 3 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <span className={`text-lg font-bold ${
+                currentStep >= 3 ? 'text-[#3AC36C]' : 'text-gray-500'
               }`}>3</span>
-            </div>
+            </motion.div>
           </div>
           
-          {/* Car Icon */}
-          <div className={`absolute -bottom-6 ${
-            currentStep === 1 ? 'left-0' : currentStep === 2 ? 'left-1/2 -translate-x-1/2' : 'right-0'
-          }`}>
-            <img src="/Vector.png" alt="car" className="w-[43px] h-[14px]" />
-          </div>
+          {/* Car Icon with smooth transition */}
+          <motion.div 
+            className="absolute -bottom-6"
+            animate={{
+              left: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
+              x: currentStep === 1 ? '0%' : currentStep === 2 ? '-50%' : '-80%'
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: 0.6
+            }}
+            style={{
+              visibility: currentStep <= 3 ? 'visible' : 'hidden'
+            }}
+          >
+            <img src="/car.svg" alt="car" className="w-[43px] h-[14px]" />
+          </motion.div>
         </div>
 
-        {/* Forms */}
-        {currentStep === 1 && (
-          <Form {...form1}>
-            <form onSubmit={form1.handleSubmit(onStep1Submit)} className="space-y-4">
+        {/* Forms with smooth transitions */}
+        <AnimatePresence mode="wait">
+          {currentStep === 1 && (
+            <motion.div
+              key="step1"
+              initial={{ x: 300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                duration: 0.5
+              }}
+            >
+              <Form {...form1}>
+                <form onSubmit={form1.handleSubmit(onStep1Submit)} className="space-y-4">
               <FormField
                 control={form1.control}
                 name="fullName"
@@ -391,15 +437,28 @@ export default function Register() {
               />
               <Button 
                 type="submit" 
-                className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mt-6"
+                className="w-full h-12 rounded-[30px] bg-gradient-to-r from-[#3AC36C] to-[#2A9D5F] hover:from-[#2A9D5F] hover:to-[#1E7A47] text-white font-semibold font-['Poppins'] mt-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
               >
                 Next
               </Button>
             </form>
           </Form>
-        )}
-        
-        {currentStep === 2 && (
+        </motion.div>
+      )}
+      
+      {currentStep === 2 && (
+        <motion.div
+          key="step2"
+          initial={{ x: 300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -300, opacity: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            duration: 0.5
+          }}
+        >
           <Form {...form2}>
             <form onSubmit={form2.handleSubmit(onStep2Submit)} className="space-y-4">
               <FormField
@@ -408,12 +467,18 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input 
-                        placeholder="ID Card Number" 
-                        {...field} 
-                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
-                        autoComplete="off"
-                      />
+                      <div className="relative">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <path d="M10 9C11.6569 9 13 7.65685 13 6C13 4.34315 11.6569 3 10 3C8.34315 3 7 4.34315 7 6C7 7.65685 8.34315 9 10 9Z" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M3 18C3 14.134 6.13401 11 10 11C13.866 11 17 14.134 17 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        <Input 
+                          placeholder="ID Card Number" 
+                          {...field} 
+                          className="w-full h-12 rounded-[30px] border border-black/50 pl-12 pr-4 font-['Poppins']"
+                          autoComplete="off"
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -425,12 +490,17 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input 
-                        placeholder="Address" 
-                        {...field} 
-                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
-                        autoComplete="off"
-                      />
+                      <div className="relative">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <path d="M10 2L13 8H17L12 12L14 18L10 15L6 18L8 12L3 8H7L10 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <Input 
+                          placeholder="Address" 
+                          {...field} 
+                          className="w-full h-12 rounded-[30px] border border-black/50 pl-12 pr-4 font-['Poppins']"
+                          autoComplete="off"
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -442,12 +512,18 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input 
-                        placeholder="Working hour" 
-                        {...field} 
-                        className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']"
-                        autoComplete="off"
-                      />
+                      <div className="relative">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M10 6V10L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <Input 
+                          placeholder="Working hour" 
+                          {...field} 
+                          className="w-full h-12 rounded-[30px] border border-black/50 pl-12 pr-4 font-['Poppins']"
+                          autoComplete="off"
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -459,19 +535,25 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Select onValueChange={(value) => {
-                        field.onChange(value);
-                        setPreferredPayment(value);
-                      }} value={field.value}>
-                        <SelectTrigger className="w-full h-12 rounded-[30px] border border-black/50 px-4 font-['Poppins']">
-                          <SelectValue placeholder="Preferred Payment Method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                          <SelectItem value="E-Wallet">E-Wallet</SelectItem>
-                          <SelectItem value="Cash">Cash</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="relative">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+                          <path d="M2 8H18L16 18H4L2 8Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M6 8V4C6 2.89543 6.89543 2 8 2H12C13.1046 2 14 2.89543 14 4V8" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                        <Select onValueChange={(value) => {
+                          field.onChange(value);
+                          setPreferredPayment(value);
+                        }} value={field.value}>
+                          <SelectTrigger className="w-full h-12 rounded-[30px] border border-black/50 pl-12 pr-4 font-['Poppins']">
+                            <SelectValue placeholder="Preferred Payment Method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                            <SelectItem value="E-Wallet">E-Wallet</SelectItem>
+                            <SelectItem value="Cash">Cash</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -481,7 +563,7 @@ export default function Register() {
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full h-12 rounded-[30px] border-2 border-dashed border-[#3AC36C] text-[#3AC36C] bg-white hover:bg-green-50 font-['Poppins']"
+                className="w-full h-12 rounded-[30px] border-2 border-dashed border-[#3AC36C] text-[#3AC36C] bg-white hover:bg-green-50 font-['Poppins'] transition-all duration-300 hover:shadow-md"
                 onClick={() => {
                   // Add secondary contact functionality
                   toast({
@@ -490,20 +572,36 @@ export default function Register() {
                   });
                 }}
               >
-                + Add Secondary Contact Number
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-2">
+                  <path d="M8 1V15M1 8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                Add Secondary Contact Number
               </Button>
               
               <Button 
                 type="submit" 
-                className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins'] mt-6"
+                className="w-full h-12 rounded-[30px] bg-gradient-to-r from-[#3AC36C] to-[#2A9D5F] hover:from-[#2A9D5F] hover:to-[#1E7A47] text-white font-semibold font-['Poppins'] mt-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
               >
                 Next
               </Button>
             </form>
           </Form>
-        ) }
-        
-        {currentStep === 3 && step1Data && step2Data && (
+        </motion.div>
+      )}
+      
+      {currentStep === 3 && step1Data && step2Data && (
+        <motion.div
+          key="step3"
+          initial={{ x: 300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -300, opacity: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            duration: 0.5
+          }}
+        >
           <div className="space-y-6">
             {/* Summary Card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -569,7 +667,7 @@ export default function Register() {
             <div className="space-y-3">
               <Button
                 onClick={handleCreateAccount}
-                className="w-full h-12 rounded-[30px] bg-[#3AC36C] hover:bg-[#3AC36C]/90 text-white font-semibold font-['Poppins']"
+                className="w-full h-12 rounded-[30px] bg-gradient-to-r from-[#3AC36C] to-[#2A9D5F] hover:from-[#2A9D5F] hover:to-[#1E7A47] text-white font-semibold font-['Poppins'] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
                 disabled={isLoading}
               >
                 {isLoading ? "Creating Account..." : "Create Account"}
@@ -578,13 +676,18 @@ export default function Register() {
               <Button
                 onClick={() => setCurrentStep(1)}
                 variant="ghost"
-                className="w-full text-[#3AC36C] font-semibold font-['Poppins'] hover:bg-green-50"
+                className="w-full text-[#3AC36C] font-semibold font-['Poppins'] hover:bg-green-50 transition-all duration-300"
               >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-2">
+                  <path d="M12 6L8 2L4 6M8 2V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
                 Edit Details
               </Button>
             </div>
           </div>
-        )}
+        </motion.div>
+      )}
+    </AnimatePresence>
 
         {/* Sign In Link */}
         {currentStep === 1 && (
