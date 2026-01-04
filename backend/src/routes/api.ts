@@ -54,6 +54,17 @@ router.get('/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
+// Google OAuth endpoint
+router.post('/auth/google', async (req, res) => {
+  try {
+    const { googleAuth } = await import('../controllers/googleAuth');
+    return googleAuth(req, res);
+  } catch (error) {
+    console.error('Google auth route error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Google authentication failed');
+  }
+});
+
 // Test face biometric endpoint
 router.post('/face/test', async (req, res) => {
   try {
