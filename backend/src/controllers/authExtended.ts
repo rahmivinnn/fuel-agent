@@ -23,27 +23,26 @@ export const googleAuth = async (req: Request, res: Response) => {
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Invalid Google user data');
     }
 
-    let customer = await storage.getCustomerByEmail(email);
+    let fuelFriend = await storage.getFuelFriendByEmail(email);
     
-    if (!customer) {
-      customer = await storage.createCustomer({
+    if (!fuelFriend) {
+      // Create new fuel friend from Google account
+      fuelFriend = await storage.createFuelFriend({
         fullName: displayName || email.split('@')[0],
         email: email,
         phoneNumber: '',
-        password: uid,
+        password: uid, // Use Google UID as password
+        location: '',
+        deliveryFee: '5000.00',
         isEmailVerified: true
       });
     }
 
-    const token = generateToken({ userId: customer.id, email: customer.email });
+    const token = generateToken({ userId: fuelFriend.id, email: fuelFriend.email });
+    const { password, ...fuelFriendData } = fuelFriend;
 
     return sendSuccess(res, {
-      customer: {
-        id: customer.id,
-        fullName: customer.fullName,
-        email: customer.email,
-        isEmailVerified: customer.isEmailVerified
-      },
+      fuelFriend: fuelFriendData,
       token
     }, RESPONSE_CODES.SUCCESS);
   } catch (error) {
