@@ -12,10 +12,10 @@ export const usePlatformGoogleAuth = () => {
     try {
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
       
-      // For APK, use custom scheme
+      // For APK, use localhost with port
       const isAPK = window.location.protocol === 'file:' || window.location.hostname === 'localhost';
       const redirectUri = isAPK 
-        ? 'com.fuelfriend.agent://auth/callback'
+        ? 'http://localhost:3000/auth/callback'
         : `${window.location.origin}/auth/callback`;
       
       console.log('Is APK:', isAPK);
