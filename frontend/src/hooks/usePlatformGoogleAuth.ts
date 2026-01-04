@@ -10,9 +10,16 @@ export const usePlatformGoogleAuth = () => {
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
-      // Use simple Google OAuth redirect that works in mobile WebView
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      const redirectUri = `${window.location.origin}/auth/callback`;
+      
+      // For APK, use custom scheme
+      const isAPK = window.location.protocol === 'file:' || window.location.hostname === 'localhost';
+      const redirectUri = isAPK 
+        ? 'com.fuelfriend.agent://auth/callback'
+        : `${window.location.origin}/auth/callback`;
+      
+      console.log('Is APK:', isAPK);
+      console.log('Redirect URI:', redirectUri);
       
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${clientId}&` +
@@ -20,6 +27,8 @@ export const usePlatformGoogleAuth = () => {
         `response_type=code&` +
         `scope=openid email profile&` +
         `access_type=offline`;
+
+      console.log('Google Auth URL:', googleAuthUrl);
 
       // Redirect to Google OAuth
       window.location.href = googleAuthUrl;
