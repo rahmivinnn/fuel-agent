@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -41,6 +42,9 @@ import KYCVerification from "@/pages/KYCVerification";
 import TestComponent from "./TestComponent";
 
 function Router() {
+  // Handle deep links for Google OAuth callback
+  useDeepLinkHandler();
+  
   return (
     <PageTransition>
       <Switch>
@@ -136,7 +140,7 @@ function Router() {
         <Route path="/face-verification" component={FaceVerification} />
         <Route path="/whatsapp-login" component={WhatsAppLogin} />
         {/* OAuth callbacks */}
-        <Route path="/auth/callback" component={AuthCallback} />
+        <Route path="/auth/google/callback" component={AuthCallback} />
         <Route component={NotFound} />
       </Switch>
     </PageTransition>

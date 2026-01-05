@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/lib/api';
 
-// Simple Google OAuth URL redirect for mobile
+// Check if running in Capacitor (native app)
+const isNative = () => {
+  return window.Capacitor?.isNativePlatform?.() || false;
+};
+
 export const usePlatformGoogleAuth = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -10,12 +14,13 @@ export const usePlatformGoogleAuth = () => {
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
+      // Use backend domain for all platforms
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const redirectUri = 'https://api.kelolahrd.life/auth/google/callback';
       
-      // Use registered redirect URI from Google Console
-      const redirectUri = 'http://localhost/auth/callback';
-      
-      console.log('Is APK:', isAPK);
+      const isAPK = window.location.protocol === 'file:' || window.location.hostname === 'localhost';
+      console.log('Environment:', isAPK ? 'APK' : 'Web');
+      console.log('Client ID:', clientId);
       console.log('Redirect URI:', redirectUri);
       
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -23,14 +28,14 @@ export const usePlatformGoogleAuth = () => {
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `response_type=code&` +
         `scope=openid email profile&` +
-        `access_type=offline`;
+        `access_type=offline&` +
+        `prompt=select_account`;
 
       console.log('Google Auth URL:', googleAuthUrl);
+      console.log('Redirect URI:', redirectUri);
 
-      // Redirect to Google OAuth
       window.location.href = googleAuthUrl;
-      
-      return { success: true, redirecting: true };
+      return { success: true };
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       toast({
