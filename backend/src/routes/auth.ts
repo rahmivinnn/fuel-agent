@@ -107,8 +107,8 @@ router.post('/login', async (req, res) => {
 
 // Auth routes
 router.post('/google', googleAuth);
-// OAuth callbacks
-router.get('/auth/google/callback', async (req, res) => {
+// OAuth callbacks - pindahkan ke atas sebelum routes lain
+router.get('/google/callback', async (req, res) => {
   try {
     const { code, error } = req.query;
     const userAgent = req.headers['user-agent'] || '';

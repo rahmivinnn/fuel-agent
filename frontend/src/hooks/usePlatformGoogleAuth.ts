@@ -16,7 +16,7 @@ export const usePlatformGoogleAuth = () => {
     try {
       // Use backend domain for all platforms
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      const redirectUri = 'https://api.kelolahrd.life/auth/google/callback';
+      const redirectUri = 'https://api.kelolahrd.life/api/auth/google/callback';
       
       const isAPK = window.location.protocol === 'file:' || window.location.hostname === 'localhost';
       console.log('Environment:', isAPK ? 'APK' : 'Web');
