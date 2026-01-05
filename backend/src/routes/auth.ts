@@ -107,13 +107,107 @@ router.post('/login', async (req, res) => {
 
 // Auth routes
 router.post('/google', googleAuth);
-// OAuth callbacks - disabled, using Firebase Auth instead
-// router.get('/google/callback', async (req, res) => {
-//   // This endpoint is not used when using Firebase Auth
-//   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=use_firebase_auth`);
-// });
-
-// router.post('/google/callback', googleCallback);
+router.get('/google/callback', async (req, res) => {
+  try {
+    const { code, error } = req.query;
+    
+    if (error) {
+      return res.send(`
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'GOOGLE_AUTH_ERROR',
+              error: '${error}'
+            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
+            window.close();
+          } else {
+            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=${error}';
+          }
+        </script>
+      `);
+    }
+    
+    if (!code) {
+      return res.send(`
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'GOOGLE_AUTH_ERROR',
+              error: 'no_code'
+            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
+            window.close();
+          } else {
+            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=no_code';
+          }
+        </script>
+      `);
+    }
+    
+    // Use existing googleCallback function
+    const result = await new Promise((resolve) => {
+      const mockReq = { 
+        body: { 
+          code: code as string,
+          redirect_uri: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`
+        } 
+      };
+      const mockRes = {
+        json: (data: any) => resolve(data),
+        status: (statusCode: number) => ({ json: (data: any) => resolve({ status: statusCode, ...data }) })
+      };
+      
+      googleCallback(mockReq as any, mockRes as any);
+    });
+    
+    if (result && (result as any).success) {
+      const data = (result as any).data;
+      return res.send(`
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'GOOGLE_AUTH_SUCCESS',
+              user: ${JSON.stringify(data.fuelFriend)},
+              token: '${data.token}'
+            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
+            window.close();
+          } else {
+            localStorage.setItem('token', '${data.token}');
+            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard';
+          }
+        </script>
+      `);
+    } else {
+      return res.send(`
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'GOOGLE_AUTH_ERROR',
+              error: 'auth_failed'
+            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
+            window.close();
+          } else {
+            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed';
+          }
+        </script>
+      `);
+    }
+  } catch (error) {
+    console.error('Google callback error:', error);
+    return res.send(`
+      <script>
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'GOOGLE_AUTH_ERROR',
+            error: 'server_error'
+          }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
+          window.close();
+        } else {
+          window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=server_error';
+        }
+      </script>
+    `);
+  }
+});
 router.post('/register/step1', registerStep1);
 router.post('/register/complete', registerComplete);
 router.post('/email-verification', emailVerification);

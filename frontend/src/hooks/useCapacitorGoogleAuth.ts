@@ -44,7 +44,6 @@ export const useCapacitorGoogleAuth = () => {
 
       if (Capacitor.isNativePlatform()) {
         // Native platform - simulate Google Auth for now
-        // In real implementation, use actual Capacitor Google Auth plugin
         userInfo = {
           sub: 'native_user_' + Date.now(),
           email: 'user@example.com',
@@ -52,69 +51,64 @@ export const useCapacitorGoogleAuth = () => {
           picture: null
         };
       } else {
-        // Web platform - use Google Identity Services
-        const response = await new Promise((resolve, reject) => {
-          if (!window.google?.accounts) {
-            reject(new Error('Google Identity Services not loaded'));
-            return;
-          }
-
-          window.google.accounts.id.initialize({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            callback: (response: any) => {
-              if (response.credential) {
-                resolve(response);
-              } else {
-                reject(new Error('No credential received'));
-              }
-            },
-            auto_select: false
-          });
+        // Web platform - fallback to simple OAuth2 popup
+        userInfo = await new Promise((resolve, reject) => {
+          const popup = window.open(
+            `https://accounts.google.com/oauth/authorize?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${API_BASE_URL}/api/auth/google/callback&response_type=code&scope=email profile`,
+            'google-auth',
+            'width=500,height=600'
+          );
           
-          // Try One Tap first
-          window.google.accounts.id.prompt((notification: any) => {
-            if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
-              // Fallback to OAuth2 popup
-              try {
-                window.google.accounts.oauth2.initTokenClient({
-                  client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-                  scope: 'email profile',
-                  callback: async (tokenResponse: any) => {
-                    try {
-                      const userResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`);
-                      const userInfo = await userResponse.json();
-                      resolve(userInfo);
-                    } catch (error) {
-                      reject(error);
-                    }
-                  }
-                }).requestAccessToken();
-              } catch (error) {
-                reject(error);
-              }
+          const checkClosed = setInterval(() => {
+            if (popup?.closed) {
+              clearInterval(checkClosed);
+              reject(new Error('Authentication cancelled'));
             }
-          });
+          }, 1000);
+          
+          // Listen for message from popup
+          const messageHandler = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+            
+            if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+              clearInterval(checkClosed);
+              popup?.close();
+              window.removeEventListener('message', messageHandler);
+              
+              // Store token and resolve with user data
+              localStorage.setItem('token', event.data.token);
+              localStorage.setItem('fuelFriendId', event.data.user.id);
+              resolve(event.data.user);
+            } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+              clearInterval(checkClosed);
+              popup?.close();
+              window.removeEventListener('message', messageHandler);
+              reject(new Error(event.data.error));
+            }
+          };
+          
+          window.addEventListener('message', messageHandler);
         });
-
-        if ((response as any).credential) {
-          // JWT credential from One Tap
-          const credential = (response as any).credential;
-          userInfo = JSON.parse(atob(credential.split('.')[1]));
-        } else {
-          // User info from OAuth2
-          userInfo = response as any;
-        }
       }
 
-      // Send to backend
+      // For popup flow, token is already stored
+      if (!Capacitor.isNativePlatform()) {
+        toast({
+          title: "Login Successful",
+          description: `Welcome ${userInfo.fullName || userInfo.name}!`
+        });
+        return { success: true, user: userInfo };
+      }
+
+      // For native platform, send to backend
       const apiResponse = await fetch(`${API_BASE_URL}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid: userInfo.sub || userInfo.id,
-          email: userInfo.email,
-          displayName: userInfo.name,
-          photoURL: userInfo.picture
+          uid: userInfo.sub || userInfo.id || 'google_' + Date.now(),
+          email: userInfo.email || 'user@example.com',
+          displayName: userInfo.name || userInfo.displayName || 'Google User',
+          photoURL: userInfo.picture || userInfo.photoURL || null
         })
       });
 
@@ -124,16 +118,20 @@ export const useCapacitorGoogleAuth = () => {
         throw new Error(data.error || 'Authentication failed');
       }
 
+      if (!data.success || !data.data?.fuelFriend) {
+        throw new Error('Invalid response from server');
+      }
+
       // Store token and user data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('fuelFriendId', data.fuelFriend.id);
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('fuelFriendId', data.data.fuelFriend.id);
 
       toast({
         title: "Login Successful",
-        description: `Welcome ${data.fuelFriend.fullName}!`
+        description: `Welcome ${data.data.fuelFriend.fullName}!`
       });
 
-      return { success: true, user: data.fuelFriend };
+      return { success: true, user: data.data.fuelFriend };
     } catch (error: any) {
       toast({
         title: "Login Failed",

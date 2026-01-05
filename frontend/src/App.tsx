@@ -41,6 +41,8 @@ import SplashScreen from "@/components/SplashScreen";
 import KYCVerification from "@/pages/KYCVerification";
 import TestComponent from "./TestComponent";
 
+import GoogleCallback from "@/pages/GoogleCallback";
+
 function Router() {
   // Handle deep links for Google OAuth callback
   useDeepLinkHandler();
@@ -140,6 +142,7 @@ function Router() {
         <Route path="/face-verification" component={FaceVerification} />
         <Route path="/whatsapp-login" component={WhatsAppLogin} />
         {/* OAuth callbacks */}
+        <Route path="/auth/google/callback" component={GoogleCallback} />
         <Route path="/auth/google/callback" component={AuthCallback} />
         <Route component={NotFound} />
       </Switch>
