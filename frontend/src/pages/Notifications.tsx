@@ -3,12 +3,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ArrowLeft, CheckCircle, X, Mail, User, CreditCard, MoreHorizontal, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { API_BASE_URL } from "@/lib/api";
 
 export default function Notifications() {
   const [, setLocation] = useLocation();
-  const { data: authData, isLoading: isLoadingAuth } = useAuth();
+  const { user: authData, isLoading: isLoadingAuth } = useAuthContext();
   const customerId = authData?.fuelFriend?.id;
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

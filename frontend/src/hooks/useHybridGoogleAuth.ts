@@ -4,16 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/lib/api';
 import { useLocation } from 'wouter';
 
-// Firebase imports (only for web)
-let signInWithPopup: any, GoogleAuthProvider: any, auth: any;
-if (!Capacitor.isNativePlatform()) {
-  const firebase = await import('firebase/auth');
-  const firebaseConfig = await import('@/lib/firebase');
-  signInWithPopup = firebase.signInWithPopup;
-  GoogleAuthProvider = firebase.GoogleAuthProvider;
-  auth = firebaseConfig.auth;
-}
-
 // Cordova Google Plus (only for mobile)
 declare global {
   interface Window {
@@ -69,6 +59,10 @@ export const useHybridGoogleAuth = () => {
       } else {
         // Web: Use Firebase Auth
         console.log('🌐 Using Firebase Google Auth for Web');
+        
+        // Dynamic import Firebase for web only
+        const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
+        const { auth } = await import('@/lib/firebase');
         
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);

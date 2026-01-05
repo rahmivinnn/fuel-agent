@@ -3,11 +3,11 @@ import { OrderCard } from "@/components/OrderCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrders } from "@/hooks/useOrders";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import type { Order } from "@/lib/schemas";
 
 export default function AllOrders() {
-  const { data: authData } = useAuth();
+  const { user: authData } = useAuthContext();
   const fuelFriendId = authData?.customer?.id;
   
   const { data: activeOrders = [], isLoading: isLoadingActive } = useOrders("active", fuelFriendId, "driver");

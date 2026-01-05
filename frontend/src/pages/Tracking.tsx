@@ -10,13 +10,20 @@ import { MobileContainer } from "@/components/MobileContainer";
 import { useEffect, useState } from "react";
 import type { Order } from "@/lib/schemas";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function MyOrders() {
   const [, setLocation] = useLocation();
-  const { data: authData, isLoading: isLoadingAuth } = useAuth();
+  const { user: authData, isLoading: isLoadingAuth, refetch: refetchAuth } = useAuthContext();
   const fuelFriendId = authData?.fuelFriend?.id;
   const [activeTab, setActiveTab] = useState("new");
+  
+  // Refetch auth data when component mounts (only if no data)
+  useEffect(() => {
+    if (!authData && !isLoadingAuth) {
+      refetchAuth();
+    }
+  }, [authData, isLoadingAuth, refetchAuth]);
   
   // Read tab from URL query parameter
   useEffect(() => {

@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, MessageCircle, MapPin, Navigation, Fuel, ShoppingBag } from "lucide-react";
 import type { Order } from "@/lib/schemas";
 import { formatCurrency } from "@/lib/currency";
-import { motion } from "framer-motion";
 
 interface OrderCardProps {
   order: Order;
@@ -49,14 +48,7 @@ export function OrderCard({ order, onAccept, onCancel, onCall, onMessage, onTrac
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="relative p-4 space-y-3 border border-gray-200 shadow-sm rounded-2xl bg-white">
+    <Card className="relative p-4 space-y-3 border border-gray-200 shadow-sm rounded-2xl bg-white">
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Order #{order.trackingNumber}</h3>
@@ -140,6 +132,5 @@ export function OrderCard({ order, onAccept, onCancel, onCall, onMessage, onTrac
           </div>
         )}
       </Card>
-    </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
   const [, setLocation] = useLocation();
-  const { data: user, isLoading, error } = useAuth();
+  const { user, isLoading, error } = useAuthContext();
 
   useEffect(() => {
     if (isLoading) return; // Wait for auth check

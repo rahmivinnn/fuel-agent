@@ -1,14 +1,22 @@
 import { ArrowLeft, Edit, MapPin, Star, LogOut, Shield, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 export default function ViewProfile() {
   const [, setLocation] = useLocation();
   
-  const { data: authData, isLoading } = useAuth();
+  const { user: authData, isLoading, refetch } = useAuthContext();
   const currentUser = authData?.fuelFriend;
+  
+  // Refetch auth data when component mounts (only if no data)
+  useEffect(() => {
+    if (!authData && !isLoading) {
+      refetch();
+    }
+  }, [authData, isLoading, refetch]);
   
   // Show loading while auth is being checked
   if (isLoading) {
@@ -17,6 +25,23 @@ export default function ViewProfile() {
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error if no user data
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Unable to load profile</p>
+          <button 
+            onClick={() => setLocation('/dashboard')}
+            className="mt-4 px-4 py-2 bg-green-500 text-white rounded"
+          >
+            Back to Dashboard
+          </button>
         </div>
       </div>
     );
@@ -56,17 +81,6 @@ export default function ViewProfile() {
     // Navigate to home page
     setLocation('/');
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

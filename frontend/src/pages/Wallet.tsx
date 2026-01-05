@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useWallet, useTransactions, useWithdraw } from "@/hooks/useWallet";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Wallet() {
   const { toast } = useToast();
@@ -19,7 +19,7 @@ export default function Wallet() {
   const [selectedPayment, setSelectedPayment] = useState<string>("paypal");
   const currencySymbol = getCurrencySymbol();
   
-  const { data: authData } = useAuth();
+  const { user: authData } = useAuthContext();
   const fuelFriendId = authData?.fuelFriend?.id;
   
   // Add loading check for fuelFriendId

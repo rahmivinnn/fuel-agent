@@ -4,7 +4,7 @@ import { ArrowLeft, Mic, Send } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Message() {
   const [, setLocation] = useLocation();
@@ -13,7 +13,7 @@ export default function Message() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   
-  const { data: authData } = useAuth();
+  const { user: authData } = useAuthContext();
   const fuelFriendId = authData?.customer?.id;
 
   // Fetch messages from API
