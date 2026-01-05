@@ -70,8 +70,17 @@ class StorageService {
   }
 
   async getCustomer(id: string): Promise<Customer | null> {
-    const result = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
-    return result[0] || null;
+    try {
+      const result = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error fetching customer:', error);
+      // Return null if column doesn't exist
+      if (error.code === '42703') {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async updateCustomer(id: string, updates: Partial<Customer>): Promise<Customer | null> {
@@ -154,25 +163,38 @@ class StorageService {
   }
 
   async getFuelFriend(id: string): Promise<any | null> {
-    const result = await db.select().from(fuelFriends).where(eq(fuelFriends.id, id)).limit(1);
-    if (!result[0]) return null;
-    
-    const fuelFriend = result[0];
-    
-    // Get face biometric photo if verified
     try {
-      if (fuelFriend.isIdentityVerified) {
+      const result = await db.select().from(fuelFriends).where(eq(fuelFriends.id, id)).limit(1);
+      if (!result[0]) return null;
+      
+      const fuelFriend = result[0];
+      
+      // Add default verification status if not present
+      if (!fuelFriend.hasOwnProperty('isIdentityVerified')) {
+        fuelFriend.isIdentityVerified = false;
+        fuelFriend.verificationStatus = 'pending';
+      }
+      
+      // Get face biometric photo
+      try {
         const biometric = await this.getFaceBiometric(id);
         if (biometric?.faceImageUrl) {
           fuelFriend.profilePhoto = biometric.faceImageUrl;
+          fuelFriend.isIdentityVerified = true;
+          fuelFriend.verificationStatus = 'verified';
         }
+      } catch (error) {
+        console.error('Error fetching face biometric:', error);
       }
+      
+      return fuelFriend;
     } catch (error) {
-      console.error('Error fetching face biometric:', error);
-      // Continue without profile photo if biometric fetch fails
+      console.error('Error fetching fuel friend:', error);
+      if (error.code === '42703') {
+        return null;
+      }
+      throw error;
     }
-    
-    return fuelFriend;
   }
 
   async updateFuelFriend(id: string, updates: any): Promise<any> {
