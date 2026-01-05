@@ -136,6 +136,16 @@ export default function TrackCustomer() {
         });
         
         console.log('Order API response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Response is not JSON');
+        }
+        
         const data = await response.json();
         console.log('Order API response data:', data);
         
@@ -175,33 +185,36 @@ export default function TrackCustomer() {
           }
         } else {
           console.error('API returned error:', data);
-          // If no specific order, show current fuel friend as driver
-          const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
-          const authResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          const authData = await authResponse.json();
-          if (authData.success && authData.data.fuelFriend) {
-            setDriver(authData.data.fuelFriend);
-            // Set dummy order for demo
-            setOrder({
-              id: id,
-              pickupLocation: "Gas Station",
-              deliveryAddress: "Customer Location",
-              fuelType: "Premium",
-              totalAmount: "50.00",
-              status: "in_progress",
-              deliveryLatitude: -6.2088,
-              deliveryLongitude: 106.8456
-            });
-            setCustomer({
-              fullName: "Customer",
-              phoneNumber: "+1234567890"
-            });
-          }
+          // Fallback: create dummy order data for demo
+          const dummyOrder = {
+            id: id,
+            trackingNumber: `DEMO${id}`,
+            pickupLocation: "Shell Station NYC",
+            deliveryAddress: "123 Broadway, New York",
+            fuelType: "Premium",
+            totalAmount: "50.00",
+            status: "in_progress",
+            deliveryLatitude: 40.7589,
+            deliveryLongitude: -73.9851,
+            createdAt: new Date().toISOString()
+          };
+          
+          const dummyDriver = {
+            id: "demo-driver",
+            fullName: "Demo Driver",
+            phoneNumber: "+1234567890",
+            location: "New York"
+          };
+          
+          const dummyCustomer = {
+            id: "demo-customer",
+            fullName: "Demo Customer",
+            phoneNumber: "+1987654321"
+          };
+          
+          setOrder(dummyOrder);
+          setDriver(dummyDriver);
+          setCustomer(dummyCustomer);
         }
       } catch (error) {
         console.error('Failed to fetch order details:', error);
