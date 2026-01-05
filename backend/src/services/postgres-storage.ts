@@ -159,12 +159,23 @@ class StorageService {
     
     const fuelFriend = result[0];
     
+    // Add default verification status if not present
+    if (!fuelFriend.hasOwnProperty('isIdentityVerified')) {
+      fuelFriend.isIdentityVerified = false;
+      fuelFriend.verificationStatus = 'pending';
+    }
+    
     // Get face biometric photo if verified
-    if (fuelFriend.isIdentityVerified) {
+    try {
       const biometric = await this.getFaceBiometric(id);
       if (biometric?.faceImageUrl) {
         fuelFriend.profilePhoto = biometric.faceImageUrl;
+        // If has biometric, consider as verified
+        fuelFriend.isIdentityVerified = true;
+        fuelFriend.verificationStatus = 'verified';
       }
+    } catch (error) {
+      console.error('Error fetching face biometric:', error);
     }
     
     return fuelFriend;
