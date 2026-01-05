@@ -32,10 +32,11 @@ export const useGoogleAuth = () => {
         throw new Error(data.error || 'Authentication failed');
       }
 
-      // Store user data
-      localStorage.setItem('customerId', data.customer.id);
-      localStorage.setItem('customerEmail', data.customer.email);
-      localStorage.setItem('customerName', data.customer.fullName);
+      // Store token and user data
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('fuelFriendId', data.fuelFriend.id);
+      localStorage.setItem('fuelFriendEmail', data.fuelFriend.email);
+      localStorage.setItem('fuelFriendName', data.fuelFriend.fullName);
       localStorage.setItem('googleUser', JSON.stringify({
         uid: user.uid,
         email: user.email,
@@ -45,10 +46,10 @@ export const useGoogleAuth = () => {
 
       toast({
         title: "Login Successful",
-        description: `Welcome ${data.customer.fullName}!`
+        description: `Welcome ${data.fuelFriend.fullName}!`
       });
 
-      return { success: true, user: data.customer };
+      return { success: true, user: data.fuelFriend };
     } catch (error: any) {
       toast({
         title: "Login Failed",

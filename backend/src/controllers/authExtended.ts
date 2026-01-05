@@ -35,6 +35,11 @@ export const googleCallback = async (req: Request, res: Response) => {
       throw new Error('Could not determine client ID from request.');
     }
 
+    // Get the actual redirect URI from the request or use default
+    const redirectUri = req.body.redirect_uri || `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`;
+    
+    console.log('Using redirect URI:', redirectUri);
+
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -44,7 +49,7 @@ export const googleCallback = async (req: Request, res: Response) => {
         client_secret: clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`
+        redirect_uri: redirectUri
       })
     });
 
@@ -100,7 +105,7 @@ export const googleCallback = async (req: Request, res: Response) => {
 
 export const googleAuth = async (req: Request, res: Response) => {
   try {
-    const { uid, email, displayName } = req.body;
+    const { uid, email, displayName, photoURL } = req.body;
 
     if (!uid || !email) {
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Invalid Google user data');
@@ -117,7 +122,8 @@ export const googleAuth = async (req: Request, res: Response) => {
         password: uid, // Use Google UID as password
         location: '',
         deliveryFee: '5000.00',
-        isEmailVerified: true
+        isEmailVerified: true,
+        profilePhoto: photoURL || null
       });
     }
 
