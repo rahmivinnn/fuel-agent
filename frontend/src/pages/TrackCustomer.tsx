@@ -19,7 +19,8 @@ export default function TrackCustomer() {
   const [distance, setDistance] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
   const [routeCoordinates, setRouteCoordinates] = useState<number[][]>([]);
-  const [sheetHeight, setSheetHeight] = useState(50); // Percentage of viewport height
+  const [sheetHeight, setSheetHeight] = useState(50);
+  const [isLoading, setIsLoading] = useState(true);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const driverMarker = useRef<mapboxgl.Marker | null>(null);
@@ -204,6 +205,8 @@ export default function TrackCustomer() {
         }
       } catch (error) {
         console.error('Failed to fetch order details:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -310,181 +313,192 @@ export default function TrackCustomer() {
 
   return (
     <div className="min-h-screen bg-white relative">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 p-4 flex items-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setLocation("/dashboard")}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <h1 className="text-lg font-bold ml-3">Track Customer</h1>
-      </div>
-
-      {/* Map Container - Fixed Full Screen */}
-      <div className="fixed inset-0 z-0">
-        <div ref={mapContainer} className="w-full h-full" />
-      </div>
-
-      {/* Bottom Sheet - Draggable */}
-      <div 
-        ref={sheetRef}
-        className="fixed bottom-0 left-0 right-0 z-10 bg-white rounded-t-3xl transition-all duration-300 ease-out"
-        style={{ height: `${sheetHeight}vh` }}
-      >
-        {/* Drag Handle */}
-        <div 
-          className="w-full p-4 cursor-grab active:cursor-grabbing"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto" />
+      {isLoading ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
         </div>
-        
-        {/* Content - Scrollable */}
-        <div className="px-6 pb-6 space-y-6 overflow-y-auto" style={{ height: `calc(${sheetHeight}vh - 60px)` }}>
-        
-        {/* Distance Info */}
-        {distance && (
-          <div className="bg-green-50 rounded-lg p-3 mb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-800">Distance to Customer</span>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-bold text-green-800">{distance}</p>
-                <p className="text-xs text-green-600">~{duration} away</p>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Driver Info */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gray-300 rounded-full overflow-hidden">
-              <img 
-                src="/avatar.png" 
-                alt="Driver" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%23e5e7eb'/%3E%3Cpath d='M24 12c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 28c-6.6 0-12-5.4-12-12 0-1.3.2-2.5.6-3.6 2.4 1.8 5.4 2.9 8.7 2.9h5.4c3.3 0 6.3-1.1 8.7-2.9.4 1.1.6 2.3.6 3.6 0 6.6-5.4 12-12 12z' fill='%23fff'/%3E%3C/svg%3E";
-                }}
-              />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">{driver?.fullName || "Loading..."}</h3>
-              <p className="text-sm text-gray-500">{driver?.location || order?.pickupLocation || "Location not available"}</p>
-            </div>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button 
-              size="icon" 
-              className="bg-green-500 hover:bg-green-600 rounded-full"
-              onClick={() => setLocation(`/message/${id}`)}
+      ) : (
+        <div>
+          {/* Header */}
+          <div className="absolute top-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 p-4 flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLocation("/dashboard")}
             >
-              <MessageCircle className="w-5 h-5 text-white" />
+              <ArrowLeft className="w-5 h-5" />
             </Button>
-            <Button size="icon" className="bg-green-500 hover:bg-green-600 rounded-full">
-              <Phone className="w-5 h-5 text-white" />
-            </Button>
+            <h1 className="text-lg font-bold ml-3">Track Customer</h1>
           </div>
-        </div>
 
-        {/* Delivery Time */}
-        <div>
-          <h4 className="font-semibold text-gray-900 mb-1">Delivery Time</h4>
-          <p className="text-gray-600">
-            {order?.estimatedDeliveryTime ? 
-              `Before ${new Date(order.estimatedDeliveryTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` : 
-              order?.createdAt ? 
-                `Before ${new Date(new Date(order.createdAt).getTime() + 30 * 60000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` :
-                "30 minutes"
-            }
-          </p>
-        </div>
+          {/* Map Container - Fixed Full Screen */}
+          <div className="fixed inset-0 z-0">
+            <div ref={mapContainer} className="w-full h-full" />
+          </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between px-4">
-          <div className="flex flex-col items-center">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
+          {/* Bottom Sheet - Draggable */}
+          <div 
+            ref={sheetRef}
+            className="fixed bottom-0 left-0 right-0 z-10 bg-white rounded-t-3xl transition-all duration-300 ease-out"
+            style={{ height: `${sheetHeight}vh` }}
+          >
+            {/* Drag Handle */}
+            <div 
+              className="w-full p-4 cursor-grab active:cursor-grabbing"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto" />
             </div>
-          </div>
-          
-          <div className="flex-1 h-0.5 bg-green-200 mx-2 relative">
-            <div className="absolute inset-0 bg-green-500 w-1/3" />
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="w-8 h-8 border-2 border-green-200 rounded-full flex items-center justify-center">
-              <Car className="w-4 h-4 text-green-500" />
+            
+            {/* Content - Scrollable */}
+            <div className="px-6 pb-6 space-y-6 overflow-y-auto" style={{ height: `calc(${sheetHeight}vh - 60px)` }}>
+            
+            {/* Distance Info */}
+            {distance && (
+              <div className="bg-green-50 rounded-lg p-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">Distance to Customer</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-green-800">{distance}</p>
+                    <p className="text-xs text-green-600">~{duration} away</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Driver Info */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gray-300 rounded-full overflow-hidden">
+                  <img 
+                    src="/avatar.png" 
+                    alt="Driver" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%23e5e7eb'/%3E%3Cpath d='M24 12c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 28c-6.6 0-12-5.4-12-12 0-1.3.2-2.5.6-3.6 2.4 1.8 5.4 2.9 8.7 2.9h5.4c3.3 0 6.3-1.1 8.7-2.9.4 1.1.6 2.3.6 3.6 0 6.6-5.4 12-12 12z' fill='%23fff'/%3E%3C/svg%3E";
+                    }}
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{driver?.fullName || "Loading..."}</h3>
+                  <p className="text-sm text-gray-500">{driver?.location || order?.pickupLocation || "Location not available"}</p>
+                </div>
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button 
+                  size="icon" 
+                  className="bg-green-500 hover:bg-green-600 rounded-full"
+                  onClick={() => setLocation(`/message/${id}`)}
+                >
+                  <MessageCircle className="w-5 h-5 text-white" />
+                </Button>
+                <Button size="icon" className="bg-green-500 hover:bg-green-600 rounded-full">
+                  <Phone className="w-5 h-5 text-white" />
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex-1 h-0.5 bg-gray-200 mx-2" />
-          
-          <div className="flex flex-col items-center">
-            <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
-              <MapPin className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-          
-          <div className="flex-1 h-0.5 bg-gray-200 mx-2" />
-          
-          <div className="flex flex-col items-center">
-            <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-        </div>
 
-        {/* Customer Info */}
-        <div>
-          <h4 className="font-semibold text-gray-900 mb-3">Customer</h4>
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-blue-600" />
-            </div>
+            {/* Delivery Time */}
             <div>
-              <p className="font-medium text-gray-900">{customer?.fullName || "Customer"}</p>
-              <p className="text-sm text-gray-500">{customer?.phoneNumber || order?.deliveryPhone || "Phone not available"}</p>
+              <h4 className="font-semibold text-gray-900 mb-1">Delivery Time</h4>
+              <p className="text-gray-600">
+                {order?.estimatedDeliveryTime ? 
+                  `Before ${new Date(order.estimatedDeliveryTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` : 
+                  order?.createdAt ? 
+                    `Before ${new Date(new Date(order.createdAt).getTime() + 30 * 60000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` :
+                    "30 minutes"
+                }
+              </p>
             </div>
-          </div>
-        </div>
 
-        {/* Order Details */}
-        <div>
-          <h4 className="font-semibold text-gray-900 mb-3">Order</h4>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Pickup</span>
-              <span className="text-gray-900">{order?.pickupLocation || order?.stationName || order?.stationId || "Loading..."}</span>
+            {/* Progress Steps */}
+            <div className="flex items-center justify-between px-4">
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              
+              <div className="flex-1 h-0.5 bg-green-200 mx-2 relative">
+                <div className="absolute inset-0 bg-green-500 w-1/3" />
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 border-2 border-green-200 rounded-full flex items-center justify-center">
+                  <Car className="w-4 h-4 text-green-500" />
+                </div>
+              </div>
+              
+              <div className="flex-1 h-0.5 bg-gray-200 mx-2" />
+              
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+              
+              <div className="flex-1 h-0.5 bg-gray-200 mx-2" />
+              
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 border-2 border-gray-200 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Drop Off</span>
-              <span className="text-gray-900">{order?.deliveryAddress || order?.customerAddress || "Loading..."}</span>
+
+            {/* Customer Info */}
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Customer</h4>
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{customer?.fullName || "Customer"}</p>
+                  <p className="text-sm text-gray-500">{customer?.phoneNumber || order?.deliveryPhone || "Phone not available"}</p>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Fuel Type</span>
-              <span className="text-gray-900">{order?.fuelType || order?.productType || "Loading..."}</span>
+
+            {/* Order Details */}
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Order</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Pickup</span>
+                  <span className="text-gray-900">{order?.pickupLocation || order?.stationName || order?.stationId || "Loading..."}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Drop Off</span>
+                  <span className="text-gray-900">{order?.deliveryAddress || order?.customerAddress || "Loading..."}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Fuel Type</span>
+                  <span className="text-gray-900">{order?.fuelType || order?.productType || "Loading..."}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Amount</span>
+                  <span className="text-gray-900">{order?.totalAmount ? `$${order.totalAmount}` : order?.amount ? `$${order.amount}` : "Loading..."}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status</span>
+                  <span className="text-gray-900 capitalize">{order?.status || "Loading..."}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Amount</span>
-              <span className="text-gray-900">{order?.totalAmount ? `$${order.totalAmount}` : order?.amount ? `$${order.amount}` : "Loading..."}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Status</span>
-              <span className="text-gray-900 capitalize">{order?.status || "Loading..."}</span>
-            </div>
-          </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

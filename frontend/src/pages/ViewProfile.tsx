@@ -8,7 +8,19 @@ export default function ViewProfile() {
   const [, setLocation] = useLocation();
   
   const { data: authData, isLoading } = useAuth();
-  const currentUser = authData?.fuelFriend; // Use fuelFriend directly
+  const currentUser = authData?.fuelFriend;
+  
+  // Show loading while auth is being checked
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Debug logs
   console.log('🔍 MyProfile Debug:', {
@@ -47,45 +59,10 @@ export default function ViewProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white px-4 py-4 flex items-center justify-between border-b">
-          <button onClick={handleBack} className="p-2">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-semibold">My Profile</h1>
-          <button onClick={() => setLocation('/edit-profile')} className="p-2">
-            <Edit className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="px-4 py-6 space-y-6">
-          {/* Profile Section Skeleton */}
-          <div className="text-center">
-            <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
-            <Skeleton className="h-6 w-32 mx-auto mb-2" />
-            <Skeleton className="h-4 w-24 mx-auto" />
-          </div>
-
-          {/* About Section Skeleton */}
-          <div>
-            <Skeleton className="h-6 w-16 mb-3" />
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-
-          {/* Location Section Skeleton */}
-          <div>
-            <Skeleton className="h-6 w-24 mb-3" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-
-          {/* Services Section Skeleton */}
-          <div>
-            <Skeleton className="h-6 w-24 mb-3" />
-            <Skeleton className="h-4 w-40 mb-2" />
-            <Skeleton className="h-4 w-36" />
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );

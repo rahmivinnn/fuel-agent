@@ -44,14 +44,19 @@ export const googleCallback = async (req: Request, res: Response) => {
         client_secret: clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/callback`
+        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/callback`
       })
     });
 
     const tokens = await tokenResponse.json();
     
     if (!tokenResponse.ok) {
-      throw new Error(tokens.error_description || 'Token exchange failed');
+      console.error('Token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: tokens
+      });
+      throw new Error(tokens.error_description || tokens.error || 'Bad Request');
     }
 
     // Get user info

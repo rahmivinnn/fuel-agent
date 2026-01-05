@@ -19,18 +19,21 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
       if (error || !user) {
         localStorage.removeItem('token');
         setLocation('/login');
+        return;
       }
     } else {
       // Public route (like login) - redirect if already logged in
       if (user && !error) {
         setLocation('/dashboard');
+        return;
       }
     }
   }, [user, isLoading, error, requireAuth, setLocation]);
 
+  // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p className="text-gray-600">Loading...</p>
@@ -41,12 +44,26 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
 
   // For protected routes, only show if authenticated
   if (requireAuth && (error || !user)) {
-    return null; // Will redirect to login
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
   }
 
   // For public routes, only show if not authenticated
   if (!requireAuth && user && !error) {
-    return null; // Will redirect to dashboard
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

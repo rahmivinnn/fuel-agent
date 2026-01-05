@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function MyOrders() {
   const [, setLocation] = useLocation();
-  const { data: authData } = useAuth();
+  const { data: authData, isLoading: isLoadingAuth } = useAuth();
   const fuelFriendId = authData?.fuelFriend?.id;
   const [activeTab, setActiveTab] = useState("new");
   
@@ -27,8 +27,8 @@ export default function MyOrders() {
     }
   }, []);
   
-  // Add loading check for fuelFriendId
-  if (!fuelFriendId) {
+  // Show loading while auth is being checked
+  if (isLoadingAuth || !fuelFriendId) {
     return (
       <div className="min-h-screen bg-white pb-20 overscroll-y-none touch-pan-x" style={{ overscrollBehavior: 'none' }}>
         <MobileContainer>

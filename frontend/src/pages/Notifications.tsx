@@ -8,17 +8,32 @@ import { API_BASE_URL } from "@/lib/api";
 
 export default function Notifications() {
   const [, setLocation] = useLocation();
-  const { data: authData } = useAuth();
+  const { data: authData, isLoading: isLoadingAuth } = useAuth();
   const customerId = authData?.fuelFriend?.id;
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Show loading while auth is being checked
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (!customerId) return;
+      if (!customerId) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
-        const token = localStorage.getItem('jwt_token');
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE_URL}/api/notifications/customer/${customerId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,

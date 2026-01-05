@@ -34,6 +34,18 @@ export default function Dashboard() {
     isLoadingAuth
   });
   
+  // Show loading while auth is being checked
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Clean up old localStorage keys on first load
   useEffect(() => {
     const cleanupOldStorage = () => {
@@ -120,7 +132,6 @@ export default function Dashboard() {
   };
 
   return (
-    <AuthGuard requireAuth={true}>
     <div className="min-h-screen bg-white pb-20 overscroll-none">
       <div className="bg-white rounded-t-3xl pt-8">
         <MobileContainer>
@@ -282,6 +293,5 @@ export default function Dashboard() {
       </div>
       <BottomNav />
     </div>
-    </AuthGuard>
   );
 }
