@@ -44,7 +44,7 @@ export const googleCallback = async (req: Request, res: Response) => {
         client_secret: clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/callback`
+        redirect_uri: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`
       })
     });
 
