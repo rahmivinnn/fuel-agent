@@ -19,8 +19,15 @@ export const generateToken = (payload: Omit<JWTPayload, 'role'> & { userType?: s
 };
 
 export const verifyToken = (token: string): JWTPayload => {
-  console.log('🔍 Verifying token:', token.substring(0, 50) + '...');
+  console.log('🔍 Verifying token length:', token.length);
+  console.log('🔍 Token format check:', token.split('.').length === 3 ? 'Valid JWT format' : 'Invalid JWT format');
   console.log('🔐 JWT_SECRET for verification:', JWT_SECRET ? 'Set' : 'Not set');
+  
+  // Check if token is properly formatted
+  if (!token || typeof token !== 'string' || token.split('.').length !== 3) {
+    throw new Error('Invalid token format');
+  }
+  
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     console.log('✅ Token verified, payload:', decoded);

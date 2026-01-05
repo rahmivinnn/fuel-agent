@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginData } from "@/lib/schemas";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { usePlatformGoogleAuth } from "@/hooks/usePlatformGoogleAuth";
+import { useCapacitorGoogleAuth } from "@/hooks/useCapacitorGoogleAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { MobileContainer } from "@/components/MobileContainer";
@@ -24,7 +24,15 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'password' | 'email-otp' | 'whatsapp-otp'>('password');
-  const { signInWithGoogle, loading: googleLoading } = usePlatformGoogleAuth();
+  const { loading: googleLoading, signInWithGoogle } = useCapacitorGoogleAuth();
+
+  useEffect(() => {
+    // Auto-redirect if already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      setLocation('/dashboard');
+    }
+  }, [setLocation]);
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -94,8 +102,10 @@ export default function Login() {
   };
 
   const handleGoogleSignIn = async () => {
-    await signInWithGoogle();
-    // Redirect will be handled automatically
+    const result = await signInWithGoogle();
+    if (result.success) {
+      setLocation('/dashboard');
+    }
   };
 
   const handleOTPLoginSuccess = (user: any) => {

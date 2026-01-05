@@ -15,7 +15,8 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   console.log('🔑 Auth header:', authHeader ? 'Present' : 'Missing');
   
   const token = authHeader && authHeader.split(' ')[1];
-  console.log('🎫 Token extracted:', token ? 'Yes' : 'No');
+  console.log('🎫 Token extracted:', token ? `${token.substring(0, 20)}...` : 'No token');
+  console.log('🎫 Token length:', token ? token.length : 0);
 
   if (!token) {
     console.log('❌ No token provided');

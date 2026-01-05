@@ -107,60 +107,13 @@ router.post('/login', async (req, res) => {
 
 // Auth routes
 router.post('/google', googleAuth);
-// OAuth callbacks - pindahkan ke atas sebelum routes lain
-router.get('/google/callback', async (req, res) => {
-  try {
-    const { code, error } = req.query;
-    const userAgent = req.headers['user-agent'] || '';
-    const isAPK = userAgent.includes('wv') || userAgent.includes('Mobile');
-    
-    if (error) {
-      const redirectUrl = isAPK 
-        ? `fuelfriend://login?error=${error}`
-        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=${error}`;
-      return res.redirect(redirectUrl);
-    }
-    
-    if (!code) {
-      const redirectUrl = isAPK 
-        ? `fuelfriend://login?error=no_code`
-        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=no_code`;
-      return res.redirect(redirectUrl);
-    }
-    
-    const { googleCallback } = await import('../controllers/authExtended');
-    const mockReq = { body: { code } };
-    const mockRes = {
-      json: (data: any) => data,
-      status: (code: number) => ({ json: (data: any) => ({ status: code, data }) })
-    };
-    
-    const result = await googleCallback(mockReq as any, mockRes as any);
-    
-    if (result.success) {
-      const token = result.data.token;
-      const redirectUrl = isAPK 
-        ? `fuelfriend://auth/success?token=${token}`
-        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/success?token=${token}`;
-      return res.redirect(redirectUrl);
-    } else {
-      const redirectUrl = isAPK 
-        ? `fuelfriend://login?error=auth_failed`
-        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`;
-      return res.redirect(redirectUrl);
-    }
-  } catch (error) {
-    console.error('Google callback error:', error);
-    const userAgent = req.headers['user-agent'] || '';
-    const isAPK = userAgent.includes('wv') || userAgent.includes('Mobile');
-    const redirectUrl = isAPK 
-      ? `fuelfriend://login?error=server_error`
-      : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=server_error`;
-    return res.redirect(redirectUrl);
-  }
-});
+// OAuth callbacks - disabled, using Firebase Auth instead
+// router.get('/google/callback', async (req, res) => {
+//   // This endpoint is not used when using Firebase Auth
+//   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=use_firebase_auth`);
+// });
 
-router.post('/google/callback', googleCallback);
+// router.post('/google/callback', googleCallback);
 router.post('/register/step1', registerStep1);
 router.post('/register/complete', registerComplete);
 router.post('/email-verification', emailVerification);
