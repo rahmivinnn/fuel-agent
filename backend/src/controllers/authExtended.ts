@@ -23,13 +23,25 @@ export const googleCallback = async (req: Request, res: Response) => {
       return sendError(res, RESPONSE_CODES.BAD_REQUEST, 400, 'Authorization code required');
     }
 
+    // Check for required environment variables
+    const clientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      console.error('Missing Google OAuth credentials:', { 
+        clientId: clientId ? 'present' : 'missing',
+        clientSecret: clientSecret ? 'present' : 'missing'
+      });
+      throw new Error('Could not determine client ID from request.');
+    }
+
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
-        client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+        client_id: clientId,
+        client_secret: clientSecret,
         code,
         grant_type: 'authorization_code',
         redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/callback`

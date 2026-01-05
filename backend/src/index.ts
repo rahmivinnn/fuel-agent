@@ -16,8 +16,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Trust proxy for production deployment
-app.set('trust proxy', true);
+// Trust proxy configuration - more secure than 'true'
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // Trust first proxy only
+} else {
+  app.set('trust proxy', false); // Disable in development
+}
 
 // Initialize database on startup
 initializeDatabase();
@@ -40,6 +44,7 @@ if (process.env.NODE_ENV === 'production') {
     windowMs: 15 * 60 * 1000,
     max: 1000,
     skip: (req) => req.method === 'OPTIONS',
+    trustProxy: 1, // Explicitly set trust proxy for rate limiter
     message: {
       success: false,
       message: 'Too many requests',
