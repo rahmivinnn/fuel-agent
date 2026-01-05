@@ -5,49 +5,17 @@ import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { MobileContainer } from "@/components/MobileContainer";
-import { usePlatformGoogleAuth } from "@/hooks/usePlatformGoogleAuth";
+import { useHybridGoogleAuth } from "@/hooks/useHybridGoogleAuth";
 import { motion } from "framer-motion";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { signInWithGoogle, loading: googleLoading } = usePlatformGoogleAuth();
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { signInWithGoogle, loading: googleLoading, platform } = useHybridGoogleAuth();
 
   const handleGoogleSignIn = async () => {
-    try {
-      setIsGoogleLoading(true);
-      
-      // Check if Google auth is available
-      const result = await signInWithGoogle();
-      
-      if (result.success) {
-        if (result.token) {
-          localStorage.setItem("token", result.token);
-        }
-        toast({ title: "Success", description: "Signed in with Google." });
-        setLocation("/dashboard");
-      } else {
-        // If Google auth fails, show appropriate message
-        const errorMsg = result.error?.includes('temporarily disabled') 
-          ? "Google Sign-In is temporarily disabled. Please use email login."
-          : result.error || "Google sign-in failed";
-          
-        toast({ 
-          title: "Google Sign-In Unavailable", 
-          description: errorMsg,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      toast({ 
-        title: "Google Sign-In Unavailable", 
-        description: "Please use email login instead",
-        variant: "destructive"
-      });
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    await signInWithGoogle();
+    // Redirect handled automatically in hook
   };
 
   return (
@@ -139,8 +107,8 @@ export default function Landing() {
               variant="outline"
               className="w-full h-12 text-base font-normal flex items-center justify-center gap-2 text-foreground border-2 border-gray-300 hover:border-[#4285F4] hover:bg-blue-50 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
               onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading || googleLoading}
-              aria-busy={isGoogleLoading}
+              disabled={googleLoading}
+              aria-busy={googleLoading}
               data-testid="button-google-signin"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="mr-2">
@@ -149,7 +117,7 @@ export default function Landing() {
                 <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957273C0.347727 6.17318 0 7.54772 0 9C0 10.4523 0.347727 11.8268 0.957273 13.0418L3.96409 10.71Z" fill="#FBBC04"/>
                 <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
               </svg>
-              {isGoogleLoading || googleLoading ? "Connecting..." : "Continue with Google"}
+              {googleLoading ? "Connecting..." : `Continue with Google (${platform})`}
             </Button>
           </motion.div>
         </motion.div>

@@ -1,0 +1,8 @@
+{
+  "plugins": {
+    "cordova-plugin-googleplus": {
+      "REVERSED_CLIENT_ID": "moc.selpmaxe.ruoy",
+      "WEB_APPLICATION_CLIENT_ID": "915622810812-n4f8t96hp3fbo2r46t4ti7unfnt4tupf.apps.googleusercontent.com"
+    }
+  }
+}
