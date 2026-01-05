@@ -38,100 +38,37 @@ export const useCapacitorGoogleAuth = () => {
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
-      await initializeGoogleAuth();
-
-      let userInfo;
-
       if (Capacitor.isNativePlatform()) {
         // Native platform - simulate Google Auth for now
-        userInfo = {
+        const userInfo = {
           sub: 'native_user_' + Date.now(),
           email: 'user@example.com',
           name: 'Native User',
           picture: null
         };
+        
+        // Send to backend for native
+        const apiResponse = await fetch(`${API_BASE_URL}/api/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: userInfo.sub,
+            email: userInfo.email,
+            displayName: userInfo.name,
+            photoURL: userInfo.picture
+          })
+        });
+
+        const data = await apiResponse.json();
+        if (data.success) {
+          localStorage.setItem('token', data.data.token);
+          return { success: true, user: data.data.fuelFriend };
+        }
       } else {
-        // Web platform - fallback to simple OAuth2 popup
-        userInfo = await new Promise((resolve, reject) => {
-          const popup = window.open(
-            `https://accounts.google.com/oauth/authorize?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${API_BASE_URL}/api/auth/google/callback&response_type=code&scope=email profile`,
-            'google-auth',
-            'width=500,height=600'
-          );
-          
-          const checkClosed = setInterval(() => {
-            if (popup?.closed) {
-              clearInterval(checkClosed);
-              reject(new Error('Authentication cancelled'));
-            }
-          }, 1000);
-          
-          // Listen for message from popup
-          const messageHandler = (event: MessageEvent) => {
-            if (event.origin !== window.location.origin) return;
-            
-            if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-              clearInterval(checkClosed);
-              popup?.close();
-              window.removeEventListener('message', messageHandler);
-              
-              // Store token and resolve with user data
-              localStorage.setItem('token', event.data.token);
-              localStorage.setItem('fuelFriendId', event.data.user.id);
-              resolve(event.data.user);
-            } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-              clearInterval(checkClosed);
-              popup?.close();
-              window.removeEventListener('message', messageHandler);
-              reject(new Error(event.data.error));
-            }
-          };
-          
-          window.addEventListener('message', messageHandler);
-        });
+        // Web platform - direct redirect to Google OAuth
+        window.location.href = `https://accounts.google.com/oauth/authorize?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${API_BASE_URL}/api/auth/google/callback&response_type=code&scope=email profile`;
+        return { success: true };
       }
-
-      // For popup flow, token is already stored
-      if (!Capacitor.isNativePlatform()) {
-        toast({
-          title: "Login Successful",
-          description: `Welcome ${userInfo.fullName || userInfo.name}!`
-        });
-        return { success: true, user: userInfo };
-      }
-
-      // For native platform, send to backend
-      const apiResponse = await fetch(`${API_BASE_URL}/api/auth/google`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: userInfo.sub || userInfo.id || 'google_' + Date.now(),
-          email: userInfo.email || 'user@example.com',
-          displayName: userInfo.name || userInfo.displayName || 'Google User',
-          photoURL: userInfo.picture || userInfo.photoURL || null
-        })
-      });
-
-      const data = await apiResponse.json();
-
-      if (!apiResponse.ok) {
-        throw new Error(data.error || 'Authentication failed');
-      }
-
-      if (!data.success || !data.data?.fuelFriend) {
-        throw new Error('Invalid response from server');
-      }
-
-      // Store token and user data
-      localStorage.setItem('token', data.data.token);
-      localStorage.setItem('fuelFriendId', data.data.fuelFriend.id);
-
-      toast({
-        title: "Login Successful",
-        description: `Welcome ${data.data.fuelFriend.fullName}!`
-      });
-
-      return { success: true, user: data.data.fuelFriend };
     } catch (error: any) {
       toast({
         title: "Login Failed",

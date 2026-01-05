@@ -110,40 +110,61 @@ router.post('/google', googleAuth);
 router.get('/google/callback', async (req, res) => {
   try {
     const { code, error } = req.query;
+    const userAgent = req.headers['user-agent'] || '';
+    const isMobile = userAgent.includes('wv') || userAgent.includes('Mobile');
+    const frontendUrl = isMobile ? process.env.FRONTEND_URL_MOBILE : process.env.FRONTEND_URL_WEB;
     
     if (error) {
-      return res.send(`
-        <script>
-          if (window.opener) {
-            window.opener.postMessage({
-              type: 'GOOGLE_AUTH_ERROR',
-              error: '${error}'
-            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
-            window.close();
-          } else {
-            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=${error}';
-          }
-        </script>
-      `);
+      const redirectUrl = isMobile 
+        ? `${frontendUrl}/login?error=${error}`
+        : `${frontendUrl}/login?error=${error}`;
+      
+      if (isMobile) {
+        return res.redirect(redirectUrl);
+      } else {
+        return res.send(`
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'GOOGLE_AUTH_ERROR',
+                error: '${error}'
+              }, '${frontendUrl}');
+              window.close();
+            } else {
+              window.location.href = '${redirectUrl}';
+            }
+          </script>
+        `);
+      }
     }
     
     if (!code) {
-      return res.send(`
-        <script>
-          if (window.opener) {
-            window.opener.postMessage({
-              type: 'GOOGLE_AUTH_ERROR',
-              error: 'no_code'
-            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
-            window.close();
-          } else {
-            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=no_code';
-          }
-        </script>
-      `);
+      const redirectUrl = isMobile 
+        ? `${frontendUrl}/login?error=no_code`
+        : `${frontendUrl}/login?error=no_code`;
+      
+      if (isMobile) {
+        return res.redirect(redirectUrl);
+      } else {
+        return res.send(`
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'GOOGLE_AUTH_ERROR',
+                error: 'no_code'
+              }, '${frontendUrl}');
+              window.close();
+            } else {
+              window.location.href = '${redirectUrl}';
+            }
+          </script>
+        `);
+      }
     }
     
     // Use existing googleCallback function
+    console.log('🔄 Processing Google OAuth callback with code:', code);
+    
     const result = await new Promise((resolve) => {
       const mockReq = { 
         body: { 
@@ -152,30 +173,48 @@ router.get('/google/callback', async (req, res) => {
         } 
       };
       const mockRes = {
-        json: (data: any) => resolve(data),
-        status: (statusCode: number) => ({ json: (data: any) => resolve({ status: statusCode, ...data }) })
+        json: (data: any) => {
+          console.log('📦 GoogleCallback response:', data);
+          resolve(data);
+        },
+        status: (statusCode: number) => ({ 
+          json: (data: any) => {
+            console.log('📦 GoogleCallback error response:', { status: statusCode, data });
+            resolve({ status: statusCode, ...data });
+          }
+        })
       };
       
       googleCallback(mockReq as any, mockRes as any);
     });
     
+    console.log('🔍 OAuth callback result:', result);
+    
     if (result && (result as any).success) {
       const data = (result as any).data;
-      return res.send(`
-        <script>
-          if (window.opener) {
-            window.opener.postMessage({
-              type: 'GOOGLE_AUTH_SUCCESS',
-              user: ${JSON.stringify(data.fuelFriend)},
-              token: '${data.token}'
-            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
-            window.close();
-          } else {
-            localStorage.setItem('token', '${data.token}');
-            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard';
-          }
-        </script>
-      `);
+      const successUrl = isMobile 
+        ? `${frontendUrl}/success?token=${data.token}`
+        : `${frontendUrl}/dashboard`;
+      
+      if (isMobile) {
+        return res.redirect(successUrl);
+      } else {
+        return res.send(`
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'GOOGLE_AUTH_SUCCESS',
+                user: ${JSON.stringify(data.fuelFriend)},
+                token: '${data.token}'
+              }, '${frontendUrl}');
+              window.close();
+            } else {
+              localStorage.setItem('token', '${data.token}');
+              window.location.href = '${successUrl}';
+            }
+          </script>
+        `);
+      }
     } else {
       return res.send(`
         <script>
@@ -183,10 +222,10 @@ router.get('/google/callback', async (req, res) => {
             window.opener.postMessage({
               type: 'GOOGLE_AUTH_ERROR',
               error: 'auth_failed'
-            }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
+            }, '${process.env.FRONTEND_URL}');
             window.close();
           } else {
-            window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed';
+            window.location.href = '${process.env.FRONTEND_URL}/login?error=auth_failed';
           }
         </script>
       `);
@@ -199,10 +238,10 @@ router.get('/google/callback', async (req, res) => {
           window.opener.postMessage({
             type: 'GOOGLE_AUTH_ERROR',
             error: 'server_error'
-          }, '${process.env.FRONTEND_URL || 'http://localhost:5173'}');
+          }, '${process.env.FRONTEND_URL}');
           window.close();
         } else {
-          window.location.href = '${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=server_error';
+          window.location.href = '${process.env.FRONTEND_URL}/login?error=server_error';
         }
       </script>
     `);
