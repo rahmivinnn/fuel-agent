@@ -35,10 +35,11 @@ export const googleCallback = async (req: Request, res: Response) => {
       throw new Error('Could not determine client ID from request.');
     }
 
-    // Get the actual redirect URI from the request or use default
-    const redirectUri = req.body.redirect_uri || `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`;
+    // Get the actual redirect URI from the request or use the same one used in authorization
+    const redirectUri = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`;
     
     console.log('Using redirect URI:', redirectUri);
+    console.log('Expected redirect URI in Google Console:', redirectUri);
 
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
