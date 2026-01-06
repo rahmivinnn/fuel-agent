@@ -11,11 +11,8 @@ RUN npm install --production
 # Copy source code
 COPY . .
 
-# Build TypeScript
-RUN npm run build
-
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start with ts-node directly (skip build)
+CMD ["npx", "ts-node", "src/index.ts"]
