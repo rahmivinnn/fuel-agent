@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --production
+# Install all dependencies (including dev dependencies for ts-node)
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -14,5 +14,5 @@ COPY . .
 # Expose port
 EXPOSE 3000
 
-# Start with ts-node directly (skip build)
+# Start with ts-node directly
 CMD ["npx", "ts-node", "src/index.ts"]
