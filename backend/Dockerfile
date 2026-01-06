@@ -5,7 +5,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including dev dependencies for ts-node)
+# Install all dependencies (including dev dependencies for tsx)
 RUN npm install
 
 # Copy source code
@@ -14,5 +14,5 @@ COPY . .
 # Expose port
 EXPOSE 3000
 
-# Start with ts-node directly
-CMD ["npx", "ts-node", "src/index.ts"]
+# Start with tsx directly (which is already installed)
+CMD ["npx", "tsx", "src/index.ts"]
