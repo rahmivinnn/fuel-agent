@@ -3,18 +3,6 @@ kind: Namespace
 metadata:
   name: fuel-friend
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: backend-secrets
-  namespace: fuel-friend
-type: Opaque
-stringData:
-  database-url: "postgresql://username:password@host:5432/database"
-  jwt-secret: "your-jwt-secret-key"
-  google-client-id: "your-google-client-id"
-  google-client-secret: "your-google-client-secret"
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
