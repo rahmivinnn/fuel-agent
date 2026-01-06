@@ -32,10 +32,17 @@ initializeWhatsApp();
 // Add preflight handler
 app.options('*', cors());
 app.use(cors({
-  origin: true, // Allow all origins for mobile apps
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins for mobile compatibility
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'User-Agent']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'User-Agent', 'X-Requested-With', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
 }));
 
 // Rate limiting - disabled in development
