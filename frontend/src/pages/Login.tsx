@@ -26,13 +26,15 @@ export default function Login() {
   const [loginMethod, setLoginMethod] = useState<'password' | 'email-otp' | 'whatsapp-otp'>('password');
   const { loading: googleLoading, signInWithGoogle, platform } = useHybridGoogleAuth();
 
-  useEffect(() => {
-    // Auto-redirect if already logged in
-    const token = localStorage.getItem('token');
-    if (token) {
-      setLocation('/dashboard');
-    }
-  }, [setLocation]);
+  // Remove auto-redirect useEffect to prevent conflicts
+  // useEffect(() => {
+  //   const token = localStorage.getItem('token');
+  //   console.log('🔍 Login useEffect - token check:', !!token);
+  //   if (token) {
+  //     console.log('🚀 Auto-redirecting to dashboard');
+  //     setLocation('/dashboard');
+  //   }
+  // }, [setLocation]);
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -81,6 +83,7 @@ export default function Login() {
       
       console.log('💾 Token stored in localStorage');
       console.log('🔍 Verify storage:', localStorage.getItem("token")?.substring(0, 20) + '...');
+      console.log('🔍 All localStorage keys:', Object.keys(localStorage));
 
       toast({
         title: "Success!",
@@ -88,7 +91,12 @@ export default function Login() {
       });
       
       console.log('🚀 Redirecting to dashboard');
-      setLocation("/dashboard");
+      
+      // Trigger AuthContext refetch
+      window.dispatchEvent(new Event('storage'));
+      
+      // Force redirect with window.location
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('💥 Login error:', error);
       toast({
@@ -167,7 +175,6 @@ export default function Login() {
   }
 
   return (
-    <AuthGuard requireAuth={false}>
     <div className="relative w-full max-w-[402px] mx-auto min-h-screen bg-white">
       {/* Main Content */}
       <div className="px-4 pt-6 pb-8">
@@ -300,6 +307,5 @@ export default function Login() {
         </div>
       </div>
     </div>
-    </AuthGuard>
   );
 }

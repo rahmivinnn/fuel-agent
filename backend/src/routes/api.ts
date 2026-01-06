@@ -267,13 +267,19 @@ router.post('/orders/:id/cancel', authenticateToken, async (req, res) => {
 
 // Customers (Protected)
 router.get('/customers/:id', authenticateToken, async (req, res) => {
-  const customer = await storage.getCustomer(req.params.id);
-  if (!customer) {
-    return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'Customer not found');
+  try {
+    const customer = await storage.getCustomer(req.params.id);
+    if (!customer) {
+      return sendError(res, RESPONSE_CODES.USER_NOT_FOUND, 404, 'Customer not found');
+    }
+    
+    const vehicles = await storage.getVehiclesByCustomer(req.params.id);
+    const { password, ...customerData } = customer;
+    return sendSuccess(res, { customer: customerData, vehicles }, RESPONSE_CODES.SUCCESS);
+  } catch (error) {
+    console.error('Get customer error:', error);
+    return sendError(res, RESPONSE_CODES.INTERNAL_ERROR, 500, 'Failed to get customer');
   }
-  const vehicles = await storage.getVehiclesByCustomer(req.params.id);
-  const { password, ...customerData } = customer;
-  return sendSuccess(res, { customer: customerData, vehicles }, RESPONSE_CODES.SUCCESS);
 });
 
 router.patch('/customers/:id', authenticateToken, async (req, res) => {

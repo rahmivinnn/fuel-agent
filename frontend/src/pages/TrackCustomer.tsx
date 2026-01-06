@@ -340,7 +340,7 @@ export default function TrackCustomer() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setLocation("/dashboard")}
+              onClick={() => setLocation("/my-orders")}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -415,7 +415,7 @@ export default function TrackCustomer() {
                   <MessageCircle className="w-5 h-5 text-white" />
                 </Button>
                 <Button size="icon" className="bg-green-500 hover:bg-green-600 rounded-full">
-                  <Phone className="w-5 h-5 text-white" />
+                  <Phone className="w-5 h-5 text-white" onClick={() => setLocation(`/call/${id}`)} />
                 </Button>
               </div>
             </div>

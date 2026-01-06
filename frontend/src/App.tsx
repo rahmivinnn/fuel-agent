@@ -28,6 +28,7 @@ import TermsConditions from "@/pages/TermsConditions";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TrackCustomer from "@/pages/TrackCustomer";
 import Message from "@/pages/Message";
+import Call from "@/pages/Call";
 import Notifications from "@/pages/Notifications";
 import EmailVerification from "@/pages/EmailVerification";
 import VerifyCode from "@/pages/VerifyCode";
@@ -126,6 +127,11 @@ function Router() {
         <Route path="/message/:id">
           <AuthGuard>
             <Message />
+          </AuthGuard>
+        </Route>
+        <Route path="/call/:id">
+          <AuthGuard>
+            <Call />
           </AuthGuard>
         </Route>
         <Route path="/notifications">

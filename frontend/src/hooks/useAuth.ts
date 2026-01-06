@@ -4,35 +4,13 @@ import { API_BASE_URL } from "@/lib/api";
 import { useEffect } from "react";
 
 export function useAuth() {
-  const token = localStorage.getItem('token');
-  const queryClient = useQueryClient();
-  
-  // Invalidate cache when token changes
-  useEffect(() => {
-    if (token) {
-      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-    }
-  }, [token, queryClient]);
-  
-  return useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: async () => {
-      const response = await apiCallWithAuth(`${API_BASE_URL}/api/auth/me`);
-      
-      if (!response.ok) {
-        throw new Error("Failed to get user data");
-      }
-      
-      const data = await response.json();
-      return data.data;
-    },
-    enabled: !!token,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false
-  });
+  // Hook disabled - using AuthContext instead
+  return {
+    data: null,
+    isLoading: false,
+    error: null,
+    refetch: () => Promise.resolve()
+  };
 }
   const queryClient = useQueryClient();
   
